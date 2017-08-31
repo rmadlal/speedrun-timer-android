@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Speedrun Timer</string>
+
+    <string name="no_games">No games</string>
+    <string name="chrono_init">0:00.00</string>
+    <string name="start_button">Let\'s go!</string>
+    <string name="fab_add_str">Add a game!</string>
+    <string name="hint_game_title">Game title</string>
+    <string name="game_text">Game</string>
+    <string name="pb_text">PB: 0:00.0</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="delete">Delete</string>
+
+    <integer name="notification_id">1234</integer>
+</resources>
