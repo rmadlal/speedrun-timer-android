@@ -12,52 +12,53 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/gameText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/game_text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp" />
-
-        <Spinner
-            android:id="@+id/gameSpinner"
+        <LinearLayout
+            android:id="@+id/linearLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            app:layout_constraintBottom_toBottomOf="@+id/gameText"
-            app:layout_constraintLeft_toRightOf="@+id/gameText"
-            app:layout_constraintRight_toLeftOf="@+id/deleteGameButton"
-            tools:layout_constraintRight_creator="1"
-            tools:layout_constraintLeft_creator="1" />
+            android:layout_margin="16dp"
+            android:weightSum="3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent">
 
-        <ImageButton
-            android:id="@+id/deleteGameButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="16dp"
-            android:background="@android:color/transparent"
-            android:tint="@color/colorAccent"
-            android:onClick="deleteGameButtonPressed"
-            app:layout_constraintBottom_toBottomOf="@+id/gameText"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/gameText"
-            app:srcCompat="@drawable/ic_delete_black_24dp"
-            android:layout_marginEnd="16dp" />
+            <Spinner
+                android:id="@+id/gameNameSpinner"
+                android:layout_weight="2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+
+            <Spinner
+                android:id="@+id/categorySpinner"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp" />
+
+            <ImageButton
+                android:id="@+id/deleteGameButton"
+                android:layout_weight="0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:background="@android:color/transparent"
+                android:tint="@color/colorAccent"
+                android:contentDescription="@string/delete_button_desc"
+                app:srcCompat="@drawable/ic_delete_black_24dp" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/pbText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pb_text"
-            app:layout_constraintLeft_toLeftOf="@+id/gameSpinner"
-            app:layout_constraintTop_toBottomOf="@+id/gameText"
             android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp" />
+            android:layout_marginLeft="8dp"
+            android:text="@string/pb_text"
+            app:layout_constraintLeft_toLeftOf="@+id/linearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+            android:layout_marginStart="8dp" />
 
     </android.support.constraint.ConstraintLayout>
 

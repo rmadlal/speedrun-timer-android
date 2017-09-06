@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
@@ -27,7 +26,7 @@ public class TimerService extends Service {
 
     private View mView;
     private Chronometer chronometer;
-    Game game;
+    private long bestTime;
 
     private WindowManager mWindowManager;
     private boolean moved;
@@ -46,20 +45,22 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_RUNNING = true;
 
-        game = (Game) intent.getSerializableExtra("com.example.ronmad.speedruntimer.game");
-        Chronometer.bestTime = game.bestTime;
+        Game game = (Game) intent.getSerializableExtra("com.example.ronmad.speedruntimer.game");
+        String category = intent.getStringExtra("com.example.ronmad.speedruntimer.category");
+        bestTime = game.getBestTime(category);
+        Chronometer.bestTime = bestTime;
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.mipmap.icons8_stopwatch_48)
-                .setContentTitle(game.name)
+                .setSmallIcon(R.drawable.ic_timer_black_48dp)
+                .setContentTitle(game.getName() + " " + category)
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(android.R.drawable.ic_delete, "Close timer", PendingIntent.getBroadcast(
                         this, 0, new Intent("action_close_timer"), PendingIntent.FLAG_UPDATE_CURRENT))
                 .setAutoCancel(true);
-        if (game.bestTime > 0) {
-            notificationBuilder.setContentText("PB: " + game.getFormattedBestTime());
+        if (bestTime > 0) {
+            notificationBuilder.setContentText("PB: " + Game.getFormattedBestTime(bestTime));
         }
         Notification notification = notificationBuilder.build();
         notificationManager.notify(R.integer.notification_id, notification);
@@ -85,6 +86,8 @@ public class TimerService extends Service {
 
     WindowManager.LayoutParams mWindowsParams;
     private void setupView() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        mWindowManager.getDefaultDisplay().getMetrics(metrics);
         mWindowsParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -102,10 +105,10 @@ public class TimerService extends Service {
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = layoutInflater.inflate(R.layout.timer_overlay, null);
 
-        chronometer = (Chronometer) mView.findViewById(R.id.chronometer);
+        chronometer = new Chronometer(this, mView);
 
-        chronometer.setLongClickable(true);
-        chronometer.setOnTouchListener(new View.OnTouchListener() {
+        mView.setLongClickable(true);
+        mView.setOnTouchListener(new View.OnTouchListener() {
             private DisplayMetrics metrics = new DisplayMetrics();
             private int initialX;
             private int initialY;
@@ -145,12 +148,10 @@ public class TimerService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         int targetX = initialX - (int) (event.getRawX() - initialTouchX);
                         int targetY = initialY - (int) (event.getRawY() - initialTouchY);
-                        targetX = Math.max(0, targetX);
-                        targetX = Math.min(targetX, metrics.widthPixels - v.getWidth());
-                        targetY = Math.max(0, targetY);
-                        targetY = Math.min(targetY, metrics.heightPixels - v.getHeight());
+                        targetX = Math.max(0, Math.min(targetX, metrics.widthPixels - v.getWidth()));
+                        targetY = Math.max(0, Math.min(targetY, metrics.heightPixels - v.getHeight()));
                         if (!moved &&
-                            Math.pow(targetX - initialX, 2) + Math.pow(targetY - initialY, 2) < 20*20)
+                            Math.pow(targetX - initialX, 2) + Math.pow(targetY - initialY, 2) < 25*25)
                             break;
                         moved = true;
                         mWindowsParams.x = targetX;
@@ -162,49 +163,34 @@ public class TimerService extends Service {
             }
         });
 
-        chronometer.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                if (!moved && chronometer.getTimeElapsed() > 0) {
-                    if (game.bestTime > 0 && chronometer.getTimeElapsed() >= game.bestTime) {
-                        chronometer.reset();
-                    }
-                    else if (!Chronometer.running) {
-                        AlertDialog resetDialog = new AlertDialog.Builder(getApplicationContext())
-                            .setTitle("New personal best!")
-                            .setMessage("Save it?")
-                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    game.bestTime = chronometer.getTimeElapsed();
-                                    notificationBuilder.setContentText("PB: " + game.getFormattedBestTime());
-                                    notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
-                                    Intent intent = new Intent("save-best-time");
-                                    intent.putExtra("com.example.ronmad.speedruntimer.time", game.bestTime);
-                                    sendBroadcast(intent);
-                                    chronometer.reset();
-                                    Chronometer.bestTime = game.bestTime;
-                                }
-                            })
-                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    chronometer.reset();
-                                }
-                            })
-                            .setNeutralButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-
-                                }
-                            })
-                            .create();
-                        resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-                        resetDialog.show();
-                    }
-                }
+        mView.setOnLongClickListener(view -> {
+            if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
                 return false;
             }
+            if (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime) {
+                chronometer.reset();
+            }
+            else if (!Chronometer.running) {
+                AlertDialog resetDialog = new AlertDialog.Builder(getApplicationContext())
+                    .setTitle("New personal best!")
+                    .setMessage("Save it?")
+                    .setPositiveButton(R.string.yes, (dialogInterface, i) -> {
+                        bestTime = chronometer.getTimeElapsed();
+                        chronometer.reset();
+                        Chronometer.bestTime = bestTime;
+                        notificationBuilder.setContentText("PB: " + Game.getFormattedBestTime(bestTime));
+                        notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
+                        Intent intent = new Intent("action_save_best_time");
+                        intent.putExtra("com.example.ronmad.speedruntimer.time", bestTime);
+                        sendBroadcast(intent);
+                    })
+                    .setNegativeButton(R.string.no, (dialogInterface, i) -> chronometer.reset())
+                    .setNeutralButton(android.R.string.cancel, (dialogInterface, i) -> {})
+                    .create();
+                resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                resetDialog.show();
+            }
+            return true;
         });
     }
 }

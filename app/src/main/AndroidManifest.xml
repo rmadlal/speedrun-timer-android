@@ -6,21 +6,21 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/icons8_stopwatch_48"
+        android:icon="@drawable/ic_timer_black_48dp"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
-            android:name="com.example.ronmad.speedruntimer.MainActivity"
+            android:name=".MainActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service android:name="com.example.ronmad.speedruntimer.TimerService" />
+        <service android:name=".TimerService" />
 
     </application>
 

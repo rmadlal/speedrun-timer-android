@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303f9f</color>
-    <color name="colorAccent">#ff4040</color>
+    <color name="colorPrimary">#00acc1</color>
+    <color name="colorPrimaryDark">#00838f</color>
+    <color name="colorAccent">#FF4040</color>
     <color name="colorAccentSecondary">#FF9696</color>
+
+    <color name="timerAhead">#007000</color>
+    <color name="timerBehind">#700000</color>
+
 </resources>

@@ -6,14 +6,17 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.v7.widget.AppCompatTextView;
-import android.util.AttributeSet;
+import android.view.View;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-class Chronometer extends AppCompatTextView {
+public class Chronometer {
+
+    private TextView chronoMillis;
+    private TextView chronoRest;
 
     static long bestTime;
     static boolean started;
@@ -21,35 +24,26 @@ class Chronometer extends AppCompatTextView {
 
     private long mBase;
     private long timeElapsed;
-    private SimpleDateFormat df;
+    private SimpleDateFormat millisDf;
+    private SimpleDateFormat restDf;
     private boolean hoursShowing;
 
     private Handler mHandler;
     private static final int TICK_WHAT = 2;
 
-    public Chronometer(Context context) {
-        super(context);
+    public Chronometer(Context context, View view) {
 
-        ctor(context);
-    }
+        chronoMillis = (TextView) view.findViewById(R.id.chronoMillis);
+        chronoRest = (TextView) view.findViewById(R.id.chronoRest);
 
-    public Chronometer(Context context, AttributeSet attrs) {
-        super(context, attrs);
-
-        ctor(context);
-    }
-
-    public Chronometer(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-
-        ctor(context);
-    }
-
-    private void ctor(Context context) {
-        mHandler = new MyHandler(this);
-
-        setTypeface(Typeface.createFromAsset(
+        chronoMillis.setTypeface(Typeface.createFromAsset(
                 context.getAssets(), "fonts/digital-7.ttf"));
+        chronoRest.setTypeface(Typeface.createFromAsset(
+                context.getAssets(), "fonts/digital-7.ttf"));
+
+        millisDf = new SimpleDateFormat(".SS", Locale.getDefault());
+
+        mHandler = new MyHandler(this);
 
         init();
     }
@@ -58,11 +52,14 @@ class Chronometer extends AppCompatTextView {
         started = false;
         timeElapsed = 0;
 
-        df = new SimpleDateFormat("m:ss.SS", Locale.getDefault());
+        restDf = new SimpleDateFormat("m:ss", Locale.getDefault());
         hoursShowing = false;
 
-        setText(R.string.chrono_init);
-        setTextColor(Color.DKGRAY);
+        chronoMillis.setText(R.string.chrono_millis);
+        chronoRest.setText(R.string.chrono_rest);
+
+        chronoMillis.setTextColor(Color.DKGRAY);
+        chronoRest.setTextColor(Color.DKGRAY);
     }
 
     public void start() {
@@ -78,7 +75,6 @@ class Chronometer extends AppCompatTextView {
     }
 
     public void reset() {
-        if (running) return;
         init();
     }
 
@@ -90,12 +86,18 @@ class Chronometer extends AppCompatTextView {
         timeElapsed = now - mBase;
 
         int hours = (int) (timeElapsed / (3600 * 1000));
-        if (hours > 0 && !hoursShowing) {
-            df = new SimpleDateFormat("H:mm:ss.SS", Locale.getDefault());
-            hoursShowing = true;
+        if (hours > 0) {
+            if (!hoursShowing) {
+                restDf = new SimpleDateFormat(":mm:ss", Locale.getDefault());
+                hoursShowing = true;
+            }
+            chronoRest.setText(hours + restDf.format(timeElapsed));
+        }
+        else {
+            chronoRest.setText(restDf.format(timeElapsed));
         }
 
-        setText(df.format(timeElapsed));
+        chronoMillis.setText(millisDf.format(timeElapsed));
         updateColor();
     }
 
@@ -103,12 +105,16 @@ class Chronometer extends AppCompatTextView {
         if (bestTime == 0) {
             return;
         }
-        if (timeElapsed < bestTime && getCurrentTextColor() != Color.GREEN) {
-            setTextColor(Color.parseColor("#009600"));
+        int colorAhead = Color.parseColor("#007000");
+        int colorBehind = Color.parseColor("#700000");
+        if (timeElapsed < bestTime && chronoMillis.getCurrentTextColor() != colorAhead) {
+            chronoMillis.setTextColor(colorAhead);
+            chronoRest.setTextColor(colorAhead);
 
         }
-        else if (timeElapsed >= bestTime && getCurrentTextColor() != Color.RED) {
-            setTextColor(Color.parseColor("#960000"));
+        else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
+            chronoMillis.setTextColor(colorBehind);
+            chronoRest.setTextColor(colorBehind);
         }
     }
 
@@ -136,7 +142,7 @@ class Chronometer extends AppCompatTextView {
             Chronometer mChronometer = instance.get();
             if (mChronometer != null && mChronometer.isRunning()) {
                 mChronometer.updateText(SystemClock.elapsedRealtime());
-                sendMessageDelayed(Message.obtain(this, TICK_WHAT), 10);
+                sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15);
             }
         }
     }

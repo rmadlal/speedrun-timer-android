@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/timer_overlay"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     tools:context=".MainActivity">
 
-    <com.example.ronmad.speedruntimer.Chronometer
-        android:id="@+id/chronometer"
+    <TextView
+        android:id="@+id/chronoRest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/chrono_init"
+        android:text="@string/chrono_rest"
         android:textSize="32sp" />
+
+    <TextView
+        android:id="@+id/chronoMillis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/chrono_millis"
+        android:textSize="20sp" />
 
 </LinearLayout>
