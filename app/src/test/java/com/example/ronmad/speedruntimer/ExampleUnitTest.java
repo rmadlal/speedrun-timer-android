@@ -2,6 +2,8 @@ package com.example.ronmad.speedruntimer;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -11,7 +13,9 @@ import static org.junit.Assert.*;
  */
 public class ExampleUnitTest {
     @Test
-    public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
+    public void testTimeSplit() throws Exception {
+        String time = "1:04:51.420";
+        String[] parts = time.split("[:.]");
+        System.out.println(Arrays.toString(parts));
     }
 }

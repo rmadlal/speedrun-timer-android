@@ -11,10 +11,15 @@
     <string name="hint_game_category">Category</string>
     <string name="game_text">Game</string>
     <string name="pb_text">PB: 0:00.0</string>
+    <string name="hr_hint">Hrs</string>
+    <string name="mins_hint">Mins</string>
+    <string name="secs_hint">Secs</string>
+    <string name="millis_hint">Millis</string>
     <string name="delete_button_desc">Delete game/category</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="delete">Delete</string>
+    <string name="pb_clear">Clear</string>
 
     <string-array name="category_autocomplete">
         <item>Any%</item>

@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     static final int SNACKBAR_WHAT = 0;
 
+    private static boolean backFromPermissionCheck = false;
+
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
     private Gson gson;
@@ -57,8 +59,9 @@ public class MainActivity extends AppCompatActivity {
     private Button letsGoButton;
     private ImageButton deleteGameButton;
     private TextView pbText;
+    private ImageButton editPbButton;
     private FloatingActionButton fabAdd;
-    private Snackbar addSnackbar;
+    private Snackbar mSnackbar;
     private SnackbarHandler snackbarHandler;
 
     @Override
@@ -71,12 +74,13 @@ public class MainActivity extends AppCompatActivity {
 
         letsGoButton = (Button) findViewById(R.id.startButton);
         pbText = (TextView) findViewById(R.id.pbText);
+        editPbButton = (ImageButton) findViewById(R.id.editPbButton);
         fabAdd = (FloatingActionButton) findViewById(R.id.fabAdd);
-        addSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_INDEFINITE);
-        snackbarHandler = new SnackbarHandler(addSnackbar);
+        mSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_INDEFINITE);
+        snackbarHandler = new SnackbarHandler(mSnackbar);
 
         String savedData = sharedPrefs.getString("games", "");
-        Log.v("savedData", savedData);
+        Log.v("savedData", savedData.isEmpty() ? "Nothing" : savedData);
         if (savedData.isEmpty()) {
             games = new ArrayList<>();
         }
@@ -98,10 +102,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        stopService(new Intent(this, TimerService.class));
+        if (!backFromPermissionCheck) {
+            stopService(new Intent(this, TimerService.class));
+        }
         if (pbText != null) {
             handlePbText();
         }
+        backFromPermissionCheck = false;
     }
 
     @Override
@@ -109,9 +116,9 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         sharedPrefs.edit()
-                   .putString("games", games.isEmpty() ? "" : gson.toJson(games))
-                   .putInt("gameNameSpinnerPos", gameNameSpinner.getSelectedItemPosition())
-                   .apply();
+                .putString("games", games.isEmpty() ? "" : gson.toJson(games))
+                .putInt("gameNameSpinnerPos", Math.max(0, gameNameSpinner.getSelectedItemPosition()))
+                .apply();
     }
 
     @Override
@@ -125,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkDrawOverlayPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (!Settings.canDrawOverlays(this)) {
+                backFromPermissionCheck = true;
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, Overlay_REQUEST_CODE);
             } else {
@@ -185,13 +193,11 @@ public class MainActivity extends AppCompatActivity {
         gameNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                gameNameSpinnerAction();
+                spinnerAction(gameNameSpinner);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                currentGame = null;
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) { }
         });
         categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -200,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                     newCategoryItemSelected();
                 }
                 else {
-                    categorySpinnerAction();
+                    spinnerAction(categorySpinner);
                     if (currentGame != null) {
                         currentGame.setLastSelectedCategoryPosition(i);
                     }
@@ -208,23 +214,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                categorySpinnerAction();
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) { }
         });
 
         refreshSpinners();
-    }
-
-    private void gameNameSpinnerAction() {
-        currentGame = games.isEmpty() ? null : games.get(gameNameSpinner.getSelectedItemPosition());
-        refreshCategorySpinner();
-    }
-
-    private void categorySpinnerAction() {
-        currentCategory = games.isEmpty() ? null : categorySpinner.getSelectedItem().toString();
-        handleUIInteraction();
-        handlePbText();
     }
 
     private void refreshSpinners() {
@@ -233,8 +226,7 @@ public class MainActivity extends AppCompatActivity {
             gameNameSpinnerAdapter.add(game.getName());
         }
         gameNameSpinnerAdapter.notifyDataSetChanged();
-        gameNameSpinner.setSelection(sharedPrefs.getInt("gameNameSpinnerPos", 0));
-        gameNameSpinnerAction();
+        setSpinnerSelection(gameNameSpinner, sharedPrefs.getInt("gameNameSpinnerPos", 0));
     }
 
     private void refreshCategorySpinner() {
@@ -244,8 +236,27 @@ public class MainActivity extends AppCompatActivity {
             currentGame.getCategories().forEach((category, bestTime) -> categorySpinnerAdapter.insert(category, 0));
         }
         categorySpinnerAdapter.notifyDataSetChanged();
-        categorySpinner.setSelection(currentGame == null ? 0 : currentGame.getLastSelectedCategoryPosition());
-        categorySpinnerAction();
+        setSpinnerSelection(categorySpinner, currentGame == null ? 0 : currentGame.getLastSelectedCategoryPosition());
+    }
+
+    private void spinnerAction(Spinner spinner) {
+        if (spinner == gameNameSpinner) {
+            currentGame = games.isEmpty() ? null : games.get(gameNameSpinner.getSelectedItemPosition());
+            refreshCategorySpinner();
+        }
+        else if (spinner == categorySpinner) {
+            currentCategory = games.isEmpty() ? null : categorySpinner.getSelectedItem().toString();
+            handleUIInteraction();
+            handlePbText();
+        }
+    }
+
+    private void setSpinnerSelection(Spinner spinner, int pos) {
+        int prevPos = spinner.getSelectedItemPosition();
+        spinner.setSelection(pos);
+        if (pos == prevPos || prevPos == -1) {
+            spinnerAction(spinner);
+        }
     }
 
     private void setupDeleteButton() {
@@ -256,21 +267,21 @@ public class MainActivity extends AppCompatActivity {
             if (bestTime > 0) {
                 new AlertDialog.Builder(this)
                         .setTitle("Delete " + currentGame.getName() + currentCategory)
-                        .setMessage("Your PB of " + currentGame.getFormattedBestTime(currentCategory) + " will be deleted. Are you sure?")
-                        .setPositiveButton(R.string.delete, (dialogInterface, i) -> deleteCategory())
-                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {})
+                        .setMessage("Your PB of " + Game.getFormattedBestTime(bestTime) + " will be deleted. Are you sure?")
+                        .setPositiveButton(R.string.delete, (dialogInterface, i) -> removeCategory())
+                        .setNeutralButton(android.R.string.cancel, null)
                         .create().show();
             }
             else {
-                deleteCategory();
+                removeCategory();
             }
         });
         deleteGameButton.setOnLongClickListener(view -> {
             new AlertDialog.Builder(this)
                     .setTitle("Delete " + currentGame.getName())
                     .setMessage("All categories and PBs will be lost. Are you sure?")
-                    .setPositiveButton(R.string.delete, (dialogInterface, i) -> deleteGame())
-                    .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {})
+                    .setPositiveButton(R.string.delete, (dialogInterface, i) -> removeGame())
+                    .setNeutralButton(android.R.string.cancel, null)
                     .create().show();
             return true;
         });
@@ -286,6 +297,12 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(getFragmentManager(), "NewGameDialog");
     }
 
+    public void editPbButtonPressed(View view) {
+        EditPbDialog dialog = new EditPbDialog();
+        dialog.activity = this;
+        dialog.show(getFragmentManager(), "EditPbDialog");
+    }
+
     private void newCategoryItemSelected() {
         categorySpinner.setSelection(categorySpinnerAdapter.getPosition(currentCategory));
         NewGameDialog dialog = new NewGameDialog();
@@ -294,34 +311,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleUIInteraction() {
-        gameNameSpinner.setEnabled(!games.isEmpty());
-        categorySpinner.setEnabled(!games.isEmpty());
-        deleteGameButton.setEnabled(!games.isEmpty());
-        letsGoButton.setEnabled(!games.isEmpty());
-        if (games.isEmpty()) {
-            gameNameSpinnerAdapter.add(getString(R.string.no_games));
-            deleteGameButton.setColorFilter(ContextCompat.getColor(this, R.color.colorAccentSecondary));
-            snackbarHandler.sendEmptyMessageDelayed(SNACKBAR_WHAT, 1000);
+        boolean gamesExist = currentGame != null;
+        gameNameSpinner.setEnabled(gamesExist);
+        categorySpinner.setEnabled(gamesExist);
+        letsGoButton.setEnabled(gamesExist);
+        deleteGameButton.setEnabled(gamesExist);
+        deleteGameButton.setColorFilter(ContextCompat.getColor(this,
+                gamesExist ? R.color.colorAccent : R.color.colorAccentSecondary));
+        if (gamesExist) {
+            gameNameSpinnerAdapter.remove(getString(R.string.no_games));
+            mSnackbar.dismiss();
         }
         else {
-            gameNameSpinnerAdapter.remove(getString(R.string.no_games));
-            deleteGameButton.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent));
-            addSnackbar.dismiss();
+            gameNameSpinnerAdapter.add(getString(R.string.no_games));
+            snackbarHandler.sendEmptyMessageDelayed(SNACKBAR_WHAT, 1000);
         }
         gameNameSpinnerAdapter.notifyDataSetChanged();
     }
 
     private void handlePbText() {
-        if (games.isEmpty()) {
+        if (currentGame == null) {
             pbText.setVisibility(View.INVISIBLE);
-            return;
-        }
-        if (currentGame.getBestTime(currentCategory) > 0) {
-            pbText.setText("PB: " + currentGame.getFormattedBestTime(currentCategory));
-            pbText.setVisibility(View.VISIBLE);
+            editPbButton.setVisibility(View.INVISIBLE);
         }
         else {
-            pbText.setVisibility(View.INVISIBLE);
+            long bestTime = currentGame.getBestTime(currentCategory);
+            pbText.setText("PB: " +
+                    (bestTime == 0 ? "None yet" : Game.getFormattedBestTime(bestTime)));
+            pbText.setVisibility(View.VISIBLE);
+            editPbButton.setVisibility(View.VISIBLE
+            );
         }
     }
 
@@ -332,47 +351,45 @@ public class MainActivity extends AppCompatActivity {
             games.add(0, newGame);
             gameNameSpinnerAdapter.insert(gameName, 0);
             gameNameSpinnerAdapter.notifyDataSetChanged();
-            gameNameSpinner.setSelection(0);
+            setSpinnerSelection(gameNameSpinner, 0);
         }
         else {
             int gameIndex = games.indexOf(newGame);
             games.get(gameIndex).addCategory(category);
-            gameNameSpinner.setSelection(gameIndex);
+            setSpinnerSelection(gameNameSpinner, gameIndex);
         }
-        gameNameSpinnerAction();
+    }
+
+    private void removeGame() {
+        games.remove(currentGame);
+        gameNameSpinnerAdapter.remove(currentGame.getName());
+        gameNameSpinnerAdapter.notifyDataSetChanged();
+        setSpinnerSelection(gameNameSpinner, Math.max(0, gameNameSpinner.getSelectedItemPosition() - 1));
     }
 
     private void addCategory(String category) {
-        currentGame.addCategory(category);
-        refreshCategorySpinner();
+        if (currentGame.addCategory(category) == null) {
+            refreshCategorySpinner();
+        }
     }
 
-    private void deleteCategory() {
+    private void removeCategory() {
         currentGame.removeCategory(currentCategory);
         if (currentGame.isEmpty()) {
-            deleteGame();
+            removeGame();
         }
         else {
             categorySpinnerAdapter.remove(currentCategory);
             categorySpinnerAdapter.notifyDataSetChanged();
-            categorySpinner.setSelection(Math.max(0, categorySpinner.getSelectedItemPosition() - 1));
-            categorySpinnerAction();
+            setSpinnerSelection(categorySpinner, Math.max(0, categorySpinner.getSelectedItemPosition() - 1));
         }
     }
 
-    private void deleteGame() {
-        games.remove(currentGame);
-        gameNameSpinnerAdapter.remove(currentGame.getName());
-        gameNameSpinnerAdapter.notifyDataSetChanged();
-        gameNameSpinner.setSelection(Math.max(0, gameNameSpinner.getSelectedItemPosition() - 1));
-        gameNameSpinnerAction();
-    }
-
-    public void updateBestTime(long time) {
+    void updateBestTime(long time) {
         currentGame.setBestTime(currentCategory, time);
         sharedPrefs.edit()
-            .putString("games", gson.toJson(games))
-            .apply();
+                .putString("games", gson.toJson(games))
+                .apply();
     }
 
     private static class MyReceiver extends BroadcastReceiver {
@@ -388,12 +405,12 @@ public class MainActivity extends AppCompatActivity {
             if (action.equals("action_close_timer")) {
                 if (Chronometer.started) {
                     AlertDialog closeDialog = new AlertDialog.Builder(context)
-                        .setTitle("Timer is active")
-                        .setMessage("Close anyway?")
-                        .setPositiveButton(android.R.string.yes, (dialogInterface, i) ->
-                                activity.stopService(new Intent(activity, TimerService.class)))
-                        .setNegativeButton(android.R.string.no, (dialogInterface, i) -> {})
-                        .create();
+                            .setTitle("Timer is active")
+                            .setMessage("Close anyway?")
+                            .setPositiveButton(android.R.string.yes, (dialogInterface, i) ->
+                                    activity.stopService(new Intent(activity, TimerService.class)))
+                            .setNeutralButton(android.R.string.no, null)
+                            .create();
                     closeDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
                     closeDialog.show();
                 }
@@ -417,10 +434,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleMessage(Message msg) {
-           switch (msg.what) {
-               case SNACKBAR_WHAT:
-                   snackbar.show();
-           }
+            switch (msg.what) {
+                case SNACKBAR_WHAT:
+                    snackbar.show();
+            }
         }
     }
 
@@ -445,35 +462,84 @@ public class MainActivity extends AppCompatActivity {
             final EditText newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
             final MyAutoCompleteTextView newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newGameCategoryInput);
             return new AlertDialog.Builder(getActivity())
-                .setTitle("New game")
-                .setView(dialogView)
-                .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                    String newGameName = newGameInput.getText().toString();
-                    String newCategory = newCategoryInput.getText().toString();
-                    if (newGameName.isEmpty()) {
-                        return;
-                    }
-                    activity.addGameAndCategory(newGameName, newCategory);
-                })
-                .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {})
-                .create();
+                    .setTitle("New game")
+                    .setView(dialogView)
+                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                        String newGameName = newGameInput.getText().toString();
+                        String newCategory = newCategoryInput.getText().toString();
+                        if (newGameName.isEmpty()) {
+                            return;
+                        }
+                        activity.addGameAndCategory(newGameName, newCategory);
+                    })
+                    .setNeutralButton(android.R.string.cancel, null)
+                    .create();
         }
 
         private AlertDialog createNewCategoryDialog() {
             View dialogView = inflater.inflate(R.layout.new_category_dialog, null);
             final MyAutoCompleteTextView newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newCategoryInput);
             return new AlertDialog.Builder(getActivity())
-                .setTitle("New category")
-                .setView(dialogView)
-                .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                    String newCategory = newCategoryInput.getText().toString();
-                    if (newCategory.isEmpty() || activity.currentGame.hasCategory(newCategory)) {
-                        return;
-                    }
-                    activity.addCategory(newCategory);
-                })
-                .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {})
-                .create();
+                    .setTitle("New category")
+                    .setView(dialogView)
+                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                        String newCategory = newCategoryInput.getText().toString();
+                        if (newCategory.isEmpty() || activity.currentGame.hasCategory(newCategory)) {
+                            return;
+                        }
+                        activity.addCategory(newCategory);
+                    })
+                    .setNeutralButton(android.R.string.cancel, null)
+                    .create();
+        }
+    }
+
+    public static class EditPbDialog extends DialogFragment {
+        MainActivity activity;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            LayoutInflater inflater = getActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.edit_pb_dialog, null);
+            final EditText hoursInput = (EditText) dialogView.findViewById(R.id.hours);
+            final EditText minutesInput = (EditText) dialogView.findViewById(R.id.minutes);
+            final EditText secondsInput = (EditText) dialogView.findViewById(R.id.seconds);
+            final EditText millisInput = (EditText) dialogView.findViewById(R.id.milliseconds);
+            long bestTime = activity.currentGame.getBestTime(activity.currentCategory);
+            if (bestTime > 0) {
+                String bestTimeStr = Game.getFormattedBestTime(bestTime);
+                String[] parts = bestTimeStr.split("[:.]");
+                int j = 0;
+                if (parts.length == 4) {
+                    hoursInput.setText(parts[j++]);
+                }
+                minutesInput.setText(parts[j++]);
+                secondsInput.setText(parts[j++]);
+                millisInput.setText(parts[j]);
+            }
+            return new AlertDialog.Builder(getActivity())
+                    .setTitle("Set PB for " + activity.currentGame.getName() + " " + activity.currentCategory)
+                    .setView(dialogView)
+                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                        String hoursStr = hoursInput.getText().toString();
+                        String minutesStr = minutesInput.getText().toString();
+                        String secondsStr = secondsInput.getText().toString();
+                        String millisStr = millisInput.getText().toString();
+                        int hours = hoursStr.isEmpty() ? 0 : Integer.parseInt(hoursStr);
+                        int minutes = minutesStr.isEmpty() ? 0 : Integer.parseInt(minutesStr);
+                        int seconds = secondsStr.isEmpty() ? 0 : Integer.parseInt(secondsStr);
+                        int millis = millisStr.isEmpty() ? 0 : Integer.parseInt(millisStr);
+                        long total = 1000*60*60 * hours + 1000*60 * minutes + 1000 * seconds + millis;
+                        activity.updateBestTime(total);
+                        activity.handlePbText();
+
+                    })
+                    .setNegativeButton(R.string.pb_clear, (dialogInterface, i) -> {
+                        activity.updateBestTime(0);
+                        activity.handlePbText();
+                    })
+                    .setNeutralButton(android.R.string.cancel, null)
+                    .create();
         }
     }
 }

@@ -21,12 +21,12 @@ public class TimerService extends Service {
 
     public static boolean IS_RUNNING = false;
 
-    private NotificationManager notificationManager;
-    private NotificationCompat.Builder notificationBuilder;
-
     private View mView;
     private Chronometer chronometer;
     private long bestTime;
+
+    private NotificationManager notificationManager;
+    private NotificationCompat.Builder notificationBuilder;
 
     private WindowManager mWindowManager;
     private boolean moved;
@@ -185,7 +185,7 @@ public class TimerService extends Service {
                         sendBroadcast(intent);
                     })
                     .setNegativeButton(R.string.no, (dialogInterface, i) -> chronometer.reset())
-                    .setNeutralButton(android.R.string.cancel, (dialogInterface, i) -> {})
+                    .setNeutralButton(android.R.string.cancel, null)
                     .create();
                 resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
                 resetDialog.show();

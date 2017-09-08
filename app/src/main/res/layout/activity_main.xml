@@ -53,12 +53,30 @@
             android:id="@+id/pbText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginLeft="8dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/pb_text"
-            app:layout_constraintLeft_toLeftOf="@+id/linearLayout"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-            android:layout_marginStart="8dp" />
+            android:textSize="16sp"
+            app:layout_constraintLeft_toLeftOf="@id/linearLayout"
+            app:layout_constraintTop_toBottomOf="@id/linearLayout"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <ImageButton
+            android:id="@+id/editPbButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginLeft="16dp"
+            android:onClick="editPbButtonPressed"
+            app:srcCompat="@drawable/ic_edit_black_24dp"
+            android:tint="@color/colorAccent"
+            android:background="@android:color/transparent"
+            app:layout_constraintLeft_toRightOf="@id/pbText"
+            app:layout_constraintBottom_toBottomOf="@+id/pbText"
+            app:layout_constraintTop_toTopOf="@+id/pbText"
+            android:layout_marginBottom="0dp" />
 
     </android.support.constraint.ConstraintLayout>
 

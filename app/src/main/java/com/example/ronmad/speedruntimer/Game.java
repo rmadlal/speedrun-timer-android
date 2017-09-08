@@ -43,14 +43,6 @@ public class Game implements Serializable {
         categories.put(category, time);
     }
 
-    public String getFormattedBestTime(String category) {
-        return hasCategory(category) ? new SimpleDateFormat(
-                (getBestTime(category) / (1000*3600) > 0 ? "H:mm:ss.SS" : "m:ss.SS"),
-                Locale.getDefault())
-                .format(getBestTime(category))
-                : "";
-    }
-
     public Long addCategory(String category) {
         return categories.putIfAbsent(category, 0L);
     }
@@ -74,9 +66,12 @@ public class Game implements Serializable {
     }
 
     public static String getFormattedBestTime(long time) {
-        return new SimpleDateFormat(
-                (time / (1000*3600) > 0 ? "H:mm:ss.SS" : "m:ss.SS"),
-                Locale.getDefault())
+        int hours = (int) time / (1000*3600);
+        if (hours > 0) {
+            return hours + new SimpleDateFormat(":mm:ss.SS", Locale.getDefault())
+                    .format(time);
+        }
+        return new SimpleDateFormat("m:ss.SS", Locale.getDefault())
                 .format(time);
     }
 }

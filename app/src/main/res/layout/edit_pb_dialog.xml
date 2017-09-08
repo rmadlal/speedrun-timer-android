@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditText
+        android:id="@+id/hours"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/hr_hint"
+        android:inputType="number"
+        android:maxLines="1"
+        android:nextFocusDown="@+id/minutes"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <TextView
+        android:id="@+id/hrMinColon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=":"
+        android:textAppearance="@android:style/TextAppearance"
+        app:layout_constraintLeft_toRightOf="@id/hours"
+        app:layout_constraintBaseline_toBaselineOf="@id/hours"/>
+
+    <EditText
+        android:id="@+id/minutes"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/mins_hint"
+        android:inputType="number"
+        android:maxLines="1"
+        android:nextFocusDown="@+id/seconds"
+        app:layout_constraintLeft_toRightOf="@id/hrMinColon"
+        app:layout_constraintBaseline_toBaselineOf="@id/hrMinColon"/>
+
+    <TextView
+        android:id="@+id/minSecColon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=":"
+        android:textAppearance="@android:style/TextAppearance"
+        app:layout_constraintLeft_toRightOf="@id/minutes"
+        app:layout_constraintBaseline_toBaselineOf="@id/minutes"/>
+
+    <EditText
+        android:id="@+id/seconds"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/secs_hint"
+        android:inputType="number"
+        android:maxLines="1"
+        android:nextFocusDown="@+id/milliseconds"
+        app:layout_constraintLeft_toRightOf="@id/minSecColon"
+        app:layout_constraintBaseline_toBaselineOf="@id/minSecColon"/>
+
+    <TextView
+        android:id="@+id/secMillDot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="."
+        android:textAppearance="@android:style/TextAppearance"
+        app:layout_constraintLeft_toRightOf="@id/seconds"
+        app:layout_constraintBaseline_toBaselineOf="@id/seconds"/>
+
+    <EditText
+        android:id="@+id/milliseconds"
+        android:layout_width="64dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/millis_hint"
+        android:inputType="number"
+        android:maxLines="1"
+        app:layout_constraintLeft_toRightOf="@id/secMillDot"
+        app:layout_constraintBaseline_toBaselineOf="@id/secMillDot"/>
+
+</android.support.constraint.ConstraintLayout>
