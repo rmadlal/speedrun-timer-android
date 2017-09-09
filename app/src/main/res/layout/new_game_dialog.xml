@@ -16,7 +16,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.example.ronmad.speedruntimer.MyAutoCompleteTextView
+    <il.ronmad.speedruntimer.MyAutoCompleteTextView
         android:id="@+id/newGameCategoryInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.example.ronmad.speedruntimer.MyAutoCompleteTextView
+    <il.ronmad.speedruntimer.MyAutoCompleteTextView
         android:id="@+id/newCategoryInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

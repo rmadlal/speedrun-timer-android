@@ -1,4 +1,4 @@
-package com.example.ronmad.speedruntimer;
+package il.ronmad.speedruntimer;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

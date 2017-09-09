@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:context="il.ronmad.speedruntimer.MainActivity">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -14,9 +14,8 @@
 
         <LinearLayout
             android:id="@+id/linearLayout"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
             android:weightSum="3"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -24,24 +23,27 @@
 
             <Spinner
                 android:id="@+id/gameNameSpinner"
-                android:layout_weight="2"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:layout_marginTop="16dp"
+                android:layout_marginLeft="16dp"/>
 
             <Spinner
                 android:id="@+id/categorySpinner"
-                android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp" />
+                android:layout_weight="1"
+                android:layout_marginTop="16dp"
+                android:layout_marginLeft="8dp"/>
 
             <ImageButton
                 android:id="@+id/deleteGameButton"
-                android:layout_weight="0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_weight="0"
+                android:layout_margin="8dp"
+                android:padding="8dp"
                 android:background="@android:color/transparent"
                 android:tint="@color/colorAccent"
                 android:contentDescription="@string/delete_button_desc"
@@ -54,29 +56,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginRight="16dp"
             android:text="@string/pb_text"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="@id/linearLayout"
             app:layout_constraintTop_toBottomOf="@id/linearLayout"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <ImageButton
             android:id="@+id/editPbButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:layout_marginLeft="16dp"
-            android:onClick="editPbButtonPressed"
-            app:srcCompat="@drawable/ic_edit_black_24dp"
+            android:layout_marginLeft="8dp"
+            android:padding="8dp"
             android:tint="@color/colorAccent"
             android:background="@android:color/transparent"
+            android:onClick="editPbButtonPressed"
+            android:contentDescription="@string/edit_pb_button_desc"
+            app:srcCompat="@drawable/ic_edit_black_24dp"
             app:layout_constraintLeft_toRightOf="@id/pbText"
             app:layout_constraintBottom_toBottomOf="@+id/pbText"
-            app:layout_constraintTop_toTopOf="@+id/pbText"
-            android:layout_marginBottom="0dp" />
+            app:layout_constraintTop_toTopOf="@+id/pbText" />
 
     </android.support.constraint.ConstraintLayout>
 

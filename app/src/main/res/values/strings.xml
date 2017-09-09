@@ -16,6 +16,7 @@
     <string name="secs_hint">Secs</string>
     <string name="millis_hint">Millis</string>
     <string name="delete_button_desc">Delete game/category</string>
+    <string name="edit_pb_button_desc">Edit PB of current game and category</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="delete">Delete</string>

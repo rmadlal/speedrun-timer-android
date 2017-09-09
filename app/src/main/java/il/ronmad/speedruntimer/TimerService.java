@@ -1,4 +1,4 @@
-package com.example.ronmad.speedruntimer;
+package il.ronmad.speedruntimer;
 
 import android.app.AlertDialog;
 import android.app.Notification;

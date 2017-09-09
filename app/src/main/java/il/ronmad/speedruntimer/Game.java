@@ -1,4 +1,4 @@
-package com.example.ronmad.speedruntimer;
+package il.ronmad.speedruntimer;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class Game implements Serializable {
+
+    static final long serialVersionUID = Game.class.hashCode();
 
     private String name;
     private Map<String, Long> categories;

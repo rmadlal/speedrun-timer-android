@@ -4,7 +4,7 @@
     android:id="@+id/timer_overlay"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    tools:context=".MainActivity">
+    tools:context="il.ronmad.speedruntimer.MainActivity">
 
     <TextView
         android:id="@+id/chronoRest"

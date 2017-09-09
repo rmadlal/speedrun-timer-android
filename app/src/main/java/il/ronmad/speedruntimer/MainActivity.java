@@ -1,4 +1,4 @@
-package com.example.ronmad.speedruntimer;
+package il.ronmad.speedruntimer;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -318,9 +318,11 @@ public class MainActivity extends AppCompatActivity {
         deleteGameButton.setEnabled(gamesExist);
         deleteGameButton.setColorFilter(ContextCompat.getColor(this,
                 gamesExist ? R.color.colorAccent : R.color.colorAccentSecondary));
+        editPbButton.setVisibility(gamesExist ? View.VISIBLE : View.INVISIBLE);
         if (gamesExist) {
             gameNameSpinnerAdapter.remove(getString(R.string.no_games));
             mSnackbar.dismiss();
+
         }
         else {
             gameNameSpinnerAdapter.add(getString(R.string.no_games));
@@ -332,15 +334,12 @@ public class MainActivity extends AppCompatActivity {
     private void handlePbText() {
         if (currentGame == null) {
             pbText.setVisibility(View.INVISIBLE);
-            editPbButton.setVisibility(View.INVISIBLE);
         }
         else {
             long bestTime = currentGame.getBestTime(currentCategory);
             pbText.setText("PB: " +
                     (bestTime == 0 ? "None yet" : Game.getFormattedBestTime(bestTime)));
             pbText.setVisibility(View.VISIBLE);
-            editPbButton.setVisibility(View.VISIBLE
-            );
         }
     }
 
@@ -507,15 +506,16 @@ public class MainActivity extends AppCompatActivity {
             final EditText millisInput = (EditText) dialogView.findViewById(R.id.milliseconds);
             long bestTime = activity.currentGame.getBestTime(activity.currentCategory);
             if (bestTime > 0) {
-                String bestTimeStr = Game.getFormattedBestTime(bestTime);
-                String[] parts = bestTimeStr.split("[:.]");
-                int j = 0;
-                if (parts.length == 4) {
-                    hoursInput.setText(parts[j++]);
-                }
-                minutesInput.setText(parts[j++]);
-                secondsInput.setText(parts[j++]);
-                millisInput.setText(parts[j]);
+                int hours = (int)(bestTime / (3600 * 1000));
+                int remaining = (int)(bestTime % (3600 * 1000));
+                int minutes = remaining / (60 * 1000);
+                remaining = remaining % (60 * 1000);
+                int seconds = remaining / 1000;
+                int milliseconds = remaining % (1000);
+                hoursInput.setText(hours > 0 ? ""+hours : "");
+                minutesInput.setText(minutes > 0 ? ""+minutes : "");
+                secondsInput.setText(seconds > 0 ? ""+seconds : "");
+                millisInput.setText(milliseconds > 0 ? ""+milliseconds : "");
             }
             return new AlertDialog.Builder(getActivity())
                     .setTitle("Set PB for " + activity.currentGame.getName() + " " + activity.currentCategory)
