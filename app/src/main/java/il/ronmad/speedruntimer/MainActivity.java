@@ -64,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar mSnackbar;
     private SnackbarHandler snackbarHandler;
 
+    // defintetly new and improved, not at all ripped off. and withoutt typos
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
