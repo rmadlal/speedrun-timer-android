@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
 
     private AlertDialog closeTimerDialog;
 
+    // defintetly new and improved, not at all ripped off. and withoutt typos
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
