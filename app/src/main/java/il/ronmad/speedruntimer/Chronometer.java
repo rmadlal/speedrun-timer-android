@@ -9,7 +9,6 @@ import android.os.SystemClock;
 import android.view.View;
 import android.widget.TextView;
 
-import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -22,14 +21,13 @@ public class Chronometer {
     static boolean started;
     static boolean running;
 
-    private long mBase;
+    private long base;
     private long timeElapsed;
     private SimpleDateFormat millisDf;
     private SimpleDateFormat restDf;
     private boolean hoursShowing;
 
-    private Handler mHandler;
-    private static final int TICK_WHAT = 2;
+    private Handler handler;
 
     public Chronometer(Context context, View view) {
 
@@ -43,7 +41,7 @@ public class Chronometer {
 
         millisDf = new SimpleDateFormat(".SS", Locale.getDefault());
 
-        mHandler = new MyHandler(this);
+        handler = new Handler();
 
         init();
     }
@@ -65,13 +63,12 @@ public class Chronometer {
     public void start() {
         started = true;
         running = true;
-        mBase = SystemClock.elapsedRealtime() - timeElapsed;
-        updateRunning();
+        base = SystemClock.elapsedRealtime() - timeElapsed;
+        update();
     }
 
     public void stop() {
         running = false;
-        updateRunning();
     }
 
     public void reset() {
@@ -82,8 +79,8 @@ public class Chronometer {
         return running;
     }
 
-    private synchronized void updateText(long now) {
-        timeElapsed = now - mBase;
+    private void update() {
+        timeElapsed = SystemClock.elapsedRealtime() - base;
 
         int hours = (int) (timeElapsed / (3600 * 1000));
         if (hours > 0) {
@@ -91,14 +88,18 @@ public class Chronometer {
                 restDf = new SimpleDateFormat(":mm:ss", Locale.getDefault());
                 hoursShowing = true;
             }
-            chronoRest.setText(hours + restDf.format(timeElapsed));
-        }
-        else {
+            chronoRest.setText(String.format(Locale.getDefault(),
+                    "%d%s", hours, restDf.format(timeElapsed)));
+        } else {
             chronoRest.setText(restDf.format(timeElapsed));
         }
 
         chronoMillis.setText(millisDf.format(timeElapsed));
         updateColor();
+
+        if (running) {
+            handler.postDelayed(this::update, 15);
+        }
     }
 
     private void updateColor() {
@@ -111,39 +112,13 @@ public class Chronometer {
             chronoMillis.setTextColor(colorAhead);
             chronoRest.setTextColor(colorAhead);
 
-        }
-        else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
+        } else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
             chronoMillis.setTextColor(colorBehind);
             chronoRest.setTextColor(colorBehind);
         }
     }
 
-    private void updateRunning() {
-        if (running) {
-            updateText(SystemClock.elapsedRealtime());
-            mHandler.sendMessageDelayed(Message.obtain(mHandler, TICK_WHAT), 15);
-        } else {
-            mHandler.removeMessages(TICK_WHAT);
-        }
-    }
-
     public long getTimeElapsed() {
         return timeElapsed;
-    }
-
-    private static class MyHandler extends Handler {
-        private final WeakReference<Chronometer> instance;
-
-        MyHandler(Chronometer instance) {
-            this.instance = new WeakReference<>(instance);
-        }
-
-        public void handleMessage(Message m) {
-            Chronometer mChronometer = instance.get();
-            if (mChronometer != null && mChronometer.isRunning()) {
-                mChronometer.updateText(SystemClock.elapsedRealtime());
-                sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15);
-            }
-        }
     }
 }

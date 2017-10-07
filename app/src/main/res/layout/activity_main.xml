@@ -6,96 +6,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="il.ronmad.speedruntimer.MainActivity">
+    tools:context=".MainActivity">
 
-    <android.support.constraint.ConstraintLayout
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:theme="@android:style/Theme.Material">
 
-        <LinearLayout
-            android:id="@+id/linearLayout"
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:weightSum="3"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent">
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-            <Spinner
-                android:id="@+id/gameNameSpinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:layout_marginTop="16dp"
-                android:layout_marginLeft="16dp"/>
+    </android.support.design.widget.AppBarLayout>
 
-            <Spinner
-                android:id="@+id/categorySpinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginTop="16dp"
-                android:layout_marginLeft="8dp"/>
-
-            <ImageButton
-                android:id="@+id/deleteGameButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:layout_margin="8dp"
-                android:padding="8dp"
-                android:background="@android:color/transparent"
-                android:tint="@color/colorAccent"
-                android:contentDescription="@string/delete_button_desc"
-                app:srcCompat="@drawable/ic_delete_black_24dp" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/pbText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginLeft="24dp"
-            android:layout_marginBottom="16dp"
-            android:layout_marginRight="16dp"
-            android:text="@string/pb_text"
-            android:textSize="16sp"
-            app:layout_constraintLeft_toLeftOf="@id/linearLayout"
-            app:layout_constraintTop_toBottomOf="@id/linearLayout"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <ImageButton
-            android:id="@+id/editPbButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:padding="8dp"
-            android:tint="@color/colorAccent"
-            android:background="@android:color/transparent"
-            android:onClick="editPbButtonPressed"
-            android:contentDescription="@string/edit_pb_button_desc"
-            app:srcCompat="@drawable/ic_edit_black_24dp"
-            app:layout_constraintLeft_toRightOf="@id/pbText"
-            app:layout_constraintBottom_toBottomOf="@+id/pbText"
-            app:layout_constraintTop_toTopOf="@+id/pbText" />
-
-    </android.support.constraint.ConstraintLayout>
+    <include
+        android:id="@+id/main"
+        layout="@layout/content_main" />
 
     <Button
         android:id="@+id/startButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:onClick="launchTimerButtonPressed"
-        android:text="@string/start_button" />
+        android:text="@string/start_button"
+        android:textSize="16sp"
+        android:onClick="launchTimerButtonPressed" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:layout_gravity="bottom|right"
         android:clickable="true"
         android:onClick="addGameButtonPressed"

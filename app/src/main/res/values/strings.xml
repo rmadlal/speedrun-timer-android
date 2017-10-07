@@ -3,6 +3,7 @@
     <string name="app_name">Speedrun Timer</string>
 
     <string name="no_games">No games</string>
+    <string name="new_category">"New category..."</string>
     <string name="chrono_millis">.00</string>
     <string name="chrono_rest">0:00</string>
     <string name="start_button">Run</string>
@@ -10,17 +11,26 @@
     <string name="hint_game_title">Game title</string>
     <string name="hint_game_category">Category</string>
     <string name="game_text">Game</string>
-    <string name="pb_text">PB: 0:00.0</string>
+    <string name="pb_text">Personal best:</string>
+    <string name="pb_time">0:00.00</string>
     <string name="hr_hint">Hrs</string>
     <string name="mins_hint">Mins</string>
     <string name="secs_hint">Secs</string>
     <string name="millis_hint">Millis</string>
     <string name="delete_button_desc">Delete game/category</string>
     <string name="edit_pb_button_desc">Edit PB of current game and category</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
+    <string name="save_reset">Save &amp; reset</string>
+    <string name="reset">Reset</string>
+    <string name="create">Create</string>
+    <string name="apply">Apply</string>
     <string name="delete">Delete</string>
     <string name="pb_clear">Clear</string>
+    <string name="close">Close</string>
+    <string name="undo">Undo</string>
+    <string name="close_timer">Close timer</string>
+    <string name="menu_delete_game">Delete game</string>
+    <string name="menu_edit_pb">Edit PB</string>
+    <string name="error_empty_game">Title must not be empty</string>
 
     <string-array name="category_autocomplete">
         <item>Any%</item>
@@ -28,7 +38,15 @@
         <item>Low%</item>
     </string-array>
 
+    <!-- Intent actions and extras -->
+    <string name="action_close_timer">il.ronmad.speedruntimer.ACTION_CLOSE_TIMER</string>
+    <string name="action_save_best_time">il.ronmad.speedruntimer.ACTION_SAVE_BEST_TIME</string>
+    <string name="games">il.ronmad.speedruntimer.GAMES</string>
+    <string name="spinner_pos">il.ronmad.speedruntimer.SPINNER_POS</string>
+    <string name="game">il.ronmad.speedruntimer.GAME</string>
+    <string name="category_name">il.ronmad.speedruntimer.CATEGORY_NAME</string>
+    <string name="best_time">il.ronmad.speedruntimer.BEST_TIME</string>
+
     <integer name="notification_id">1234</integer>
-    <string name="title_activity_settings">Settings</string>
 
 </resources>

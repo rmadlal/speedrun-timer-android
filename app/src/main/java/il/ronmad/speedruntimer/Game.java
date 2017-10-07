@@ -1,14 +1,10 @@
 package il.ronmad.speedruntimer;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class Game implements Serializable {
-
-    static final long serialVersionUID = Game.class.hashCode();
+public class Game {
 
     private String name;
     private Map<String, Long> categories;
@@ -69,11 +65,18 @@ public class Game implements Serializable {
 
     public static String getFormattedBestTime(long time) {
         int hours = (int) time / (1000*3600);
+        int remaining = (int)(time % (3600 * 1000));
+        int minutes = remaining / (60 * 1000);
+        remaining = remaining % (60 * 1000);
+        int seconds = remaining / 1000;
+        int millis = (remaining % 1000) / 10;
         if (hours > 0) {
-            return hours + new SimpleDateFormat(":mm:ss.SS", Locale.getDefault())
-                    .format(time);
+            return String.format(Locale.getDefault(), "%d:%02d:%02d.%02d", hours, minutes, seconds, millis);
         }
-        return new SimpleDateFormat("m:ss.SS", Locale.getDefault())
-                .format(time);
+        if (minutes > 0) {
+            return String.format(Locale.getDefault(), "%d:%02d.%02d", minutes, seconds, millis);
+
+        }
+        return String.format(Locale.getDefault(), "%d.%02d", seconds, millis);
     }
 }
