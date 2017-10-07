@@ -42,7 +42,11 @@ public class Game {
     }
 
     public Long addCategory(String category) {
-        return categories.putIfAbsent(category, 0L);
+        Long v = categories.get(category);
+        if (v == null) {
+            v = categories.put(category, 0L);
+        }
+        return v;
     }
 
     public void removeCategory(String category) {

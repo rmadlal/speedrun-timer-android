@@ -1,18 +1,21 @@
 package il.ronmad.speedruntimer;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class Chronometer {
+
+    private Context context;
 
     private TextView chronoMillis;
     private TextView chronoRest;
@@ -27,9 +30,11 @@ public class Chronometer {
     private SimpleDateFormat restDf;
     private boolean hoursShowing;
 
-    private Handler handler;
+    private Handler chronoHandler;
+    private static final int TICK_WHAT = 2;
 
     public Chronometer(Context context, View view) {
+        this.context = context;
 
         chronoMillis = (TextView) view.findViewById(R.id.chronoMillis);
         chronoRest = (TextView) view.findViewById(R.id.chronoRest);
@@ -41,7 +46,7 @@ public class Chronometer {
 
         millisDf = new SimpleDateFormat(".SS", Locale.getDefault());
 
-        handler = new Handler();
+        chronoHandler = new ChronoHandler(this);
 
         init();
     }
@@ -56,19 +61,20 @@ public class Chronometer {
         chronoMillis.setText(R.string.chrono_millis);
         chronoRest.setText(R.string.chrono_rest);
 
-        chronoMillis.setTextColor(Color.DKGRAY);
-        chronoRest.setTextColor(Color.DKGRAY);
+        chronoMillis.setTextColor(ContextCompat.getColor(context, android.R.color.primary_text_light));
+        chronoRest.setTextColor(ContextCompat.getColor(context, android.R.color.primary_text_light));
     }
 
     public void start() {
         started = true;
         running = true;
         base = SystemClock.elapsedRealtime() - timeElapsed;
-        update();
+        updateRunning();
     }
 
     public void stop() {
         running = false;
+        updateRunning();
     }
 
     public void reset() {
@@ -96,18 +102,14 @@ public class Chronometer {
 
         chronoMillis.setText(millisDf.format(timeElapsed));
         updateColor();
-
-        if (running) {
-            handler.postDelayed(this::update, 15);
-        }
     }
 
     private void updateColor() {
         if (bestTime == 0) {
             return;
         }
-        int colorAhead = Color.parseColor("#007000");
-        int colorBehind = Color.parseColor("#700000");
+        int colorAhead = ContextCompat.getColor(context, R.color.timerAhead);
+        int colorBehind = ContextCompat.getColor(context, R.color.timerBehind);
         if (timeElapsed < bestTime && chronoMillis.getCurrentTextColor() != colorAhead) {
             chronoMillis.setTextColor(colorAhead);
             chronoRest.setTextColor(colorAhead);
@@ -118,7 +120,32 @@ public class Chronometer {
         }
     }
 
+    private void updateRunning() {
+        if (running) {
+            update();
+            chronoHandler.sendMessageDelayed(Message.obtain(chronoHandler, TICK_WHAT), 15);
+        } else {
+            chronoHandler.removeMessages(TICK_WHAT);
+        }
+    }
+
     public long getTimeElapsed() {
         return timeElapsed;
+    }
+
+    private static class ChronoHandler extends Handler {
+        private final WeakReference<Chronometer> instance;
+
+        ChronoHandler(Chronometer instance) {
+            this.instance = new WeakReference<>(instance);
+        }
+
+        public void handleMessage(Message m) {
+            Chronometer mChronometer = instance.get();
+            if (mChronometer != null && mChronometer.isRunning()) {
+                mChronometer.update();
+                sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15);
+            }
+        }
     }
 }

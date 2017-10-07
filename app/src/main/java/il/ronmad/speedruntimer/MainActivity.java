@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +15,7 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -36,7 +36,6 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -116,25 +115,29 @@ public class MainActivity extends AppCompatActivity {
         if (backFromPermissionCheck) {
             backFromPermissionCheck = false;
             if (Build.VERSION.SDK_INT >= 23) {
-                // All of this is because the permission takes time to register.
-                Handler handler = new Handler();
-                handler.postDelayed(() -> {
-                    if (Settings.canDrawOverlays(this)) {
-                        startTimerService();
-                    } else {
-                        handler.postDelayed(() -> {
-                            if (Settings.canDrawOverlays(this)) {
-                                startTimerService();
-                            } else {
-                                handler.postDelayed(() -> {
-                                    if (Settings.canDrawOverlays(this)) {
-                                        startTimerService();
-                                    }
-                                }, 500);
-                            }
-                        }, 500);
-                    }
-                }, 500);
+                if (Settings.canDrawOverlays(this)) {
+                    startTimerService();
+                } else {
+                    // All of this is because the permission may take time to register.
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        if (Settings.canDrawOverlays(this)) {
+                            startTimerService();
+                        } else {
+                            handler.postDelayed(() -> {
+                                if (Settings.canDrawOverlays(this)) {
+                                    startTimerService();
+                                } else {
+                                    handler.postDelayed(() -> {
+                                        if (Settings.canDrawOverlays(this)) {
+                                            startTimerService();
+                                        }
+                                    }, 500);
+                                }
+                            }, 500);
+                        }
+                    }, 500);
+                }
             }
         } else {
             stopService(new Intent(this, TimerService.class));
@@ -216,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case OVERLAY_REQUEST_CODE: {
                 if (Build.VERSION.SDK_INT >= 23) {
-                    if (resultCode == RESULT_OK) {
+                    if (Settings.canDrawOverlays(this)) {
                         startTimerService();
                     }
                 } else {
@@ -323,7 +326,9 @@ public class MainActivity extends AppCompatActivity {
         categorySpinnerAdapter.clear();
         if (currentGame != null) {
             categorySpinnerAdapter.add(getString(R.string.new_category));
-            currentGame.getCategories().forEach((category, bestTime) -> categorySpinnerAdapter.insert(category, 0));
+            for (String category : currentGame.getCategories().keySet()) {
+                categorySpinnerAdapter.insert(category, 0);
+            }
         }
         categorySpinnerAdapter.notifyDataSetChanged();
         setSpinnerSelection(categorySpinner, currentGame == null ? -1 : currentGame.getLastSelectedCategoryPosition());
@@ -408,7 +413,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             long bestTime = currentGame.getBestTime(currentCategory);
             pbTime.setText(bestTime == 0 ? "None yet" : Game.getFormattedBestTime(bestTime));
-            pbTime.setTextColor(bestTime == 0 ? Color.DKGRAY : getResources().getColor(R.color.colorAccent));
+            pbTime.setTextColor(ContextCompat.getColor(this,
+                    bestTime == 0 ? android.R.color.primary_text_light : R.color.colorAccent));
             pbText.setVisibility(View.VISIBLE);
             pbTime.setVisibility(View.VISIBLE);
         }

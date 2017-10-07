@@ -1,9 +1,7 @@
-*.iml
 .gradle
-/local.properties
-/.idea/
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-img/Thumbs.db
+.idea/
+build/
+app/app-release.apk
+img/Image1.png
+img/set-timer-button.png
+**/Thumbs.db

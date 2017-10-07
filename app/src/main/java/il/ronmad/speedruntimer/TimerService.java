@@ -63,7 +63,7 @@ public class TimerService extends Service {
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         new Intent(this, MainActivity.class),
                         PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(android.R.drawable.ic_delete, getString(R.string.close_timer),
+                .addAction(R.drawable.ic_close_black_24dp, getString(R.string.close_timer),
                         PendingIntent.getBroadcast(this, 0,
                                 new Intent(getString(R.string.action_close_timer)),
                                 PendingIntent.FLAG_UPDATE_CURRENT))
