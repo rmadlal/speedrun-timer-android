@@ -33,8 +33,13 @@ public class MyAutoCompleteTextView extends AppCompatAutoCompleteTextView {
     protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
 
+        if (getWindowVisibility() != VISIBLE) {
+            return;
+        }
         if (focused) {
             showDropDown();
+        } else {
+            dismissDropDown();
         }
     }
 

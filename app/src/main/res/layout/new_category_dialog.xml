@@ -14,7 +14,6 @@
         android:layout_height="wrap_content"
         android:inputType="textNoSuggestions"
         android:hint="@string/hint_game_category"
-        android:layout_margin="8dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

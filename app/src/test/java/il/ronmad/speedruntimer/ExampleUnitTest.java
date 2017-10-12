@@ -1,5 +1,7 @@
 package il.ronmad.speedruntimer;
 
+import android.graphics.Color;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -26,5 +28,10 @@ public class ExampleUnitTest {
         assertEquals(5, minutes);
         assertEquals(27, seconds);
         assertEquals(43, milliseconds);
+    }
+
+    @Test
+    public void testAlpha() throws Exception {
+        System.out.println(Color.alpha(Color.argb(255, 255, 255, 255)));
     }
 }

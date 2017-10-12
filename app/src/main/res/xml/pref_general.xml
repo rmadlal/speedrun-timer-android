@@ -1,0 +1,41 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="Color preferences">
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_color_neutral"
+            android:title="@string/color_neutral_title"
+            android:defaultValue="@color/timerNeutralColorDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_color_ahead"
+            android:title="@string/color_ahead_title"
+            android:defaultValue="@color/timerAheadColorDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_color_behind"
+            android:title="@string/color_behind_title"
+            android:defaultValue="@color/timerBehindColorDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_color_pb"
+            android:title="@string/color_pb_title"
+            android:defaultValue="@color/timerPBColorDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

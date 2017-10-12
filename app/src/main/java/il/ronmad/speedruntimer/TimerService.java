@@ -7,9 +7,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,7 +25,7 @@ import com.google.gson.GsonBuilder;
 
 public class TimerService extends Service {
 
-    public static boolean IS_RUNNING = false;
+    public static boolean IS_ACTIVE = false;
 
     private Gson gson;
 
@@ -48,13 +51,12 @@ public class TimerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        IS_RUNNING = true;
+        IS_ACTIVE = true;
 
         gson = new GsonBuilder().create();
         Game game = gson.fromJson(intent.getStringExtra(getString(R.string.game)), Game.class);
         String category = intent.getStringExtra(getString(R.string.category_name));
         bestTime = game.getBestTime(category);
-        Chronometer.bestTime = bestTime;
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this)
@@ -77,6 +79,18 @@ public class TimerService extends Service {
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        Chronometer.bestTime = bestTime;
+        Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_color_neutral),
+                ContextCompat.getColor(this, R.color.timerNeutralColorDefault));
+        Chronometer.colorAhead = prefs.getInt(getString(R.string.key_color_ahead),
+                ContextCompat.getColor(this, R.color.timerAheadColorDefault));
+        Chronometer.colorBehind = prefs.getInt(getString(R.string.key_color_behind),
+                ContextCompat.getColor(this, R.color.timerBehindColorDefault));
+        Chronometer.colorPB = prefs.getInt(getString(R.string.key_color_pb),
+                ContextCompat.getColor(this, R.color.timerPBColorDefault));
+
         setupLayoutComponents();
         setupView();
 
@@ -89,7 +103,7 @@ public class TimerService extends Service {
             mWindowManager.removeView(mView);
         }
 
-        IS_RUNNING = false;
+        IS_ACTIVE = false;
         super.onDestroy();
     }
 

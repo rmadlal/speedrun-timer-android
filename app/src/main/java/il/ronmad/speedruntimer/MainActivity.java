@@ -65,6 +65,11 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar mSnackbar;
 
     private AlertDialog closeTimerDialog;
+    private AlertDialog timerOpenOnResumeDialog;
+
+    private static final String NEW_GAME_DIALOG_TAG = "NewGameDialog";
+    private static final String NEW_CATEGORY_DIALOG_TAG = "NewCategoryDialog";
+    private static final String EDIT_PB_DIALOG_TAG = "EditPBDialog";
 
     // defintetly new and improved, not at all ripped off. and withoutt typos
 
@@ -103,6 +108,16 @@ public class MainActivity extends AppCompatActivity {
                         stopService(new Intent(this, TimerService.class)))
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();
+        timerOpenOnResumeDialog = new AlertDialog.Builder(this)
+                .setMessage("Timer must be closed in order to use the app.")
+                .setPositiveButton(R.string.close, (dialogInterface, i) ->
+                        stopService(new Intent(this, TimerService.class)))
+                .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
+                    Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                    homeIntent.addCategory(Intent.CATEGORY_HOME);
+                    startActivity(homeIntent);
+                })
+                .create();
 
         setupSpinners();
         setupReceiver();
@@ -114,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (backFromPermissionCheck) {
             backFromPermissionCheck = false;
-            if (Build.VERSION.SDK_INT >= 23) {
+            if (Build.VERSION.SDK_INT >= 23 && !TimerService.IS_ACTIVE) {
                 if (Settings.canDrawOverlays(this)) {
                     startTimerService();
                 } else {
@@ -139,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
                     }, 500);
                 }
             }
-        } else {
-            stopService(new Intent(this, TimerService.class));
+        } else if (TimerService.IS_ACTIVE) {
+            timerOpenOnResumeDialog.show();
         }
         if (pbTime != null) {
             handlePBDisplay();
@@ -190,7 +205,10 @@ public class MainActivity extends AppCompatActivity {
                 actionDeleteGame();
                 return true;
             case R.id.action_edit_pb:
-                new MyDialog().show(getFragmentManager(), "EditPBDialog");
+                new MyDialog().show(getFragmentManager(), EDIT_PB_DIALOG_TAG);
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -235,13 +253,14 @@ public class MainActivity extends AppCompatActivity {
         homeIntent.addCategory(Intent.CATEGORY_HOME);
         startActivity(homeIntent);
 
-        if (TimerService.IS_RUNNING) {
+        if (TimerService.IS_ACTIVE) {
             stopService(new Intent(this, TimerService.class));
         }
         Intent serviceIntent = new Intent(this, TimerService.class);
         serviceIntent.putExtra(getString(R.string.game), gson.toJson(currentGame));
         serviceIntent.putExtra(getString(R.string.category_name), currentCategory);
         startService(serviceIntent);
+        TimerService.IS_ACTIVE = true;
     }
 
     private void setupSpinners() {
@@ -359,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void addGameButtonPressed(View view) {
         mSnackbar.dismiss();
-        new MyDialog().show(getFragmentManager(), "NewGameDialog");
+        new MyDialog().show(getFragmentManager(), NEW_GAME_DIALOG_TAG);
     }
 
     private void actionDeleteCategory() {
@@ -388,7 +407,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void newCategoryItemSelected() {
         categorySpinner.setSelection(categorySpinnerAdapter.getPosition(currentCategory));
-        new MyDialog().show(getFragmentManager(), "NewCategoryDialog");
+        new MyDialog().show(getFragmentManager(), NEW_CATEGORY_DIALOG_TAG);
     }
 
     private void handleUIInteraction() {
@@ -481,13 +500,13 @@ public class MainActivity extends AppCompatActivity {
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             activity = (MainActivity) getActivity();
             inflater = activity.getLayoutInflater();
-            if (getTag().equals("NewGameDialog")) {
+            if (getTag().equals(NEW_GAME_DIALOG_TAG)) {
                 return createNewGameDialog();
             }
-            if (getTag().equals("NewCategoryDialog")) {
+            if (getTag().equals(NEW_CATEGORY_DIALOG_TAG)) {
                 return createNewCategoryDialog();
             }
-            if (getTag().equals("EditPBDialog")) {
+            if (getTag().equals(EDIT_PB_DIALOG_TAG)) {
                 return createEditPBDialog();
             }
             return null;
@@ -551,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle(String.format("Edit best time for %s %s", activity.currentGame.getName(), activity.currentCategory))
                     .setView(dialogView)
-                    .setPositiveButton(R.string.apply, (dialogInterface, i) -> {
+                    .setPositiveButton(R.string.save, (dialogInterface, i) -> {
                         long newTime = getTimeFromEditTexts();
                         activity.updateBestTime(newTime);
                         showEditedPBSnackbar(bestTime, newTime == 0);

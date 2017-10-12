@@ -20,7 +20,11 @@ public class Chronometer {
     private TextView chronoMillis;
     private TextView chronoRest;
 
-    static long bestTime;
+    static long bestTime = 0;
+    static int colorNeutral;
+    static int colorAhead;
+    static int colorBehind;
+    static int colorPB;
     static boolean started;
     static boolean running;
 
@@ -61,8 +65,7 @@ public class Chronometer {
         chronoMillis.setText(R.string.chrono_millis);
         chronoRest.setText(R.string.chrono_rest);
 
-        chronoMillis.setTextColor(ContextCompat.getColor(context, android.R.color.primary_text_light));
-        chronoRest.setTextColor(ContextCompat.getColor(context, android.R.color.primary_text_light));
+        setColor(colorNeutral);
     }
 
     public void start() {
@@ -75,6 +78,9 @@ public class Chronometer {
     public void stop() {
         running = false;
         updateRunning();
+        if (bestTime == 0 || timeElapsed < bestTime) {
+            setColor(colorPB);
+        }
     }
 
     public void reset() {
@@ -108,15 +114,11 @@ public class Chronometer {
         if (bestTime == 0) {
             return;
         }
-        int colorAhead = ContextCompat.getColor(context, R.color.timerAhead);
-        int colorBehind = ContextCompat.getColor(context, R.color.timerBehind);
         if (timeElapsed < bestTime && chronoMillis.getCurrentTextColor() != colorAhead) {
-            chronoMillis.setTextColor(colorAhead);
-            chronoRest.setTextColor(colorAhead);
+            setColor(colorAhead);
 
         } else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
-            chronoMillis.setTextColor(colorBehind);
-            chronoRest.setTextColor(colorBehind);
+            setColor(colorBehind);
         }
     }
 
@@ -131,6 +133,11 @@ public class Chronometer {
 
     public long getTimeElapsed() {
         return timeElapsed;
+    }
+
+    public void setColor(int color) {
+        chronoMillis.setTextColor(color);
+        chronoRest.setTextColor(color);
     }
 
     private static class ChronoHandler extends Handler {
