@@ -4,5 +4,5 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:maxLines="1"
-    android:textAppearance="@android:style/TextAppearance.Material.Headline"
+    android:textAppearance="@android:style/TextAppearance.Material.Title"
     android:textAlignment="inherit" />

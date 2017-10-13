@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
@@ -14,6 +15,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -28,6 +30,7 @@ public class TimerService extends Service {
     public static boolean IS_ACTIVE = false;
 
     private Gson gson;
+    private SharedPreferences prefs;
 
     private View mView;
     private Chronometer chronometer;
@@ -79,7 +82,7 @@ public class TimerService extends Service {
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         Chronometer.bestTime = bestTime;
         Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_color_neutral),
@@ -100,6 +103,12 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         if (mView != null) {
+            Log.v("x", ""+mWindowsParams.x);
+            Log.v("y", ""+mWindowsParams.y);
+            prefs.edit()
+                    .putInt(getString(R.string.key_timer_pos_x), mWindowsParams.x)
+                    .putInt(getString(R.string.key_timer_pos_y), mWindowsParams.y)
+                    .apply();
             mWindowManager.removeView(mView);
         }
 
@@ -170,34 +179,43 @@ public class TimerService extends Service {
             }
         });
 
-        mView.setOnLongClickListener(view -> {
-            if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
-                return false;
-            }
-            if (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime) {
-                chronometer.reset();
-            } else if (!Chronometer.running) {
-                AlertDialog resetDialog = new AlertDialog.Builder(getApplicationContext())
-                    .setTitle("New personal best!")
-                    .setMessage("Save it?")
-                    .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
-                        bestTime = chronometer.getTimeElapsed();
-                        chronometer.reset();
-                        Chronometer.bestTime = bestTime;
-                        notificationBuilder.setContentText(String.format("Best time: %s", Game.getFormattedBestTime(bestTime)));
-                        notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
-                        Intent intent = new Intent(getString(R.string.action_save_best_time));
-                        intent.putExtra(getString(R.string.best_time), bestTime);
-                        sendBroadcast(intent);
-                    })
-                    .setNegativeButton(R.string.reset, (dialogInterface, i) -> chronometer.reset())
-                    .setNeutralButton(android.R.string.cancel, null)
-                    .create();
-                resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-                resetDialog.show();
-            }
-            return true;
-        });
+        mView.setOnLongClickListener(new View.OnLongClickListener() {
+             @Override
+             public boolean onLongClick(View view) {
+                 if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
+                     return false;
+                 }
+                 if (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime) {
+                     chronometer.reset();
+                 } else if (!Chronometer.running) {
+                     AlertDialog resetDialog = new AlertDialog.Builder(getApplicationContext())
+                             .setTitle("New personal best!")
+                             .setMessage("Save it?")
+                             .setPositiveButton(R.string.save_reset, new DialogInterface.OnClickListener() {
+                                 @Override
+                                 public void onClick(DialogInterface dialogInterface, int i) {
+
+                                     bestTime = chronometer.getTimeElapsed();
+                                     chronometer.reset();
+                                     Chronometer.bestTime = bestTime;
+                                     notificationBuilder.setContentText(String.format("Best time: %s", Game.getFormattedBestTime(bestTime)));
+                                     notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
+                                     Intent intent = new Intent(getString(R.string.action_save_best_time));
+                                     intent.putExtra(getString(R.string.best_time), bestTime);
+                                     sendBroadcast(intent);
+                                 }})
+                             .setNegativeButton(R.string.reset, new DialogInterface.OnClickListener() {
+                                 @Override
+                                 public void onClick(DialogInterface dialogInterface, int i) {
+                                     chronometer.reset();
+                                 }})
+                             .setNeutralButton(android.R.string.cancel, null)
+                             .create();
+                     resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                     resetDialog.show();
+                 }
+                 return true;
+        }});
     }
 
     WindowManager.LayoutParams mWindowsParams;
@@ -213,6 +231,12 @@ public class TimerService extends Service {
                 PixelFormat.TRANSLUCENT);
 
         mWindowsParams.gravity = Gravity.BOTTOM | Gravity.END;
+        if (prefs.contains(getString(R.string.key_timer_pos_x))) {
+            int x = prefs.getInt(getString(R.string.key_timer_pos_x), 0);
+            int y = prefs.getInt(getString(R.string.key_timer_pos_y), 0);
+            mWindowsParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowsParams.width));
+            mWindowsParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowsParams.height));
+        }
         mWindowManager.addView(mView, mWindowsParams);
     }
 }

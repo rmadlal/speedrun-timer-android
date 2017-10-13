@@ -5,7 +5,6 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.TextView;
 
@@ -14,8 +13,6 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class Chronometer {
-
-    private Context context;
 
     private TextView chronoMillis;
     private TextView chronoRest;
@@ -38,8 +35,6 @@ public class Chronometer {
     private static final int TICK_WHAT = 2;
 
     public Chronometer(Context context, View view) {
-        this.context = context;
-
         chronoMillis = (TextView) view.findViewById(R.id.chronoMillis);
         chronoRest = (TextView) view.findViewById(R.id.chronoRest);
 

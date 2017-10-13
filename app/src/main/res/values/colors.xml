@@ -8,6 +8,6 @@
     <color name="timerNeutralColorDefault">#A0000000</color>
     <color name="timerAheadColorDefault">#A0006000</color>
     <color name="timerBehindColorDefault">#A0600000</color>
-    <color name="timerPBColorDefault">#0000A0</color>
+    <color name="timerPBColorDefault">#A00000A0</color>
 
 </resources>

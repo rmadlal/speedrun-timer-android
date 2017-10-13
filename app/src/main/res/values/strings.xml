@@ -65,5 +65,7 @@
     <string name="key_color_ahead">color_ahead</string>
     <string name="key_color_behind">color_behind</string>
     <string name="key_color_pb">color_pb</string>
+    <string name="key_timer_pos_x">timer_x</string>
+    <string name="key_timer_pos_y">timer_y</string>
 
 </resources>
