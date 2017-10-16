@@ -18,7 +18,10 @@
         android:maxLines="1"
         android:nextFocusDown="@+id/minutes"
         android:selectAllOnFocus="true"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/hrMinColon"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_bias="0" />
 
     <TextView
         android:id="@+id/hrMinColon"
@@ -27,7 +30,10 @@
         android:text=":"
         android:textAppearance="@android:style/TextAppearance.Material.Title"
         app:layout_constraintLeft_toRightOf="@id/hours"
-        app:layout_constraintBaseline_toBaselineOf="@id/hours" />
+        app:layout_constraintRight_toLeftOf="@+id/minutes"
+        app:layout_constraintBaseline_toBaselineOf="@id/hours"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp" />
 
     <EditText
         android:id="@+id/minutes"
@@ -40,6 +46,7 @@
         android:nextFocusDown="@+id/seconds"
         android:selectAllOnFocus="true"
         app:layout_constraintLeft_toRightOf="@id/hrMinColon"
+        app:layout_constraintRight_toLeftOf="@+id/minSecColon"
         app:layout_constraintBaseline_toBaselineOf="@id/hrMinColon" />
 
     <TextView
@@ -49,7 +56,10 @@
         android:text=":"
         android:textAppearance="@android:style/TextAppearance.Material.Title"
         app:layout_constraintLeft_toRightOf="@id/minutes"
-        app:layout_constraintBaseline_toBaselineOf="@id/minutes" />
+        app:layout_constraintRight_toLeftOf="@+id/seconds"
+        app:layout_constraintBaseline_toBaselineOf="@id/minutes"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp" />
 
     <EditText
         android:id="@+id/seconds"
@@ -62,6 +72,7 @@
         android:nextFocusDown="@+id/milliseconds"
         android:selectAllOnFocus="true"
         app:layout_constraintLeft_toRightOf="@id/minSecColon"
+        app:layout_constraintRight_toLeftOf="@+id/secMillDot"
         app:layout_constraintBaseline_toBaselineOf="@id/minSecColon" />
 
     <TextView
@@ -71,7 +82,10 @@
         android:text="."
         android:textAppearance="@android:style/TextAppearance.Material.Title"
         app:layout_constraintLeft_toRightOf="@id/seconds"
-        app:layout_constraintBaseline_toBaselineOf="@id/seconds" />
+        app:layout_constraintRight_toLeftOf="@+id/milliseconds"
+        app:layout_constraintBaseline_toBaselineOf="@id/seconds"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp" />
 
     <EditText
         android:id="@+id/milliseconds"
@@ -83,6 +97,7 @@
         android:maxLines="1"
         android:selectAllOnFocus="true"
         app:layout_constraintLeft_toRightOf="@id/secMillDot"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBaseline_toBaselineOf="@id/secMillDot" />
 
 </android.support.constraint.ConstraintLayout>

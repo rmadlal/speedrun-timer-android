@@ -15,7 +15,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -82,7 +81,7 @@ public class TimerService extends Service {
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         Chronometer.bestTime = bestTime;
         Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_color_neutral),
@@ -103,8 +102,6 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         if (mView != null) {
-            Log.v("x", ""+mWindowsParams.x);
-            Log.v("y", ""+mWindowsParams.y);
             prefs.edit()
                     .putInt(getString(R.string.key_timer_pos_x), mWindowsParams.x)
                     .putInt(getString(R.string.key_timer_pos_y), mWindowsParams.y)

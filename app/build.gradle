@@ -10,27 +10,26 @@ android {
         }
     }
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 3
-        versionName '1.2'
+        versionCode 5
+        versionName '1.4'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
-    testOptions {
-        unitTests.returnDefaultValues = true
-    }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
         }
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
     productFlavors {
     }

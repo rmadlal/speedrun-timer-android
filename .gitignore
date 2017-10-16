@@ -1,6 +1,7 @@
-.gradle
+.gradle/
 .idea/
 build/
+temp/
 app/app-release.apk
 img/Image1.png
 img/set-timer-button.png

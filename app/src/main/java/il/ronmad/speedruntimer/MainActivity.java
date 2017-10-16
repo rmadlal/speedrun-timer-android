@@ -19,7 +19,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -57,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     private Spinner categorySpinner;
     private ArrayAdapter<String> categorySpinnerAdapter;
 
-    private Toolbar toolbar;
     private Button letsGoButton;
     private TextView pbText;
     private TextView pbTime;
@@ -78,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         sharedPrefs = getPreferences(MODE_PRIVATE);
@@ -91,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
         mSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
 
         String savedData = sharedPrefs.getString(getString(R.string.games), "");
-        Log.v("savedData", savedData.isEmpty() ? "Nothing" : savedData);
         if (savedData.isEmpty()) {
             games = new ArrayList<>();
             new Handler().postDelayed(new Runnable() {
@@ -572,6 +569,12 @@ public class MainActivity extends AppCompatActivity {
                             if (newGameName.isEmpty()) {
                                 newGameInput.setError(getString(R.string.error_empty_game));
                                 newGameInput.requestFocus();
+                            } else if (newCategory.isEmpty()) {
+                                newCategoryInput.setError(getString(R.string.error_empty_category));
+                                newCategoryInput.requestFocus();
+                            } else if (activity.currentGame.hasCategory(newCategory)) {
+                                newCategoryInput.setError(getString(R.string.error_category_already_exists));
+                                newCategoryInput.requestFocus();
                             } else {
                                 activity.addGameAndCategory(newGameName, newCategory);
                                 dialog.dismiss();
@@ -586,21 +589,35 @@ public class MainActivity extends AppCompatActivity {
         private AlertDialog createNewCategoryDialog() {
             View dialogView = inflater.inflate(R.layout.new_category_dialog, null);
             newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newCategoryInput);
-            return new AlertDialog.Builder(activity)
+            final AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle("New category")
                     .setView(dialogView)
-                    .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            String newCategory = newCategoryInput.getText().toString();
-                            if (newCategory.isEmpty() || activity.currentGame.hasCategory(newCategory)) {
-                                return;
-                            }
-                            activity.addCategory(newCategory);
-                        }
-                    })
+                    .setPositiveButton(R.string.create, null)
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
+            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                    createButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            String newCategory = newCategoryInput.getText().toString();
+                            if (newCategory.isEmpty()) {
+                                newCategoryInput.setError(getString(R.string.error_empty_category));
+                                newCategoryInput.requestFocus();
+                            } else if (activity.currentGame.hasCategory(newCategory)) {
+                                newCategoryInput.setError(getString(R.string.error_category_already_exists));
+                                newCategoryInput.requestFocus();
+                            } else {
+                                activity.addCategory(newCategory);
+                                dialog.dismiss();
+                            }
+                        }
+                    });
+                }
+            });
+            return dialog;
         }
 
         private AlertDialog createEditPBDialog() {

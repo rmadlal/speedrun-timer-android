@@ -37,7 +37,9 @@ public class MyAutoCompleteTextView extends AppCompatAutoCompleteTextView {
             return;
         }
         if (focused) {
-            showDropDown();
+            if (getError() == null) {
+                showDropDown();
+            }
         } else {
             dismissDropDown();
         }
