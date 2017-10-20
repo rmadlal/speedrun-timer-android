@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@android:style/TextAppearance.Material.Title"
+        android:gravity="center_vertical"
+        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/next_img"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"/>
+
+    <ImageView
+        android:id="@+id/next_img"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:contentDescription="@string/img_next_desc"
+        app:srcCompat="@drawable/ic_action_next"
+        app:layout_constraintLeft_toRightOf="@id/text1"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/text1"
+        app:layout_constraintBottom_toBottomOf="@id/text1"/>
+
+</android.support.constraint.ConstraintLayout>

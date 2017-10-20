@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <RelativeLayout
+        android:id="@+id/textsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/next_img"
+        app:layout_constraintHorizontal_chainStyle="spread_inside">
+
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@android:style/TextAppearance.Material.Title"
+            android:gravity="center_vertical"
+            android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"/>
+
+        <TextView
+            android:id="@+id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pb_text"
+            android:layout_below="@id/text1"
+            android:layout_alignStart="@id/text1"
+            android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+            android:gravity="center_vertical"
+            android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd" />
+
+        <TextView
+            android:id="@+id/text3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/text2"
+            android:layout_alignBottom="@id/text2"
+            android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+            android:gravity="center_vertical" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/next_img"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:contentDescription="@string/img_play_desc"
+        app:srcCompat="@drawable/ic_action_play"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/textsLayout"
+        app:layout_constraintTop_toTopOf="@id/textsLayout"
+        app:layout_constraintBottom_toBottomOf="@id/textsLayout"/>
+
+</android.support.constraint.ConstraintLayout>

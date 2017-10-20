@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item
+<!--    <item
         android:id="@+id/action_edit_pb"
         android:icon="@drawable/ic_edit_black_24dp"
         android:title="@string/menu_edit_pb"
@@ -20,10 +20,10 @@
         android:id="@+id/action_delete_game"
         android:title="@string/menu_delete_game"
         android:orderInCategory="3"
-        app:showAsAction="never" />
+        app:showAsAction="never" />-->
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_settings"
         android:title="@string/menu_settings"
         android:orderInCategory="4"
         app:showAsAction="never" />

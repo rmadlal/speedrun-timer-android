@@ -1,6 +1,5 @@
 package il.ronmad.speedruntimer;
 
-import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -14,6 +13,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,14 +21,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static il.ronmad.speedruntimer.Util.gson;
 
 public class TimerService extends Service {
 
     public static boolean IS_ACTIVE = false;
 
-    private Gson gson;
     private SharedPreferences prefs;
 
     private View mView;
@@ -55,7 +53,6 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        gson = new GsonBuilder().create();
         Game game = gson.fromJson(intent.getStringExtra(getString(R.string.game)), Game.class);
         String category = intent.getStringExtra(getString(R.string.category_name));
         bestTime = game.getBestTime(category);
@@ -114,7 +111,7 @@ public class TimerService extends Service {
     }
 
     private void setupLayoutComponents() {
-        getApplicationContext().setTheme(R.style.AppTheme);
+        setTheme(R.style.AppTheme);
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = layoutInflater.inflate(R.layout.timer_overlay, null);
 
@@ -185,27 +182,30 @@ public class TimerService extends Service {
                  if (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime) {
                      chronometer.reset();
                  } else if (!Chronometer.running) {
-                     AlertDialog resetDialog = new AlertDialog.Builder(getApplicationContext())
-                             .setTitle("New personal best!")
+                     AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
+                             .setTitle(bestTime == 0 ? "New personal best!" :
+                                     String.format("New personal best! (-%s)",
+                                     Game.getFormattedBestTime(bestTime - chronometer.getTimeElapsed())))
                              .setMessage("Save it?")
                              .setPositiveButton(R.string.save_reset, new DialogInterface.OnClickListener() {
                                  @Override
                                  public void onClick(DialogInterface dialogInterface, int i) {
-
                                      bestTime = chronometer.getTimeElapsed();
                                      chronometer.reset();
                                      Chronometer.bestTime = bestTime;
-                                     notificationBuilder.setContentText(String.format("Best time: %s", Game.getFormattedBestTime(bestTime)));
+                                     notificationBuilder.setContentText(String.format("Personal best: %s", Game.getFormattedBestTime(bestTime)));
                                      notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
                                      Intent intent = new Intent(getString(R.string.action_save_best_time));
                                      intent.putExtra(getString(R.string.best_time), bestTime);
                                      sendBroadcast(intent);
-                                 }})
+                                 }
+                             })
                              .setNegativeButton(R.string.reset, new DialogInterface.OnClickListener() {
                                  @Override
                                  public void onClick(DialogInterface dialogInterface, int i) {
                                      chronometer.reset();
-                                 }})
+                                 }
+                             })
                              .setNeutralButton(android.R.string.cancel, null)
                              .create();
                      resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);

@@ -1,7 +1,6 @@
 package il.ronmad.speedruntimer;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,7 +14,9 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -25,49 +26,43 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+import static il.ronmad.speedruntimer.Util.gson;
+
+public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
 
     private static boolean backFromPermissionCheck = false;
 
+    private FragmentManager fragmentManager;
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
-    private Gson gson;
 
     private List<Game> games;
     private Game currentGame;
     private String currentCategory;
 
-    private Spinner gameNameSpinner;
-    private ArrayAdapter<String> gameNameSpinnerAdapter;
-    private Spinner categorySpinner;
-    private ArrayAdapter<String> categorySpinnerAdapter;
-
-    private Button letsGoButton;
-    private TextView pbText;
-    private TextView pbTime;
+    private Toolbar toolbar;
     private FloatingActionButton fabAdd;
     private Snackbar mSnackbar;
 
-    private AlertDialog closeTimerDialog;
-    private AlertDialog timerOpenOnResumeDialog;
+    private static final String TAG_NEW_GAME_DIALOG = "NewGameDialog";
+    private static final String TAG_EDIT_GAME_DIALOG = "EditGameDialog";
+    private static final String TAG_NEW_CATEGORY_DIALOG = "NewCategoryDialog";
+    private static final String TAG_EDIT_PB_DIALOG = "EditPBDialog";
+    private static final String TAG_GAMES_LIST_FRAGMENT = "GamesListFragment";
+    private static final String TAG_CATEGORY_LIST_FRAGMENT = "CategoryListFragment";
 
-    private static final String NEW_GAME_DIALOG_TAG = "NewGameDialog";
-    private static final String NEW_CATEGORY_DIALOG_TAG = "NewCategoryDialog";
-    private static final String EDIT_PB_DIALOG_TAG = "EditPBDialog";
+    public enum ListAction {
+        CLICK,
+        EDIT,
+        DELETE
+    }
 
     // defintetly new and improved, not at all ripped off. and withoutt typos
 
@@ -76,18 +71,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        sharedPrefs = getPreferences(MODE_PRIVATE);
-        gson = new GsonBuilder().create();
-
-        letsGoButton = (Button) findViewById(R.id.startButton);
-        pbText = (TextView) findViewById(R.id.pbText);
-        pbTime = (TextView) findViewById(R.id.pbTime);
         fabAdd = (FloatingActionButton) findViewById(R.id.fabAdd);
         mSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
 
+        sharedPrefs = getPreferences(MODE_PRIVATE);
         String savedData = sharedPrefs.getString(getString(R.string.games), "");
         if (savedData.isEmpty()) {
             games = new ArrayList<>();
@@ -104,36 +94,24 @@ public class MainActivity extends AppCompatActivity {
         currentGame = null;
         currentCategory = null;
 
-        closeTimerDialog = new AlertDialog.Builder(this)
-                .setMessage("Timer is active. Close anyway?")
-                .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        stopService(new Intent(MainActivity.this, TimerService.class));
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .create();
-        timerOpenOnResumeDialog = new AlertDialog.Builder(this)
-                .setMessage("Timer must be closed in order to use the app.")
-                .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        stopService(new Intent(MainActivity.this, TimerService.class));
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                        homeIntent.addCategory(Intent.CATEGORY_HOME);
-                        startActivity(homeIntent);
-                    }
-                })
-                .create();
-
-        setupSpinners();
         setupReceiver();
+
+        fragmentManager = getSupportFragmentManager();
+        GameCategoriesListFragment categoriesListFragment =
+                (GameCategoriesListFragment) fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
+        if (categoriesListFragment != null) {
+            currentGame = games.get(games.indexOf(categoriesListFragment.getGame()));
+            categoriesListFragment.resetData(currentGame);
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(currentGame.getName());
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, GamesListFragment.newInstance(games), TAG_GAMES_LIST_FRAGMENT)
+                    .commit();
+        }
     }
 
     @Override
@@ -146,52 +124,18 @@ public class MainActivity extends AppCompatActivity {
                 if (Settings.canDrawOverlays(this)) {
                     startTimerService();
                 } else {
-                    // All of this is because the permission may take time to register.
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
-                                startTimerService();
-                            } else {
-                                handler.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
-                                            startTimerService();
-                                        } else {
-                                            handler.postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
-                                                        startTimerService();
-                                                    }
-                                                }
-                                            }, 500);
-                                        }
-                                    }
-                                }, 500);
-                            }
-                        }
-                    }, 500);
+                    checkOverlayPermissionDelayed();
                 }
             }
         } else if (TimerService.IS_ACTIVE) {
-            timerOpenOnResumeDialog.show();
-        }
-        if (pbTime != null) {
-            handlePBDisplay();
+            showCloseTimerOnResumeDialog();
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
-        sharedPrefs.edit()
-                .putString(getString(R.string.games), games.isEmpty() ? "" : gson.toJson(games))
-                .putInt(getString(R.string.spinner_pos), Math.max(0, gameNameSpinner.getSelectedItemPosition()))
-                .apply();
+        saveGameData();
     }
 
     @Override
@@ -202,6 +146,60 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onGamesListFragmentInteraction(ListAction action, int[] positions) {
+        switch (action) {
+            case CLICK:
+                currentGame = games.get(positions[0]);
+                fragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fragment_transition_in, R.anim.fragment_transition_out,
+                                R.anim.fragment_transition_pop_in, R.anim.fragment_transition_pop_out)
+                        .replace(R.id.fragment_container,
+                                GameCategoriesListFragment.newInstance(currentGame),
+                                TAG_CATEGORY_LIST_FRAGMENT)
+                        .addToBackStack(null)
+                        .commit();
+                toolbar.setTitle(currentGame.getName());
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setDisplayHomeAsUpEnabled(true);
+                }
+                break;
+            case EDIT:
+                currentGame = games.get(positions[0]);
+                actionEditGameName(positions[0]);
+                break;
+            case DELETE:
+                actionDeleteGames(positions);
+                break;
+            default:
+
+                break;
+        }
+
+    }
+
+    @Override
+    public void onCategoryListFragmentInteraction(ListAction action, String[] categories) {
+        switch (action) {
+            case CLICK:
+                currentCategory = categories[0];
+                checkDrawOverlayPermission();
+                break;
+            case EDIT:
+                currentCategory = categories[0];
+                new MyDialog().show(fragmentManager, TAG_EDIT_PB_DIALOG);
+                break;
+            case DELETE:
+                actionDeleteCategories(categories);
+                break;
+            default:
+
+                break;
+        }
+
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity_actions, menu);
@@ -209,34 +207,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean gamesExist = currentGame != null;
-        menu.findItem(R.id.action_edit_pb).setVisible(gamesExist);
-        menu.findItem(R.id.action_delete_cat).setVisible(gamesExist);
-        menu.findItem(R.id.action_delete_game).setVisible(gamesExist);
-        if (gamesExist) {
-            menu.findItem(R.id.action_delete_game).setTitle("Delete " + currentGame.getName());
-        }
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_delete_cat:
-                actionDeleteCategory();
-                return true;
-            case R.id.action_delete_game:
-                actionDeleteGame();
-                return true;
-            case R.id.action_edit_pb:
-                new MyDialog().show(getFragmentManager(), EDIT_PB_DIALOG_TAG);
-                return true;
-            case R.id.action_settings:
+            case R.id.menu_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case android.R.id.home:
+                fragmentManager.popBackStack();
+                toolbar.setTitle(getString(R.string.app_name));
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
+        if (gamesListFragment != null && gamesListFragment.isVisible()) {
+            super.onBackPressed();
+        } else {
+            backToGamesListFragment();
+        }
+    }
+
+    private void backToGamesListFragment() {
+        fragmentManager.popBackStack();
+        toolbar.setTitle(getString(R.string.app_name));
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(false);
         }
     }
 
@@ -253,6 +257,37 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startTimerService();
         }
+    }
+
+    // All of this is because the permission may take time to register.
+    private void checkOverlayPermissionDelayed() {
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
+                    startTimerService();
+                } else {
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
+                                startTimerService();
+                            } else {
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(MainActivity.this)) {
+                                            startTimerService();
+                                        }
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }, 500);
+                }
+            }
+        }, 500);
     }
 
     @Override
@@ -288,50 +323,6 @@ public class MainActivity extends AppCompatActivity {
         TimerService.IS_ACTIVE = true;
     }
 
-    private void setupSpinners() {
-        gameNameSpinner = (Spinner) findViewById(R.id.gameNameSpinner);
-        gameNameSpinnerAdapter = new ArrayAdapter<>(this,
-                R.layout.spinner_item, new ArrayList<String>());
-        gameNameSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        gameNameSpinner.setAdapter(gameNameSpinnerAdapter);
-
-        categorySpinner = (Spinner) findViewById(R.id.categorySpinner);
-        categorySpinnerAdapter = new ArrayAdapter<>(this,
-                R.layout.spinner_item, new ArrayList<String>());
-        categorySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(categorySpinnerAdapter);
-
-        gameNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                spinnerAction(gameNameSpinner);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) { }
-        });
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i == adapterView.getCount() - 1 && adapterView.getCount() > 1) {
-                    newCategoryItemSelected();
-                } else {
-                    spinnerAction(categorySpinner);
-                    if (currentGame != null) {
-                        currentGame.setLastSelectedCategoryPosition(i);
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                spinnerAction(categorySpinner);
-            }
-        });
-
-        refreshSpinners();
-    }
-
     private void setupReceiver() {
         receiver = new BroadcastReceiver() {
             @Override
@@ -340,8 +331,18 @@ public class MainActivity extends AppCompatActivity {
                 if (action.equals(getString(R.string.action_close_timer))) {
                     if (Chronometer.started) {
                         sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
-                        closeTimerDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-                        closeTimerDialog.show();
+                        AlertDialog dialog = new AlertDialog.Builder(context)
+                                .setMessage("Timer is active. Close anyway?")
+                                .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        stopService(new Intent(MainActivity.this, TimerService.class));
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .create();
+                        dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                        dialog.show();
                     } else {
                         stopService(new Intent(context, TimerService.class));
                     }
@@ -357,165 +358,153 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(receiver, intentFilter);
     }
 
-    private void refreshSpinners() {
-        gameNameSpinnerAdapter.clear();
-        for (Game game : games) {
-            gameNameSpinnerAdapter.add(game.getName());
-        }
-        gameNameSpinnerAdapter.notifyDataSetChanged();
-        setSpinnerSelection(gameNameSpinner, sharedPrefs.getInt(getString(R.string.spinner_pos), 0));
+    private void saveGameData() {
+        sharedPrefs.edit()
+                .putString(getString(R.string.games), games.isEmpty() ? "" : gson.toJson(games))
+                .apply();
     }
 
-    private void refreshCategorySpinner() {
-        categorySpinnerAdapter.clear();
-        if (currentGame != null) {
-            categorySpinnerAdapter.add(getString(R.string.new_category));
-            for (String category : currentGame.getCategories().keySet()) {
-                categorySpinnerAdapter.insert(category, 0);
-            }
-        }
-        categorySpinnerAdapter.notifyDataSetChanged();
-        setSpinnerSelection(categorySpinner, currentGame == null ? -1 : currentGame.getLastSelectedCategoryPosition());
+    private void showCloseTimerOnResumeDialog() {
+        new AlertDialog.Builder(this)
+                .setMessage("Timer must be closed in order to use the app.")
+                .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        stopService(new Intent(MainActivity.this, TimerService.class));
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                        homeIntent.addCategory(Intent.CATEGORY_HOME);
+                        startActivity(homeIntent);
+                    }
+                })
+                .create()
+                .show();
     }
 
-    private void spinnerAction(Spinner spinner) {
-        if (spinner == gameNameSpinner) {
-            currentGame = games.isEmpty() ? null : games.get(gameNameSpinner.getSelectedItemPosition());
-            refreshCategorySpinner();
-        } else if (spinner == categorySpinner) {
-            currentCategory = games.isEmpty() ? null : categorySpinner.getSelectedItem().toString();
-            handleUIInteraction();
-            handlePBDisplay();
-        }
-    }
-
-    private void setSpinnerSelection(Spinner spinner, int pos) {
-        int prevPos = spinner.getSelectedItemPosition();
-        spinner.setSelection(pos);
-        if (pos == prevPos || prevPos == -1) {  // onItemSelected wasn't called
-            spinnerAction(spinner);
-        }
-    }
-
-    public void launchTimerButtonPressed(View view) {
-        checkDrawOverlayPermission();
-    }
-
-    public void addGameButtonPressed(View view) {
+    public void addFabButtonPressed(View view) {
         mSnackbar.dismiss();
-        new MyDialog().show(getFragmentManager(), NEW_GAME_DIALOG_TAG);
+        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
+        if (gamesListFragment != null && gamesListFragment.isVisible()) {
+            new MyDialog().show(fragmentManager, TAG_NEW_GAME_DIALOG);
+        } else {
+            new MyDialog().show(fragmentManager, TAG_NEW_CATEGORY_DIALOG);
+        }
     }
 
-    private void actionDeleteCategory() {
-        long bestTime = currentGame.getBestTime(currentCategory);
-        if (bestTime > 0) {
+    public void actionEditGameName(int position) {
+        MyDialog dialog = new MyDialog();
+        Bundle args = new Bundle();
+        args.putInt("position", position);
+        dialog.setArguments(args);
+        dialog.show(fragmentManager, TAG_EDIT_GAME_DIALOG);
+}
+
+    private void actionDeleteCategories(final String[] categories) {
+        if (categories.length == 1) {
+            long bestTime = currentGame.getBestTime(categories[0]);
+            if (bestTime > 0) {
+                new AlertDialog.Builder(this)
+                        .setTitle(String.format("Delete %s %s?", currentGame.getName(), categories[0]))
+                        .setMessage(String.format("Your PB of %s will be lost.", Game.getFormattedBestTime(bestTime)))
+                        .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                removeCategories(categories);
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .create().show();
+            } else {
+                removeCategories(categories);
+            }
+        } else {
             new AlertDialog.Builder(this)
-                    .setTitle(String.format("Delete %s %s?", currentGame.getName(), currentCategory))
-                    .setMessage(String.format("Your PB of %s will be lost.", Game.getFormattedBestTime(bestTime)))
+                    .setTitle("Delete selected categories?")
+                    .setMessage("Your PBs will be lost.")
                     .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            removeCategory();
+                            removeCategories(categories);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create().show();
-        } else {
-            removeCategory();
         }
     }
 
-    private void actionDeleteGame() {
+    private void actionDeleteGames(final int[] positions) {
         new AlertDialog.Builder(this)
-                .setTitle(String.format("Delete %s?", currentGame.getName()))
-                .setMessage(String.format("All categories and PBs associated with %s will be lost.",
-                        currentGame.getName()))
+                .setTitle("Delete selected games?")
+                .setMessage("All categories and PBs associated with the games will be lost.")
                 .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        removeGame();
+                        removeGames(positions);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .create().show();
     }
 
-    private void newCategoryItemSelected() {
-        categorySpinner.setSelection(categorySpinnerAdapter.getPosition(currentCategory));
-        new MyDialog().show(getFragmentManager(), NEW_CATEGORY_DIALOG_TAG);
-    }
-
-    private void handleUIInteraction() {
-        boolean gamesExist = currentGame != null;
-        gameNameSpinner.setEnabled(gamesExist);
-        categorySpinner.setEnabled(gamesExist);
-        letsGoButton.setEnabled(gamesExist);
-        if (gamesExist) {
-            gameNameSpinnerAdapter.remove(getString(R.string.no_games));
-
-        } else if (gameNameSpinnerAdapter.getPosition(getString(R.string.no_games)) == -1) {
-            gameNameSpinnerAdapter.add(getString(R.string.no_games));
+    private void addGame(String gameName) {
+        games.add(new Game(gameName));
+        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
+        if (gamesListFragment != null) {
+            gamesListFragment.addGame(gameName);
         }
-        gameNameSpinnerAdapter.notifyDataSetChanged();
-        invalidateOptionsMenu();
-    }
-
-    private void handlePBDisplay() {
-        if (currentGame == null) {
-            pbText.setVisibility(View.GONE);
-            pbTime.setVisibility(View.GONE);
-        } else {
-            long bestTime = currentGame.getBestTime(currentCategory);
-            pbTime.setText(bestTime == 0 ? "None yet" : Game.getFormattedBestTime(bestTime));
-            pbTime.setTextColor(ContextCompat.getColor(this,
-                    bestTime == 0 ? android.R.color.primary_text_light : R.color.colorAccent));
-            pbText.setVisibility(View.VISIBLE);
-            pbTime.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void addGameAndCategory(String gameName, String category) {
-        Game newGame = new Game(gameName);
-        if (!games.contains(newGame)) {
-            newGame.addCategory(category);
-            games.add(0, newGame);
-            gameNameSpinnerAdapter.insert(gameName, 0);
-            gameNameSpinnerAdapter.notifyDataSetChanged();
-            setSpinnerSelection(gameNameSpinner, 0);
-        } else {
-            int gameIndex = games.indexOf(newGame);
-            games.get(gameIndex).addCategory(category);
-            setSpinnerSelection(gameNameSpinner, gameIndex);
-        }
-    }
-
-    private void removeGame() {
-        games.remove(currentGame);
-        gameNameSpinnerAdapter.remove(currentGame.getName());
-        gameNameSpinnerAdapter.notifyDataSetChanged();
-        setSpinnerSelection(gameNameSpinner, Math.max(0, gameNameSpinner.getSelectedItemPosition() - 1));
     }
 
     private void addCategory(String category) {
-        if (currentGame.addCategory(category) == null) {
-            refreshCategorySpinner();
+        currentGame.addCategory(category);
+        GameCategoriesListFragment categoryListFragment =
+                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
+        if (categoryListFragment != null) {
+            categoryListFragment.addCategory(category);
         }
     }
 
-    private void removeCategory() {
-        currentGame.removeCategory(currentCategory);
-        if (currentGame.isEmpty()) {
-            removeGame();
-        } else {
-            categorySpinnerAdapter.remove(currentCategory);
-            categorySpinnerAdapter.notifyDataSetChanged();
-            setSpinnerSelection(categorySpinner, Math.max(0, categorySpinner.getSelectedItemPosition() - 1));
+    private void editGameName(int position, String newName) {
+        games.get(position).setName(newName);
+        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
+        if (gamesListFragment != null) {
+            gamesListFragment.setGameName(position, newName);
+        }
+    }
+
+    private void removeGames(int[] positions) {
+        Game[] toRemove = new Game[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            toRemove[i] = games.get(positions[i]);
+        }
+        games.removeAll(Arrays.asList(toRemove));
+        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
+        if (gamesListFragment != null) {
+            gamesListFragment.removeGames(positions);
+        }
+    }
+
+    private void removeCategories(String[] categories) {
+        for (String category : categories) {
+            currentGame.removeCategory(category);
+        }
+        GameCategoriesListFragment categoryListFragment =
+                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
+        if (categoryListFragment != null) {
+            categoryListFragment.removeCategories(categories);
         }
     }
 
     void updateBestTime(long time) {
         currentGame.setBestTime(currentCategory, time);
-        handlePBDisplay();
+        GameCategoriesListFragment categoryListFragment =
+                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
+        if (categoryListFragment != null) {
+            categoryListFragment.setBestTime(currentCategory, time);
+        }
         sharedPrefs.edit()
                 .putString(getString(R.string.games), gson.toJson(games))
                 .apply();
@@ -535,13 +524,18 @@ public class MainActivity extends AppCompatActivity {
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             activity = (MainActivity) getActivity();
             inflater = activity.getLayoutInflater();
-            if (getTag().equals(NEW_GAME_DIALOG_TAG)) {
+            if (getTag().equals(TAG_NEW_GAME_DIALOG)) {
                 return createNewGameDialog();
             }
-            if (getTag().equals(NEW_CATEGORY_DIALOG_TAG)) {
+            if (getTag().equals(TAG_EDIT_GAME_DIALOG)) {
+                if (getArguments() != null) {
+                    return createEditGameDialog(getArguments().getInt("position"));
+                }
+            }
+            if (getTag().equals(TAG_NEW_CATEGORY_DIALOG)) {
                 return createNewCategoryDialog();
             }
-            if (getTag().equals(EDIT_PB_DIALOG_TAG)) {
+            if (getTag().equals(TAG_EDIT_PB_DIALOG)) {
                 return createEditPBDialog();
             }
             return null;
@@ -550,7 +544,6 @@ public class MainActivity extends AppCompatActivity {
         private AlertDialog createNewGameDialog() {
             View dialogView = inflater.inflate(R.layout.new_game_dialog, null);
             newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
-            newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newGameCategoryInput);
             final AlertDialog dialog =  new AlertDialog.Builder(activity)
                     .setTitle("New game")
                     .setView(dialogView)
@@ -565,18 +558,48 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(View view) {
                             String newGameName = newGameInput.getText().toString();
-                            String newCategory = newCategoryInput.getText().toString();
                             if (newGameName.isEmpty()) {
                                 newGameInput.setError(getString(R.string.error_empty_game));
                                 newGameInput.requestFocus();
-                            } else if (newCategory.isEmpty()) {
-                                newCategoryInput.setError(getString(R.string.error_empty_category));
-                                newCategoryInput.requestFocus();
-                            } else if (activity.currentGame.hasCategory(newCategory)) {
-                                newCategoryInput.setError(getString(R.string.error_category_already_exists));
-                                newCategoryInput.requestFocus();
+                            } else if (activity.games.contains(new Game(newGameName))) {
+                                newGameInput.setError(getString(R.string.error_game_already_exists));
+                                newGameInput.requestFocus();
                             } else {
-                                activity.addGameAndCategory(newGameName, newCategory);
+                                activity.addGame(newGameName);
+                                dialog.dismiss();
+                            }
+                        }
+                    });
+                }
+            });
+            return dialog;
+        }
+
+        private AlertDialog createEditGameDialog(final int position) {
+            View dialogView = inflater.inflate(R.layout.new_game_dialog, null);
+            newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
+            final AlertDialog dialog =  new AlertDialog.Builder(activity)
+                    .setTitle("Edit name")
+                    .setView(dialogView)
+                    .setPositiveButton(R.string.save, null)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                    createButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            String newGameName = newGameInput.getText().toString();
+                            if (newGameName.isEmpty()) {
+                                newGameInput.setError(getString(R.string.error_empty_game));
+                                newGameInput.requestFocus();
+                            } else if (activity.games.contains(new Game(newGameName))) {
+                                newGameInput.setError(getString(R.string.error_game_already_exists));
+                                newGameInput.requestFocus();
+                            } else {
+                                activity.editGameName(position, newGameName);
                                 dialog.dismiss();
                             }
                         }
@@ -619,7 +642,6 @@ public class MainActivity extends AppCompatActivity {
             });
             return dialog;
         }
-
         private AlertDialog createEditPBDialog() {
             LayoutInflater inflater = activity.getLayoutInflater();
             View dialogView = inflater.inflate(R.layout.edit_pb_dialog, null);

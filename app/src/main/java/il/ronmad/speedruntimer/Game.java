@@ -1,36 +1,39 @@
 package il.ronmad.speedruntimer;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class Game {
 
     private String name;
     private Map<String, Long> categories;
-    private int lastSelectedCategoryPosition;
 
     public Game(String name) {
         this.name = name;
         this.categories = new LinkedHashMap<>();
-        this.lastSelectedCategoryPosition = 0;
-
     }
 
     public String getName() {
         return name;
     }
 
-    Map<String, Long> getCategories() {
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Map<String, Long> getCategories() {
         return categories;
     }
 
-    public int getLastSelectedCategoryPosition() {
-        return lastSelectedCategoryPosition;
+    public Set<String> getCategoryNames() {
+        return categories.keySet();
     }
 
-    public void setLastSelectedCategoryPosition(int lastSelectedCategoryPosition) {
-        this.lastSelectedCategoryPosition = lastSelectedCategoryPosition;
+    public Collection<Long> getBestTimes() {
+        return categories.values();
     }
 
     public long getBestTime(String category) {
@@ -41,12 +44,8 @@ public class Game {
         categories.put(category, time);
     }
 
-    public Long addCategory(String category) {
-        Long v = categories.get(category);
-        if (v == null) {
-            v = categories.put(category, 0L);
-        }
-        return v;
+    public void addCategory(String category) {
+        categories.put(category, 0L);
     }
 
     public void removeCategory(String category) {
@@ -63,8 +62,10 @@ public class Game {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Game && ((Game)obj).name.equals(this.name)
-                || obj instanceof String && obj.equals(this.name);
+        if (obj instanceof Game) {
+            return ((Game)obj).name.equals(this.name);
+        }
+        return obj instanceof String && obj.equals(this.name);
     }
 
     public static String getFormattedBestTime(long time) {

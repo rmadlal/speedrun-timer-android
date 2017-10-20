@@ -2,23 +2,17 @@
 
     <string name="app_name">Floating Speedrun Timer</string>
 
-    <string name="no_games">No games</string>
-    <string name="new_category">"New category..."</string>
     <string name="chrono_millis">.00</string>
     <string name="chrono_rest">0:00</string>
     <string name="start_button">Run</string>
     <string name="fab_add_str">Add a game!</string>
     <string name="hint_game_title">Game title</string>
     <string name="hint_game_category">Category</string>
-    <string name="game_text">Game</string>
-    <string name="pb_text">Personal best:</string>
-    <string name="pb_time">0:00.00</string>
+    <string name="pb_text">PB:</string>
     <string name="hr_hint">Hrs</string>
     <string name="mins_hint">Mins</string>
     <string name="secs_hint">Secs</string>
     <string name="millis_hint">Millis</string>
-    <string name="delete_button_desc">Delete game/category</string>
-    <string name="edit_pb_button_desc">Edit PB of current game and category</string>
     <string name="save_reset">Save &amp; reset</string>
     <string name="reset">Reset</string>
     <string name="create">Create</string>
@@ -30,10 +24,14 @@
     <string name="close_timer">Close timer</string>
     <string name="menu_delete_game">Delete game</string>
     <string name="menu_edit_pb">Edit PB</string>
+    <string name="menu_edit_game">Edit game</string>
     <string name="menu_settings">Settings</string>
     <string name="error_empty_game">Title must not be empty</string>
     <string name="error_empty_category">Category must not be empty</string>
+    <string name="error_game_already_exists">This game already exists</string>
     <string name="error_category_already_exists">This category already exists</string>
+    <string name="img_next_desc">Go to game categories</string>
+    <string name="img_play_desc">Open timer</string>
 
     <string-array name="category_autocomplete">
         <item>Any%</item>
@@ -55,12 +53,10 @@
 
     <!-- Strings related to Settings -->
 
-    <string name="autosave_title">Automatically save </string>
     <string name="color_neutral_title">Neutral</string>
     <string name="color_ahead_title">Ahead</string>
     <string name="color_behind_title">Behind</string>
     <string name="color_pb_title">PB</string>
-    <string name="pref_ringtone_silent">Silent</string>
 
     <!-- Keys -->
     <string name="key_color_neutral">color_neutral</string>
@@ -69,6 +65,5 @@
     <string name="key_color_pb">color_pb</string>
     <string name="key_timer_pos_x">timer_x</string>
     <string name="key_timer_pos_y">timer_y</string>
-    <string name="title_activity_game">GameActivity</string>
 
 </resources>
