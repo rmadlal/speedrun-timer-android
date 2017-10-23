@@ -4,10 +4,11 @@
     <color name="colorPrimaryDark">#006064</color>
     <color name="colorAccent">#FF4040</color>
     <color name="colorAccentSecondary">#FF9696</color>
+    <color name="colorHighlightedListItem">#6680cbc4</color>
 
-    <color name="timerNeutralColorDefault">#A0000000</color>
-    <color name="timerAheadColorDefault">#A0006000</color>
-    <color name="timerBehindColorDefault">#A0600000</color>
-    <color name="timerPBColorDefault">#A00000A0</color>
+    <color name="colorTimerNeutralDefault">#A0000000</color>
+    <color name="colorTimerAheadDefault">#A0006000</color>
+    <color name="colorTimerBehindDefault">#A0600000</color>
+    <color name="colorTimerPBDefault">#A00000A0</color>
 
 </resources>

@@ -7,8 +7,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GamesAdapter extends BaseAdapter {
@@ -18,7 +16,7 @@ public class GamesAdapter extends BaseAdapter {
 
     public GamesAdapter(Context context, List<String> gameNames) {
         this.context = context;
-        this.gameNames = new ArrayList<>(gameNames);
+        this.gameNames = gameNames;
     }
 
     @Override
@@ -49,20 +47,5 @@ public class GamesAdapter extends BaseAdapter {
         text.setText((String) getItem(i));
 
         return layout;
-    }
-
-    public void add(String gameName) {
-        gameNames.add(gameName);
-        notifyDataSetChanged();
-    }
-
-    public void set(int position, String newName) {
-        gameNames.set(position, newName);
-        notifyDataSetChanged();
-    }
-
-    public void removeAll(String[] toRemove) {
-        gameNames.removeAll(Arrays.asList(toRemove));
-        notifyDataSetChanged();
     }
 }

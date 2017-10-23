@@ -15,6 +15,7 @@ import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private static boolean backFromPermissionCheck = false;
 
     private FragmentManager fragmentManager;
+    private Fragment currentFragment;
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
 
@@ -57,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private static final String TAG_EDIT_PB_DIALOG = "EditPBDialog";
     private static final String TAG_GAMES_LIST_FRAGMENT = "GamesListFragment";
     private static final String TAG_CATEGORY_LIST_FRAGMENT = "CategoryListFragment";
+    private static final String ARG_SELECTED_GAME_NAME = "selected-game-name";
+    private static final String ARG_SELECTED_CATEGORY = "selected-category";
 
     public enum ListAction {
         CLICK,
@@ -101,15 +105,17 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                 (GameCategoriesListFragment) fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
         if (categoriesListFragment != null) {
             currentGame = games.get(games.indexOf(categoriesListFragment.getGame()));
-            categoriesListFragment.resetData(currentGame);
+            categoriesListFragment.updateData(currentGame);
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setTitle(currentGame.getName());
                 actionBar.setDisplayHomeAsUpEnabled(true);
             }
+            currentFragment = categoriesListFragment;
         } else {
+            currentFragment = GamesListFragment.newInstance(games);
             fragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, GamesListFragment.newInstance(games), TAG_GAMES_LIST_FRAGMENT)
+                    .replace(R.id.fragment_container, currentFragment, TAG_GAMES_LIST_FRAGMENT)
                     .commit();
         }
     }
@@ -146,16 +152,15 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     @Override
-    public void onGamesListFragmentInteraction(ListAction action, int[] positions) {
+    public void onGamesListFragmentInteraction(GamesListFragment gamesListFragment, ListAction action) {
         switch (action) {
             case CLICK:
-                currentGame = games.get(positions[0]);
+                currentGame = games.get(games.indexOf(new Game(gamesListFragment.getClickedItemName())));
+                currentFragment = GameCategoriesListFragment.newInstance(currentGame);
                 fragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.fragment_transition_in, R.anim.fragment_transition_out,
                                 R.anim.fragment_transition_pop_in, R.anim.fragment_transition_pop_out)
-                        .replace(R.id.fragment_container,
-                                GameCategoriesListFragment.newInstance(currentGame),
-                                TAG_CATEGORY_LIST_FRAGMENT)
+                        .replace(R.id.fragment_container, currentFragment, TAG_CATEGORY_LIST_FRAGMENT)
                         .addToBackStack(null)
                         .commit();
                 toolbar.setTitle(currentGame.getName());
@@ -165,38 +170,44 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                 }
                 break;
             case EDIT:
-                currentGame = games.get(positions[0]);
-                actionEditGameName(positions[0]);
+                MyDialog editDialog = new MyDialog();
+                Bundle args = new Bundle();
+                args.putString(ARG_SELECTED_GAME_NAME, gamesListFragment.getSelectedItemNames()[0]);
+                editDialog.setArguments(args);
+                editDialog.show(fragmentManager, TAG_EDIT_GAME_DIALOG);
                 break;
             case DELETE:
-                actionDeleteGames(positions);
+                String[] selectedGames = gamesListFragment.getSelectedItemNames();
+                actionDeleteGames(selectedGames);
                 break;
             default:
 
                 break;
         }
-
     }
 
     @Override
-    public void onCategoryListFragmentInteraction(ListAction action, String[] categories) {
+    public void onCategoryListFragmentInteraction(GameCategoriesListFragment categoryListFragment, ListAction action) {
         switch (action) {
             case CLICK:
-                currentCategory = categories[0];
+                currentCategory = categoryListFragment.getClickedItemName();
                 checkDrawOverlayPermission();
                 break;
             case EDIT:
-                currentCategory = categories[0];
-                new MyDialog().show(fragmentManager, TAG_EDIT_PB_DIALOG);
+                MyDialog editDialog = new MyDialog();
+                Bundle args = new Bundle();
+                args.putString(ARG_SELECTED_CATEGORY, categoryListFragment.getSelectedItemNames()[0]);
+                editDialog.setArguments(args);
+                editDialog.show(fragmentManager, TAG_EDIT_PB_DIALOG);
                 break;
             case DELETE:
-                actionDeleteCategories(categories);
+                String[] selectedCategories = categoryListFragment.getSelectedItemNames();
+                actionDeleteCategories(selectedCategories);
                 break;
             default:
 
                 break;
         }
-
     }
 
     @Override
@@ -213,12 +224,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             case android.R.id.home:
-                fragmentManager.popBackStack();
-                toolbar.setTitle(getString(R.string.app_name));
-                ActionBar actionBar = getSupportActionBar();
-                if (actionBar != null) {
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-                }
+                backToGamesListFragment();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -227,11 +233,11 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     @Override
     public void onBackPressed() {
-        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
-        if (gamesListFragment != null && gamesListFragment.isVisible()) {
-            super.onBackPressed();
-        } else {
+        if (currentFragment == fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT)
+                && currentFragment.isVisible()) {
             backToGamesListFragment();
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -242,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(false);
         }
+        currentFragment = fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
     }
 
     final static int OVERLAY_REQUEST_CODE = 251;
@@ -381,7 +388,6 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                         startActivity(homeIntent);
                     }
                 })
-                .create()
                 .show();
     }
 
@@ -395,31 +401,23 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
     }
 
-    public void actionEditGameName(int position) {
-        MyDialog dialog = new MyDialog();
-        Bundle args = new Bundle();
-        args.putInt("position", position);
-        dialog.setArguments(args);
-        dialog.show(fragmentManager, TAG_EDIT_GAME_DIALOG);
-}
-
-    private void actionDeleteCategories(final String[] categories) {
-        if (categories.length == 1) {
-            long bestTime = currentGame.getBestTime(categories[0]);
+    private void actionDeleteCategories(final String[] toRemove) {
+        if (toRemove.length == 1) {
+            long bestTime = currentGame.getBestTime(toRemove[0]);
             if (bestTime > 0) {
                 new AlertDialog.Builder(this)
-                        .setTitle(String.format("Delete %s %s?", currentGame.getName(), categories[0]))
+                        .setTitle(String.format("Delete %s %s?", currentGame.getName(), toRemove[0]))
                         .setMessage(String.format("Your PB of %s will be lost.", Game.getFormattedBestTime(bestTime)))
                         .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                removeCategories(categories);
+                                removeCategories(toRemove);
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
-                        .create().show();
+                        .show();
             } else {
-                removeCategories(categories);
+                removeCategories(toRemove);
             }
         } else {
             new AlertDialog.Builder(this)
@@ -428,97 +426,81 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            removeCategories(categories);
+                            removeCategories(toRemove);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
-                    .create().show();
+                    .show();
         }
     }
 
-    private void actionDeleteGames(final int[] positions) {
+    private void actionDeleteGames(final String[] toRemove) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete selected games?")
                 .setMessage("All categories and PBs associated with the games will be lost.")
                 .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        removeGames(positions);
+                        removeGames(toRemove);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .create().show();
+                .show();
     }
 
     private void addGame(String gameName) {
         games.add(new Game(gameName));
-        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
-        if (gamesListFragment != null) {
-            gamesListFragment.addGame(gameName);
-        }
+        ((GamesListFragment)currentFragment).addGame(gameName);
     }
 
     private void addCategory(String category) {
         currentGame.addCategory(category);
-        GameCategoriesListFragment categoryListFragment =
-                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
-        if (categoryListFragment != null) {
-            categoryListFragment.addCategory(category);
-        }
+        ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
     }
 
-    private void editGameName(int position, String newName) {
-        games.get(position).setName(newName);
-        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
-        if (gamesListFragment != null) {
-            gamesListFragment.setGameName(position, newName);
-        }
+    private void editGameName(String oldName, String newName) {
+        Game game = games.get(games.indexOf(new Game(oldName)));
+        game.setName(newName);
+        ((GamesListFragment)currentFragment).setGameName(newName);
     }
 
-    private void removeGames(int[] positions) {
-        Game[] toRemove = new Game[positions.length];
-        for (int i = 0; i < positions.length; i++) {
-            toRemove[i] = games.get(positions[i]);
+    private void removeGames(String[] toRemove) {
+        for (String gameName : toRemove) {
+            games.remove(new Game(gameName));
         }
-        games.removeAll(Arrays.asList(toRemove));
-        GamesListFragment gamesListFragment = (GamesListFragment)fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
-        if (gamesListFragment != null) {
-            gamesListFragment.removeGames(positions);
-        }
+        ((GamesListFragment)currentFragment).removeGames();
     }
 
     private void removeCategories(String[] categories) {
         for (String category : categories) {
             currentGame.removeCategory(category);
         }
-        GameCategoriesListFragment categoryListFragment =
-                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
-        if (categoryListFragment != null) {
-            categoryListFragment.removeCategories(categories);
-        }
+        ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
+    }
+
+    private void setBestTime(String category, long time) {
+        currentGame.setBestTime(category, time);
+        ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
+        saveGameData();
     }
 
     void updateBestTime(long time) {
         currentGame.setBestTime(currentCategory, time);
-        GameCategoriesListFragment categoryListFragment =
-                (GameCategoriesListFragment)fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
-        if (categoryListFragment != null) {
-            categoryListFragment.setBestTime(currentCategory, time);
+        if (currentFragment == fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT)) {
+            ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
         }
-        sharedPrefs.edit()
-                .putString(getString(R.string.games), gson.toJson(games))
-                .apply();
+        saveGameData();
     }
 
     public static class MyDialog extends DialogFragment {
         private MainActivity activity;
         private LayoutInflater inflater;
-        private EditText newGameInput;
-        private MyAutoCompleteTextView newCategoryInput;
-        private EditText hoursInput;
-        private EditText minutesInput;
-        private EditText secondsInput;
-        private EditText millisInput;
+
+        private enum activityMethod {
+            ADD_GAME,
+            EDIT_GAME,
+            ADD_CATEGORY
+        }
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -528,140 +510,75 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                 return createNewGameDialog();
             }
             if (getTag().equals(TAG_EDIT_GAME_DIALOG)) {
-                if (getArguments() != null) {
-                    return createEditGameDialog(getArguments().getInt("position"));
-                }
+                return createEditGameDialog(getArguments().getString(ARG_SELECTED_GAME_NAME));
             }
             if (getTag().equals(TAG_NEW_CATEGORY_DIALOG)) {
                 return createNewCategoryDialog();
             }
             if (getTag().equals(TAG_EDIT_PB_DIALOG)) {
-                return createEditPBDialog();
+                return createEditPBDialog(getArguments().getString(ARG_SELECTED_CATEGORY));
             }
             return null;
         }
 
         private AlertDialog createNewGameDialog() {
             View dialogView = inflater.inflate(R.layout.new_game_dialog, null);
-            newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
+            EditText newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
             final AlertDialog dialog =  new AlertDialog.Builder(activity)
                     .setTitle("New game")
                     .setView(dialogView)
                     .setPositiveButton(R.string.create, null)
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                    createButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            String newGameName = newGameInput.getText().toString();
-                            if (newGameName.isEmpty()) {
-                                newGameInput.setError(getString(R.string.error_empty_game));
-                                newGameInput.requestFocus();
-                            } else if (activity.games.contains(new Game(newGameName))) {
-                                newGameInput.setError(getString(R.string.error_game_already_exists));
-                                newGameInput.requestFocus();
-                            } else {
-                                activity.addGame(newGameName);
-                                dialog.dismiss();
-                            }
-                        }
-                    });
-                }
-            });
+            setOnShowListener(dialog, newGameInput, activityMethod.ADD_GAME, "");
             return dialog;
         }
 
-        private AlertDialog createEditGameDialog(final int position) {
+        private AlertDialog createEditGameDialog(String oldName) {
             View dialogView = inflater.inflate(R.layout.new_game_dialog, null);
-            newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
+            EditText newGameInput = (EditText) dialogView.findViewById(R.id.newGameNameInput);
             final AlertDialog dialog =  new AlertDialog.Builder(activity)
                     .setTitle("Edit name")
                     .setView(dialogView)
                     .setPositiveButton(R.string.save, null)
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                    createButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            String newGameName = newGameInput.getText().toString();
-                            if (newGameName.isEmpty()) {
-                                newGameInput.setError(getString(R.string.error_empty_game));
-                                newGameInput.requestFocus();
-                            } else if (activity.games.contains(new Game(newGameName))) {
-                                newGameInput.setError(getString(R.string.error_game_already_exists));
-                                newGameInput.requestFocus();
-                            } else {
-                                activity.editGameName(position, newGameName);
-                                dialog.dismiss();
-                            }
-                        }
-                    });
-                }
-            });
+            setOnShowListener(dialog, newGameInput, activityMethod.EDIT_GAME, oldName);
             return dialog;
         }
 
         private AlertDialog createNewCategoryDialog() {
             View dialogView = inflater.inflate(R.layout.new_category_dialog, null);
-            newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newCategoryInput);
+            EditText newCategoryInput = (MyAutoCompleteTextView) dialogView.findViewById(R.id.newCategoryInput);
             final AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle("New category")
                     .setView(dialogView)
                     .setPositiveButton(R.string.create, null)
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                    createButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            String newCategory = newCategoryInput.getText().toString();
-                            if (newCategory.isEmpty()) {
-                                newCategoryInput.setError(getString(R.string.error_empty_category));
-                                newCategoryInput.requestFocus();
-                            } else if (activity.currentGame.hasCategory(newCategory)) {
-                                newCategoryInput.setError(getString(R.string.error_category_already_exists));
-                                newCategoryInput.requestFocus();
-                            } else {
-                                activity.addCategory(newCategory);
-                                dialog.dismiss();
-                            }
-                        }
-                    });
-                }
-            });
+            setOnShowListener(dialog, newCategoryInput, activityMethod.ADD_CATEGORY, "");
             return dialog;
         }
-        private AlertDialog createEditPBDialog() {
+        private AlertDialog createEditPBDialog(final String category) {
             LayoutInflater inflater = activity.getLayoutInflater();
             View dialogView = inflater.inflate(R.layout.edit_pb_dialog, null);
-            hoursInput = (EditText) dialogView.findViewById(R.id.hours);
-            minutesInput = (EditText) dialogView.findViewById(R.id.minutes);
-            secondsInput = (EditText) dialogView.findViewById(R.id.seconds);
-            millisInput = (EditText) dialogView.findViewById(R.id.milliseconds);
-            final long bestTime = activity.currentGame.getBestTime(activity.currentCategory);
+            final EditText hoursInput = (EditText) dialogView.findViewById(R.id.hours);
+            final EditText minutesInput = (EditText) dialogView.findViewById(R.id.minutes);
+            final EditText secondsInput = (EditText) dialogView.findViewById(R.id.seconds);
+            final EditText millisInput = (EditText) dialogView.findViewById(R.id.milliseconds);
+            final long bestTime = activity.currentGame.getBestTime(category);
             if (bestTime > 0) {
-                setTextsFromBestTime(bestTime);
+                setTextsFromBestTime(bestTime, hoursInput, minutesInput, secondsInput, millisInput);
             }
             final AlertDialog dialog = new AlertDialog.Builder(activity)
-                    .setTitle(String.format("Edit best time for %s %s", activity.currentGame.getName(), activity.currentCategory))
+                    .setTitle(String.format("Edit best time for %s %s", activity.currentGame.getName(), category))
                     .setView(dialogView)
                     .setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            long newTime = getTimeFromEditTexts();
-                            activity.updateBestTime(newTime);
-                            showEditedPBSnackbar(bestTime, newTime == 0);
+                            long newTime = getTimeFromEditTexts(hoursInput, minutesInput, secondsInput, millisInput);
+                            activity.setBestTime(category, newTime);
+                            showEditedPBSnackbar(category, bestTime, newTime == 0);
                         }
                     })
                     .setNegativeButton(R.string.pb_clear, null)
@@ -685,20 +602,76 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             return dialog;
         }
 
-        private void showEditedPBSnackbar(final long prevBestTime, boolean cleared) {
+        private void setOnShowListener(final AlertDialog dialog,
+                                       final EditText textInput,
+                                       final activityMethod method,
+                                       final String selectedName) {
+            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                    createButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            String newName = textInput.getText().toString();
+                            if (checkForErrors(newName)) {
+                                textInput.requestFocus();
+                            } else {
+                                switch (method) {
+                                    case ADD_GAME:
+                                        activity.addGame(newName);
+                                        break;
+                                    case EDIT_GAME:
+                                        activity.editGameName(selectedName, newName);
+                                        break;
+                                    case ADD_CATEGORY:
+                                        activity.addCategory(newName);
+                                        break;
+                                }
+                                dialog.dismiss();
+                            }
+                        }
+
+                        private boolean checkForErrors (String newName) {
+                            if (newName.isEmpty()) {
+                                textInput.setError(getString(
+                                        method == activityMethod.ADD_CATEGORY ? R.string.error_empty_category
+                                                : R.string.error_empty_game));
+                                return  true;
+                            }
+                            if (method == activityMethod.ADD_CATEGORY && activity.currentGame.hasCategory(newName)) {
+                                textInput.setError(getString(R.string.error_category_already_exists));
+                                return  true;
+                            }
+                            if (method != activityMethod.ADD_CATEGORY && activity.games.contains(new Game(newName))) {
+                                textInput.setError(getString(R.string.error_game_already_exists));
+                                return  true;
+                            }
+                            return  false;
+                        }
+                    });
+                }
+            });
+        }
+
+        private void showEditedPBSnackbar(final String category, final long prevBestTime, boolean cleared) {
             String message = String.format("Best time for %s %s has been %s.", activity.currentGame.getName(),
-                    activity.currentCategory, cleared ? "reset" : "edited");
+                    category, cleared ? "reset" : "edited");
             Snackbar.make(activity.fabAdd, message, Snackbar.LENGTH_LONG)
                     .setAction(R.string.undo, new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            activity.updateBestTime(prevBestTime);
+                            activity.setBestTime(category, prevBestTime);
                         }
                     })
                     .show();
         }
 
-        private void setTextsFromBestTime(long bestTime) {
+        private void setTextsFromBestTime(long bestTime,
+                                          EditText hoursInput,
+                                          EditText minutesInput,
+                                          EditText secondsInput,
+                                          EditText millisInput) {
             int hours = (int)(bestTime / (3600 * 1000));
             int remaining = (int)(bestTime % (3600 * 1000));
             int minutes = remaining / (60 * 1000);
@@ -711,7 +684,10 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             millisInput.setText(milliseconds > 0 ? ""+milliseconds : "");
         }
 
-        private long getTimeFromEditTexts() {
+        private long getTimeFromEditTexts(EditText hoursInput,
+                                          EditText minutesInput,
+                                          EditText secondsInput,
+                                          EditText millisInput) {
             String hoursStr = hoursInput.getText().toString();
             String minutesStr = minutesInput.getText().toString();
             String secondsStr = secondsInput.getText().toString();

@@ -64,25 +64,6 @@ public class CategoryAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void set(String category, long bestTime) {
-        bestTimes.set(categories.indexOf(category), bestTime);
-        notifyDataSetChanged();
-    }
-
-    public void remove(String category) {
-        bestTimes.remove(categories.indexOf(category));
-        categories.remove(category);
-        notifyDataSetChanged();
-    }
-
-    public void removeAll(String[] categories) {
-        for (String category : categories) {
-            bestTimes.remove(this.categories.indexOf(category));
-        }
-        this.categories.removeAll(Arrays.asList(categories));
-        notifyDataSetChanged();
-    }
-
     public void update(Game game) {
         categories = new ArrayList<>(game.getCategoryNames());
         bestTimes = new ArrayList<>(game.getBestTimes());

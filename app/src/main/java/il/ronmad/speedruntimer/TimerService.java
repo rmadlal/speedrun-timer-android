@@ -82,13 +82,13 @@ public class TimerService extends Service {
 
         Chronometer.bestTime = bestTime;
         Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_color_neutral),
-                ContextCompat.getColor(this, R.color.timerNeutralColorDefault));
+                ContextCompat.getColor(this, R.color.colorTimerNeutralDefault));
         Chronometer.colorAhead = prefs.getInt(getString(R.string.key_color_ahead),
-                ContextCompat.getColor(this, R.color.timerAheadColorDefault));
+                ContextCompat.getColor(this, R.color.colorTimerAheadDefault));
         Chronometer.colorBehind = prefs.getInt(getString(R.string.key_color_behind),
-                ContextCompat.getColor(this, R.color.timerBehindColorDefault));
+                ContextCompat.getColor(this, R.color.colorTimerBehindDefault));
         Chronometer.colorPB = prefs.getInt(getString(R.string.key_color_pb),
-                ContextCompat.getColor(this, R.color.timerPBColorDefault));
+                ContextCompat.getColor(this, R.color.colorTimerPBDefault));
 
         setupLayoutComponents();
         setupView();

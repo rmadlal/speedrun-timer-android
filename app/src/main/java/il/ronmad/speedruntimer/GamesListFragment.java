@@ -38,6 +38,7 @@ public class GamesListFragment extends BaseListFragment {
         } else {
             mGameNames = new ArrayList<>();
         }
+        layoutResId = R.layout.games_list_layout;
         contextMenuResId = R.menu.games_list_fragment_context_menu;
     }
 
@@ -50,20 +51,20 @@ public class GamesListFragment extends BaseListFragment {
 
     public void addGame(String newGame) {
         mGameNames.add(newGame);
-        ((GamesAdapter)mListAdapter).add(newGame);
+        mListAdapter.notifyDataSetChanged();
     }
 
-    public void setGameName(int position, String newName) {
-        mGameNames.set(position, newName);
-        ((GamesAdapter)mListAdapter).set(position, newName);
+    public void setGameName(String newName) {
+        String oldName = getSelectedItemNames()[0];
+        mGameNames.set(mGameNames.indexOf(oldName), newName);
+        mListAdapter.notifyDataSetChanged();
+        mActionMode.finish();
     }
 
-    public void removeGames(int[] positions) {
-        String[] toRemove = new String[positions.length];
-        for (int i = 0; i < positions.length; i++) {
-            toRemove[i] = mGameNames.get(positions[i]);
-        }
-        mGameNames.removeAll(Arrays.asList(toRemove));
-        ((GamesAdapter)mListAdapter).removeAll(toRemove);
+    public void removeGames() {
+        List<String> toRemove = Arrays.asList(getSelectedItemNames());
+        mGameNames.removeAll(toRemove);
+        mListAdapter.notifyDataSetChanged();
+        mActionMode.finish();
     }
 }

@@ -30,6 +30,7 @@ public class GameCategoriesListFragment extends BaseListFragment {
         if (getArguments() != null) {
             mGame = gson.fromJson(getArguments().getString(ARG_GAME_JSON), Game.class);
         }
+        layoutResId = R.layout.category_list_layout;
         contextMenuResId = R.menu.category_list_fragment_context_menu;
     }
 
@@ -40,24 +41,12 @@ public class GameCategoriesListFragment extends BaseListFragment {
         setAdapter(adapter);
     }
 
-    public void resetData(Game game) {
+    public void updateData(Game game) {
         mGame = game;
         if (mActionMode != null) {
             mActionMode.finish();
         }
         ((CategoryAdapter)mListAdapter).update(game);
-    }
-
-    public void addCategory(String category) {
-        ((CategoryAdapter)mListAdapter).add(category);
-    }
-
-    public void removeCategories(String[] categories) {
-         ((CategoryAdapter)mListAdapter).removeAll(categories);
-    }
-
-    public void setBestTime(String category, long bestTime) {
-        ((CategoryAdapter)mListAdapter).set(category, bestTime);
     }
 
     public Game getGame() {

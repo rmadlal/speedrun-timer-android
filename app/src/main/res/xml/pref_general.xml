@@ -2,12 +2,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
-        android:title="Color preferences">
+        android:title="Timer color preferences">
 
         <com.jaredrummler.android.colorpicker.ColorPreference
             android:key="@string/key_color_neutral"
             android:title="@string/color_neutral_title"
-            android:defaultValue="@color/timerNeutralColorDefault"
+            android:defaultValue="@color/colorTimerNeutralDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
@@ -15,7 +15,7 @@
         <com.jaredrummler.android.colorpicker.ColorPreference
             android:key="@string/key_color_ahead"
             android:title="@string/color_ahead_title"
-            android:defaultValue="@color/timerAheadColorDefault"
+            android:defaultValue="@color/colorTimerAheadDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
@@ -23,7 +23,7 @@
         <com.jaredrummler.android.colorpicker.ColorPreference
             android:key="@string/key_color_behind"
             android:title="@string/color_behind_title"
-            android:defaultValue="@color/timerBehindColorDefault"
+            android:defaultValue="@color/colorTimerBehindDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
@@ -31,7 +31,7 @@
         <com.jaredrummler.android.colorpicker.ColorPreference
             android:key="@string/key_color_pb"
             android:title="@string/color_pb_title"
-            android:defaultValue="@color/timerPBColorDefault"
+            android:defaultValue="@color/colorTimerPBDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
