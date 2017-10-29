@@ -26,7 +26,6 @@ public class GameCategoriesListFragment extends BaseListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         if (getArguments() != null) {
             mGame = gson.fromJson(getArguments().getString(ARG_GAME_JSON), Game.class);
         }
@@ -37,15 +36,15 @@ public class GameCategoriesListFragment extends BaseListFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        CategoryAdapter adapter = new CategoryAdapter(getContext(), mGame);
-        setAdapter(adapter);
+        if (mListAdapter == null) {
+            CategoryAdapter adapter = new CategoryAdapter(getContext(), mGame);
+            setAdapter(adapter);
+        }
     }
 
     public void updateData(Game game) {
         mGame = game;
-        if (mActionMode != null) {
-            mActionMode.finish();
-        }
+        finishActionMode();
         ((CategoryAdapter)mListAdapter).update(game);
     }
 

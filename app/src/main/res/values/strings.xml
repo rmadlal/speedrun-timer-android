@@ -51,6 +51,7 @@
     <string name="best_time">il.ronmad.speedruntimer.BEST_TIME</string>
 
     <integer name="notification_id">1234</integer>
+    <string name="notification_channel_id">il.ronmad.speedruntimer.NOTIFICATION_CHANNEL</string>
     <string name="title_activity_settings">Settings</string>
 
     <!-- Strings related to Settings -->

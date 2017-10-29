@@ -32,7 +32,6 @@ public class GamesListFragment extends BaseListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (getArguments() != null) {
             mGameNames = getArguments().getStringArrayList(ARG_GAME_NAMES);
         } else {
@@ -45,8 +44,10 @@ public class GamesListFragment extends BaseListFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        GamesAdapter adapter = new GamesAdapter(getContext(), mGameNames);
-        setAdapter(adapter);
+        if (mListAdapter == null) {
+            GamesAdapter adapter = new GamesAdapter(getContext(), mGameNames);
+            setAdapter(adapter);
+        }
     }
 
     public void addGame(String newGame) {
@@ -58,13 +59,13 @@ public class GamesListFragment extends BaseListFragment {
         String oldName = getSelectedItemNames()[0];
         mGameNames.set(mGameNames.indexOf(oldName), newName);
         mListAdapter.notifyDataSetChanged();
-        mActionMode.finish();
+        finishActionMode();
     }
 
     public void removeGames() {
         List<String> toRemove = Arrays.asList(getSelectedItemNames());
         mGameNames.removeAll(toRemove);
         mListAdapter.notifyDataSetChanged();
-        mActionMode.finish();
+        finishActionMode();
     }
 }

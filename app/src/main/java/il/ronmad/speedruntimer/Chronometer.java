@@ -35,8 +35,8 @@ public class Chronometer {
     private static final int TICK_WHAT = 2;
 
     public Chronometer(Context context, View view) {
-        chronoMillis = (TextView) view.findViewById(R.id.chronoMillis);
-        chronoRest = (TextView) view.findViewById(R.id.chronoRest);
+        chronoMillis = view.findViewById(R.id.chronoMillis);
+        chronoRest = view.findViewById(R.id.chronoRest);
 
         chronoMillis.setTypeface(Typeface.createFromAsset(
                 context.getAssets(), "fonts/digital-7.ttf"));

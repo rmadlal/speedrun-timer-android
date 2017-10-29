@@ -9,7 +9,6 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CategoryAdapter extends BaseAdapter {
@@ -47,8 +46,8 @@ public class CategoryAdapter extends BaseAdapter {
         } else {
             layout = view;
         }
-        TextView text1 = (TextView) layout.findViewById(R.id.text1);
-        TextView text3 = (TextView) layout.findViewById(R.id.text3);
+        TextView text1 = layout.findViewById(R.id.text1);
+        TextView text3 = layout.findViewById(R.id.text3);
 
         text1.setText((String) getItem(i));
         text3.setText(bestTimes.get(i) > 0 ? Game.getFormattedBestTime(bestTimes.get(i)) : "None yet");

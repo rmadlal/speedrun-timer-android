@@ -43,7 +43,7 @@ public class GamesAdapter extends BaseAdapter {
             layout = view;
         }
 
-        TextView text = (TextView) layout.findViewById(R.id.text1);
+        TextView text = layout.findViewById(R.id.text1);
         text.setText((String) getItem(i));
 
         return layout;

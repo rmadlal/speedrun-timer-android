@@ -1,6 +1,5 @@
 package il.ronmad.speedruntimer;
 
-
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,12 +12,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Vector;
 
 import il.ronmad.speedruntimer.MainActivity.ListAction;
 
@@ -26,8 +23,8 @@ public abstract class BaseListFragment extends ListFragment {
 
     protected BaseAdapter mListAdapter;
     protected ActionMode mActionMode;
-    protected List<View> checkedItems;
-    protected View clickedItem;
+    protected Vector<Integer> checkedItemPositions;
+    protected int clickedItemPosition;
     protected int layoutResId;
     protected int contextMenuResId;
 
@@ -40,13 +37,20 @@ public abstract class BaseListFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        checkedItemPositions = new Vector<>();
         setHasOptionsMenu(true);
-        checkedItems = new ArrayList<>();
+        setRetainInstance(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(layoutResId, container, false);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setupListView();
     }
 
     @Override
@@ -67,6 +71,12 @@ public abstract class BaseListFragment extends ListFragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        finishActionMode();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 //        inflater.inflate(R.menu.main_activity_actions, menu);
@@ -75,80 +85,80 @@ public abstract class BaseListFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         if (mActionMode != null) {
-            setChecked(l, v, l.isItemChecked(position));
-            if (checkedItems.size() == 0) {
+            setChecked(position, l.isItemChecked(position));
+            if (checkedItemPositions.isEmpty()) {
                 mActionMode.finish();
             } else {
                 mActionMode.invalidate();
             }
         } else {
-            setChecked(l, v, false);
-            clickedItem = v;
-            invokeListener(ListAction.CLICK);
+            setChecked(position, false);
+            clickedItemPosition = position;
+            mListener.onListFragmentInteraction(ListAction.CLICK);
         }
     }
 
     public interface OnListFragmentInteractionListener {
-        void onGamesListFragmentInteraction(GamesListFragment gamesListFragment, ListAction action);
-        void onCategoryListFragmentInteraction(GameCategoriesListFragment categoryListFragment, ListAction action);
+        void onListFragmentInteraction(ListAction action);
     }
 
     public String[] getSelectedItemNames() {
-        String[] items = new String[checkedItems.size()];
+        String[] items = new String[checkedItemPositions.size()];
         int i = 0;
-        for (View view : checkedItems) {
-            items[i++] = (String) mListAdapter.getItem(getListView().getPositionForView(view));
+        for (int pos : checkedItemPositions) {
+            items[i++] = (String) mListAdapter.getItem(pos);
         }
         return items;
     }
 
     public String getClickedItemName() {
-        return (String) mListAdapter.getItem(getListView().getPositionForView(clickedItem));
+        return (String) mListAdapter.getItem(clickedItemPosition);
     }
 
     protected void setAdapter(BaseAdapter adapter) {
         mListAdapter = adapter;
         setListAdapter(mListAdapter);
-        ListView listView = getListView();
-        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (mActionMode != null) {
-                    return false;
-                }
-
-                mActionMode = getActivity().startActionMode(actionModeCallback);
-                setChecked(getListView(), view, true);
-                mActionMode.invalidate();
-                return true;
-            }
-        });
     }
 
-    protected void setChecked(ListView listView, View view, boolean checked) {
-        listView.setItemChecked(listView.getPositionForView(view), checked);
+    protected void setChecked(int position, boolean checked) {
+        ListView listView = getListView();
+        listView.setItemChecked(position, checked);
         if (checked) {
-            checkedItems.add(view);
-            view.setBackgroundResource(R.color.colorHighlightedListItem);
+            checkedItemPositions.add(position);
+            listView.getChildAt(position).setBackgroundResource(R.color.colorHighlightedListItem);
         } else {
-            checkedItems.remove(view);
-            view.setBackgroundResource(android.R.color.transparent);
+            checkedItemPositions.remove(Integer.valueOf(position));
+            listView.getChildAt(position).setBackgroundResource(android.R.color.transparent);
         }
     }
 
     protected void clearSelections() {
-        while (!checkedItems.isEmpty()) {
-            setChecked(getListView(), checkedItems.get(0), false);
+        if (mListAdapter.isEmpty()) {
+            checkedItemPositions.clear();
+        }
+        else while (!checkedItemPositions.isEmpty()) {
+            setChecked(checkedItemPositions.get(0), false);
         }
     }
 
-    private void invokeListener(ListAction action) {
-        if (this instanceof GamesListFragment) {
-            mListener.onGamesListFragmentInteraction((GamesListFragment) this, action);
-        } else if (this instanceof GameCategoriesListFragment) {
-            mListener.onCategoryListFragmentInteraction((GameCategoriesListFragment) this, action);
+    public void finishActionMode() {
+        if (mActionMode != null) {
+            mActionMode.finish();
         }
+    }
+
+    private void setupListView() {
+        ListView listView = getListView();
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
+        listView.setOnItemLongClickListener((adapterView, view, i, l) -> {
+            if (mActionMode != null) {
+                return false;
+            }
+            mActionMode = getActivity().startActionMode(actionModeCallback);
+            setChecked(i, true);
+            mActionMode.invalidate();
+            return true;
+        });
     }
 
     private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
@@ -161,8 +171,8 @@ public abstract class BaseListFragment extends ListFragment {
 
         @Override
         public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-            actionMode.setTitle(String.valueOf(checkedItems.size()));
-            menu.findItem(R.id.menu_edit).setVisible(checkedItems.size() == 1);
+            actionMode.setTitle(String.valueOf(checkedItemPositions.size()));
+            menu.findItem(R.id.menu_edit).setVisible(checkedItemPositions.size() == 1);
             return true;
         }
 
@@ -170,10 +180,10 @@ public abstract class BaseListFragment extends ListFragment {
         public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
             switch (menuItem.getItemId()) {
                 case R.id.menu_edit:
-                    invokeListener(ListAction.EDIT);
+                    mListener.onListFragmentInteraction(ListAction.EDIT);
                     return true;
                 case R.id.menu_delete:
-                    invokeListener(ListAction.DELETE);
+                    mListener.onListFragmentInteraction(ListAction.DELETE);
                     return true;
                 default:
                     return false;
