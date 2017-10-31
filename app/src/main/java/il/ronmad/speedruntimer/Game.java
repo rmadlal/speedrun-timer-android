@@ -69,18 +69,13 @@ public class Game {
     }
 
     public static String getFormattedBestTime(long time) {
-        int hours = (int) time / (1000*3600);
-        int remaining = (int)(time % (3600 * 1000));
-        int minutes = remaining / (60 * 1000);
-        remaining = remaining % (60 * 1000);
-        int seconds = remaining / 1000;
-        int millis = (remaining % 1000) / 10;
+        int[] units = Util.getTimeUnits(time);
+        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
         if (hours > 0) {
             return String.format(Locale.getDefault(), "%d:%02d:%02d.%02d", hours, minutes, seconds, millis);
         }
         if (minutes > 0) {
             return String.format(Locale.getDefault(), "%d:%02d.%02d", minutes, seconds, millis);
-
         }
         return String.format(Locale.getDefault(), "%d.%02d", seconds, millis);
     }

@@ -18,7 +18,7 @@
             android:id="@+id/text1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@android:style/TextAppearance.Material.Title"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
             android:gravity="center_vertical"
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"/>
@@ -30,7 +30,7 @@
             android:text="@string/pb_text"
             android:layout_below="@id/text1"
             android:layout_alignStart="@id/text1"
-            android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+            android:textAppearance="@style/TextAppearance.AppCompat"
             android:gravity="center_vertical"
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd" />
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@id/text2"
             android:layout_alignBottom="@id/text2"
-            android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+            android:textAppearance="@style/TextAppearance.AppCompat"
             android:gravity="center_vertical" />
 
     </RelativeLayout>

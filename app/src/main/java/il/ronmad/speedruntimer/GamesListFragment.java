@@ -55,16 +55,14 @@ public class GamesListFragment extends BaseListFragment {
         mListAdapter.notifyDataSetChanged();
     }
 
-    public void setGameName(String newName) {
-        String oldName = getSelectedItemNames()[0];
+    public void setGameName(String oldName, String newName) {
         mGameNames.set(mGameNames.indexOf(oldName), newName);
         mListAdapter.notifyDataSetChanged();
         finishActionMode();
     }
 
-    public void removeGames() {
-        List<String> toRemove = Arrays.asList(getSelectedItemNames());
-        mGameNames.removeAll(toRemove);
+    public void removeGames(String[] toRemove) {
+        mGameNames.removeAll(Arrays.asList(toRemove));
         mListAdapter.notifyDataSetChanged();
         finishActionMode();
     }

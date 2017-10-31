@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class Chronometer {
@@ -27,9 +26,6 @@ public class Chronometer {
 
     private long base;
     private long timeElapsed;
-    private SimpleDateFormat millisDf;
-    private SimpleDateFormat restDf;
-    private boolean hoursShowing;
 
     private Handler chronoHandler;
     private static final int TICK_WHAT = 2;
@@ -43,8 +39,6 @@ public class Chronometer {
         chronoRest.setTypeface(Typeface.createFromAsset(
                 context.getAssets(), "fonts/digital-7.ttf"));
 
-        millisDf = new SimpleDateFormat(".SS", Locale.getDefault());
-
         chronoHandler = new ChronoHandler(this);
 
         init();
@@ -53,9 +47,6 @@ public class Chronometer {
     private void init() {
         started = false;
         timeElapsed = 0;
-
-        restDf = new SimpleDateFormat("m:ss", Locale.getDefault());
-        hoursShowing = false;
 
         chronoMillis.setText(R.string.chrono_millis);
         chronoRest.setText(R.string.chrono_rest);
@@ -68,6 +59,9 @@ public class Chronometer {
         running = true;
         base = SystemClock.elapsedRealtime() - timeElapsed;
         updateRunning();
+        if (bestTime == 0) {
+            setColor(colorNeutral);
+        }
     }
 
     public void stop() {
@@ -89,19 +83,14 @@ public class Chronometer {
     private void update() {
         timeElapsed = SystemClock.elapsedRealtime() - base;
 
-        int hours = (int) (timeElapsed / (3600 * 1000));
+        int[] units = Util.getTimeUnits(timeElapsed);
+        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
         if (hours > 0) {
-            if (!hoursShowing) {
-                restDf = new SimpleDateFormat(":mm:ss", Locale.getDefault());
-                hoursShowing = true;
-            }
-            chronoRest.setText(String.format(Locale.getDefault(),
-                    "%d%s", hours, restDf.format(timeElapsed)));
+            chronoRest.setText(String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds));
         } else {
-            chronoRest.setText(restDf.format(timeElapsed));
+            chronoRest.setText(String.format(Locale.getDefault(), "%d:%02d", minutes, seconds));
         }
-
-        chronoMillis.setText(millisDf.format(timeElapsed));
+        chronoMillis.setText(String.format(Locale.getDefault(), ".%02d", millis));
         updateColor();
     }
 

@@ -96,12 +96,15 @@ public class TimerService extends Service {
     private Notification setupNotification(Game game, String category) {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
-                .setSmallIcon(R.drawable.ic_timer_black_48dp)
+                .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                        R.drawable.ic_timer_black_48dp : R.drawable.ic_stat_timer)
                 .setContentTitle(String.format("%s %s", game.getName(), category))
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         new Intent(this, MainActivity.class),
                         PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(R.drawable.ic_close_black_24dp, getString(R.string.close_timer),
+                .addAction(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                                R.drawable.ic_close_black_24dp : R.drawable.ic_stat_close,
+                        getString(R.string.close_timer),
                         PendingIntent.getBroadcast(this, 0,
                                 new Intent(getString(R.string.action_close_timer)),
                                 PendingIntent.FLAG_UPDATE_CURRENT))

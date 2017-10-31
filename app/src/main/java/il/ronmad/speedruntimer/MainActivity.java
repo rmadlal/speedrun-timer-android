@@ -77,6 +77,11 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Set toolbar elevation to 4dp
+            float scale = getResources().getDisplayMetrics().density;
+            toolbar.setElevation((int) (4 * scale + 0.5f));
+        }
 
         fabAdd = findViewById(R.id.fabAdd);
         mSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
@@ -455,14 +460,14 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private void editGameName(String oldName, String newName) {
         Game game = games.get(games.indexOf(new Game(oldName)));
         game.setName(newName);
-        ((GamesListFragment)currentFragment).setGameName(newName);
+        ((GamesListFragment)currentFragment).setGameName(oldName, newName);
     }
 
     private void removeGames(String[] toRemove) {
         for (String gameName : toRemove) {
             games.remove(new Game(gameName));
         }
-        ((GamesListFragment)currentFragment).removeGames();
+        ((GamesListFragment)currentFragment).removeGames(toRemove);
     }
 
     private void removeCategories(String[] categories) {
@@ -649,16 +654,12 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                                           EditText minutesInput,
                                           EditText secondsInput,
                                           EditText millisInput) {
-            int hours = (int)(bestTime / (3600 * 1000));
-            int remaining = (int)(bestTime % (3600 * 1000));
-            int minutes = remaining / (60 * 1000);
-            remaining = remaining % (60 * 1000);
-            int seconds = remaining / 1000;
-            int milliseconds = remaining % 1000;
+            int[] units = Util.getTimeUnits(bestTime);
+            int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3];
             hoursInput.setText(hours > 0 ? ""+hours : "");
             minutesInput.setText(minutes > 0 ? ""+minutes : "");
             secondsInput.setText(seconds > 0 ? ""+seconds : "");
-            millisInput.setText(milliseconds > 0 ? ""+milliseconds : "");
+            millisInput.setText(millis > 0 ? ""+millis : "");
         }
 
         private long getTimeFromEditTexts(EditText hoursInput,
