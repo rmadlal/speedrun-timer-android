@@ -2,6 +2,7 @@ package il.ronmad.speedruntimer;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,6 +39,7 @@ import static il.ronmad.speedruntimer.Util.gson;
 
 public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
 
+    private static int launchCounter = 0;
     private static boolean backFromPermissionCheck = false;
 
     private static String currentFragmentTag = null;
@@ -52,7 +54,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private String currentCategory;
 
     private FloatingActionButton fabAdd;
-    private Snackbar mSnackbar;
+    private Snackbar addSnackbar;
+    private Snackbar rateSnackbar;
+    private boolean rateSnackbarShown;
 
     private static final String TAG_NEW_GAME_DIALOG = "NewGameDialog";
     private static final String TAG_EDIT_GAME_DIALOG = "EditGameDialog";
@@ -84,19 +88,30 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
 
         fabAdd = findViewById(R.id.fabAdd);
-        mSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
+        addSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
 
         sharedPrefs = getPreferences(MODE_PRIVATE);
-        String savedData = sharedPrefs.getString(getString(R.string.games), "");
+        String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
         if (savedData.isEmpty()) {
             games = new ArrayList<>();
-            new Handler().postDelayed(() -> mSnackbar.show(), 1000);
+            new Handler().postDelayed(() -> addSnackbar.show(), 1000);
         } else {
             Game[] gameArr = gson.fromJson(savedData, Game[].class);
             games = new ArrayList<>(Arrays.asList(gameArr));
         }
         currentGame = null;
         currentCategory = null;
+
+        rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
+        if (!rateSnackbarShown && launchCounter == 0 && !games.isEmpty()) {
+            int savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0);
+            launchCounter = Math.min(3, savedLaunchCounter) + 1;
+            if (launchCounter == 3) {
+                setupRateSnackbar();
+                new Handler().postDelayed(() -> rateSnackbar.show(), 1000);
+                rateSnackbarShown = true;
+            }
+        }
 
         setupReceiver();
         setupFragments();
@@ -127,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     @Override
     protected void onStop() {
         super.onStop();
-        saveGameData();
+        saveData();
     }
 
     @Override
@@ -181,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT) && currentFragment.isVisible()) {
             backToGamesListFragment();
         } else {
+            currentFragmentTag = null;
             super.onBackPressed();
         }
     }
@@ -265,8 +281,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             stopService(new Intent(this, TimerService.class));
         }
         Intent serviceIntent = new Intent(this, TimerService.class);
-        serviceIntent.putExtra(getString(R.string.game), gson.toJson(currentGame));
-        serviceIntent.putExtra(getString(R.string.category_name), currentCategory);
+        serviceIntent.putExtra(getString(R.string.extra_game), gson.toJson(currentGame));
+        serviceIntent.putExtra(getString(R.string.extra_category), currentCategory);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
@@ -306,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                         stopService(new Intent(context, TimerService.class));
                     }
                 } else if (action.equals(getString(R.string.action_save_best_time))) {
-                    long time = intent.getLongExtra(getString(R.string.best_time), 0);
+                    long time = intent.getLongExtra(getString(R.string.extra_best_time), 0);
                     updateBestTime(time);
                 }
             }
@@ -338,9 +354,30 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
     }
 
-    private void saveGameData() {
+    private void setupRateSnackbar() {
+        rateSnackbar = Snackbar.make(fabAdd, "If you like this app, please rate it on the Play Store.",
+                Snackbar.LENGTH_LONG);
+        rateSnackbar.setAction(R.string.rate, view -> {
+            Intent marketIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=" + getPackageName()));
+            marketIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
+                    | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT : Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET )
+                    | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            try {
+                startActivity(marketIntent);
+            } catch (ActivityNotFoundException e) {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+            }
+        });
+    }
+
+    private void saveData() {
         sharedPrefs.edit()
-                .putString(getString(R.string.games), games.isEmpty() ? "" : gson.toJson(games))
+                .putString(getString(R.string.key_games), games.isEmpty() ? "" : gson.toJson(games))
+                .putInt(getString(R.string.key_launch_counter), launchCounter)
+                .putBoolean(getString(R.string.key_rate_snackbar_shown), rateSnackbarShown)
                 .apply();
     }
 
@@ -406,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     public void addFabButtonPressed(View view) {
-        mSnackbar.dismiss();
+        addSnackbar.dismiss();
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
             new MyDialog().show(fragmentManager, TAG_NEW_GAME_DIALOG);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
@@ -480,7 +517,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private void setBestTime(String category, long time) {
         currentGame.setBestTime(category, time);
         ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
-        saveGameData();
+        saveData();
     }
 
     void updateBestTime(long time) {
@@ -488,7 +525,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
             ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
         }
-        saveGameData();
+        saveData();
     }
 
     public static class MyDialog extends DialogFragment {

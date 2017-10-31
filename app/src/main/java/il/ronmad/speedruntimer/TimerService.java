@@ -54,8 +54,8 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        Game game = gson.fromJson(intent.getStringExtra(getString(R.string.game)), Game.class);
-        String category = intent.getStringExtra(getString(R.string.category_name));
+        Game game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
+        String category = intent.getStringExtra(getString(R.string.extra_category));
         bestTime = game.getBestTime(category);
 
         Notification notification = setupNotification(game, category);
@@ -209,7 +209,7 @@ public class TimerService extends Service {
                             notificationBuilder.setContentText(String.format("PB: %s", Game.getFormattedBestTime(bestTime)));
                             notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
                             Intent intent = new Intent(getString(R.string.action_save_best_time));
-                            intent.putExtra(getString(R.string.best_time), bestTime);
+                            intent.putExtra(getString(R.string.extra_best_time), bestTime);
                             sendBroadcast(intent);
                         })
                         .setNegativeButton(R.string.reset, (dialogInterface, i) -> chronometer.reset())
