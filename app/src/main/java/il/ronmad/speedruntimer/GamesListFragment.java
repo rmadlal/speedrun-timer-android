@@ -45,7 +45,7 @@ public class GamesListFragment extends BaseListFragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (mListAdapter == null) {
-            GamesAdapter adapter = new GamesAdapter(getContext(), mGameNames);
+            GamesAdapter adapter = new GamesAdapter(getContext(), mGameNames, checkedItemPositions);
             setAdapter(adapter);
         }
     }

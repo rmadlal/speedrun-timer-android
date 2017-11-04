@@ -14,6 +14,7 @@
         android:id="@android:id/empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:gravity="top"
         android:text="@string/empty_games_list"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"

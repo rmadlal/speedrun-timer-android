@@ -22,7 +22,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import static il.ronmad.speedruntimer.Util.gson;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class TimerService extends Service {
 
@@ -54,6 +55,7 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
+        Gson gson = new GsonBuilder().create();
         Game game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
         String category = intent.getStringExtra(getString(R.string.extra_category));
         bestTime = game.getBestTime(category);
@@ -63,14 +65,15 @@ public class TimerService extends Service {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         Chronometer.bestTime = bestTime;
-        Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_color_neutral),
+        Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_pref_color_neutral),
                 ContextCompat.getColor(this, R.color.colorTimerNeutralDefault));
-        Chronometer.colorAhead = prefs.getInt(getString(R.string.key_color_ahead),
+        Chronometer.colorAhead = prefs.getInt(getString(R.string.key_pref_color_ahead),
                 ContextCompat.getColor(this, R.color.colorTimerAheadDefault));
-        Chronometer.colorBehind = prefs.getInt(getString(R.string.key_color_behind),
+        Chronometer.colorBehind = prefs.getInt(getString(R.string.key_pref_color_behind),
                 ContextCompat.getColor(this, R.color.colorTimerBehindDefault));
-        Chronometer.colorPB = prefs.getInt(getString(R.string.key_color_pb),
+        Chronometer.colorPB = prefs.getInt(getString(R.string.key_pref_color_pb),
                 ContextCompat.getColor(this, R.color.colorTimerPBDefault));
+        Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L);
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         setupLayoutComponents();
@@ -111,7 +114,7 @@ public class TimerService extends Service {
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true);
         if (bestTime > 0) {
-            notificationBuilder.setContentText(String.format("PB: %s", Game.getFormattedBestTime(bestTime)));
+            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(bestTime)));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = new NotificationChannel(
@@ -194,19 +197,20 @@ public class TimerService extends Service {
             if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
                 return false;
             }
-            if (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime) {
+            if (chronometer.getTimeElapsed() < 0
+                    || (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime)) {
                 chronometer.reset();
             } else if (!Chronometer.running) {
                 AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
                         .setTitle(bestTime == 0 ? "New personal best!" :
                                 String.format("New personal best! (-%s)",
-                                        Game.getFormattedBestTime(bestTime - chronometer.getTimeElapsed())))
+                                        Util.getFormattedTime(bestTime - chronometer.getTimeElapsed())))
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
                             bestTime = chronometer.getTimeElapsed();
                             chronometer.reset();
                             Chronometer.bestTime = bestTime;
-                            notificationBuilder.setContentText(String.format("PB: %s", Game.getFormattedBestTime(bestTime)));
+                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(bestTime)));
                             notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
                             Intent intent = new Intent(getString(R.string.action_save_best_time));
                             intent.putExtra(getString(R.string.extra_best_time), bestTime);

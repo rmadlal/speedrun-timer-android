@@ -55,19 +55,21 @@
 
     <!-- Strings related to Settings -->
 
-    <string name="color_neutral_title">Neutral</string>
-    <string name="color_ahead_title">Ahead</string>
-    <string name="color_behind_title">Behind</string>
-    <string name="color_pb_title">PB</string>
+    <string name="pref_neutral_color_title">Neutral</string>
+    <string name="pref_ahead_color_title">Ahead</string>
+    <string name="pref_behind_color_title">Behind</string>
+    <string name="pref_pb_color_title">PB</string>
+    <string name="pref_timer_countdown_title">Set timer countdown</string>
 
     <!-- Keys -->
     <string name="key_games">il.ronmad.speedruntimer.GAMES</string>
     <string name="key_launch_counter">il.ronmad.speedruntimer.LAUNCH_COUNTER</string>
     <string name="key_rate_snackbar_shown">il.ronmad.speedruntimer.RATE_SHOWN</string>
-    <string name="key_color_neutral">color_neutral</string>
-    <string name="key_color_ahead">color_ahead</string>
-    <string name="key_color_behind">color_behind</string>
-    <string name="key_color_pb">color_pb</string>
+    <string name="key_pref_color_neutral">color_neutral</string>
+    <string name="key_pref_color_ahead">color_ahead</string>
+    <string name="key_pref_color_behind">color_behind</string>
+    <string name="key_pref_color_pb">color_pb</string>
+    <string name="key_pref_timer_countdown">countdown_preference</string>
     <string name="key_timer_pos_x">timer_x</string>
     <string name="key_timer_pos_y">timer_y</string>
 

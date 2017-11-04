@@ -8,15 +8,18 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Vector;
 
 public class GamesAdapter extends BaseAdapter {
 
     private Context context;
     private List<String> gameNames;
+    private Vector<Integer> checkedItemPositions;
 
-    public GamesAdapter(Context context, List<String> gameNames) {
+    public GamesAdapter(Context context, List<String> gameNames, Vector<Integer> checkedItemPositions) {
         this.context = context;
         this.gameNames = gameNames;
+        this.checkedItemPositions = checkedItemPositions;
     }
 
     @Override
@@ -42,9 +45,14 @@ public class GamesAdapter extends BaseAdapter {
         } else {
             layout = view;
         }
-
         TextView text = layout.findViewById(R.id.text1);
         text.setText((String) getItem(i));
+
+        if (checkedItemPositions.contains(i)) {
+            layout.setBackgroundResource(R.color.colorHighlightedListItem);
+        } else {
+            layout.setBackgroundResource(android.R.color.transparent);
+        }
 
         return layout;
     }

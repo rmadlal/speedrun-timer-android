@@ -1,11 +1,10 @@
 package il.ronmad.speedruntimer;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import android.widget.EditText;
+
+import java.util.Locale;
 
 public class Util {
-
-    public static Gson gson = new GsonBuilder().create();
 
     public static int[] getTimeUnits(long time) {
         int hours = (int) time / (1000*3600);
@@ -15,5 +14,50 @@ public class Util {
         int seconds = remaining / 1000;
         int millis = remaining % 1000;
         return new int[]{hours, minutes, seconds, millis};
+    }
+
+    public static String getFormattedTime(long time) {
+        int[] units = Util.getTimeUnits(Math.abs(time));
+        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
+        String formattedTime;
+        if (hours > 0) {
+            formattedTime = String.format(Locale.getDefault(), "%d:%02d:%02d.%02d", hours, minutes, seconds, millis);
+        } else if (minutes > 0) {
+            formattedTime = String.format(Locale.getDefault(), "%d:%02d.%02d", minutes, seconds, millis);
+        } else {
+            formattedTime = String.format(Locale.getDefault(), "%d.%02d", seconds, millis);
+        }
+        if (time < 0) {
+            formattedTime = "-" + formattedTime;
+        }
+        return formattedTime;
+    }
+
+    public static void setEditTextsFromTime(long bestTime,
+                                            EditText hoursInput,
+                                            EditText minutesInput,
+                                            EditText secondsInput,
+                                            EditText millisInput) {
+        int[] units = Util.getTimeUnits(bestTime);
+        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3];
+        hoursInput.setText(hours > 0 ? ""+hours : "");
+        minutesInput.setText(minutes > 0 ? ""+minutes : "");
+        secondsInput.setText(seconds > 0 ? ""+seconds : "");
+        millisInput.setText(millis > 0 ? ""+millis : "");
+    }
+
+    public static long getTimeFromEditTexts(EditText hoursInput,
+                                            EditText minutesInput,
+                                            EditText secondsInput,
+                                            EditText millisInput) {
+        String hoursStr = hoursInput.getText().toString();
+        String minutesStr = minutesInput.getText().toString();
+        String secondsStr = secondsInput.getText().toString();
+        String millisStr = millisInput.getText().toString();
+        int hours = hoursStr.isEmpty() ? 0 : Integer.parseInt(hoursStr);
+        int minutes = minutesStr.isEmpty() ? 0 : Integer.parseInt(minutesStr);
+        int seconds = secondsStr.isEmpty() ? 0 : Integer.parseInt(secondsStr);
+        int millis = millisStr.isEmpty() ? 0 : Integer.parseInt(millisStr);
+        return 1000*60*60 * hours + 1000*60 * minutes + 1000 * seconds + millis;
     }
 }

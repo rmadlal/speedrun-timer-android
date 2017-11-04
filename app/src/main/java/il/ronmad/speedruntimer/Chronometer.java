@@ -21,6 +21,7 @@ public class Chronometer {
     static int colorAhead;
     static int colorBehind;
     static int colorPB;
+    static long countdown;
     static boolean started;
     static boolean running;
 
@@ -46,11 +47,8 @@ public class Chronometer {
 
     private void init() {
         started = false;
-        timeElapsed = 0;
-
-        chronoMillis.setText(R.string.chrono_millis);
-        chronoRest.setText(R.string.chrono_rest);
-
+        timeElapsed = -1 * countdown;
+        setChronoTextFromTime(timeElapsed);
         setColor(colorNeutral);
     }
 
@@ -67,7 +65,7 @@ public class Chronometer {
     public void stop() {
         running = false;
         updateRunning();
-        if (bestTime == 0 || timeElapsed < bestTime) {
+        if (timeElapsed > 0 && (bestTime == 0 || timeElapsed < bestTime)) {
             setColor(colorPB);
         }
     }
@@ -82,25 +80,29 @@ public class Chronometer {
 
     private void update() {
         timeElapsed = SystemClock.elapsedRealtime() - base;
-
-        int[] units = Util.getTimeUnits(timeElapsed);
-        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
-        if (hours > 0) {
-            chronoRest.setText(String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds));
-        } else {
-            chronoRest.setText(String.format(Locale.getDefault(), "%d:%02d", minutes, seconds));
-        }
-        chronoMillis.setText(String.format(Locale.getDefault(), ".%02d", millis));
+        setChronoTextFromTime(timeElapsed);
         updateColor();
     }
 
+    private void setChronoTextFromTime(long time) {
+        int[] units = Util.getTimeUnits(Math.abs(time));
+        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
+        if (hours > 0) {
+            chronoRest.setText(String.format(Locale.getDefault(),
+                    (time < 0) ? "-%d:%02d:%02d" : "%d:%02d:%02d" , hours, minutes, seconds));
+        } else {
+            chronoRest.setText(String.format(Locale.getDefault(),
+                    (time < 0) ? "-%d:%02d" : "%d:%02d", minutes, seconds));
+        }
+        chronoMillis.setText(String.format(Locale.getDefault(), ".%02d", millis));
+    }
+
     private void updateColor() {
-        if (bestTime == 0) {
+        if (bestTime == 0 || timeElapsed < 0) {
             return;
         }
         if (timeElapsed < bestTime && chronoMillis.getCurrentTextColor() != colorAhead) {
             setColor(colorAhead);
-
         } else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
             setColor(colorBehind);
         }

@@ -10,17 +10,20 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class CategoryAdapter extends BaseAdapter {
 
     private Context context;
     private List<String> categories;
     private List<Long> bestTimes;
+    private Vector<Integer> checkedItemPositions;
 
-    public CategoryAdapter(Context context, Game game) {
+    public CategoryAdapter(Context context, Game game, Vector<Integer> checkedItemPositions) {
         this.context = context;
         this.categories = new ArrayList<>(game.getCategoryNames());
         this.bestTimes = new ArrayList<>(game.getBestTimes());
+        this.checkedItemPositions = checkedItemPositions;
     }
 
     @Override
@@ -50,9 +53,15 @@ public class CategoryAdapter extends BaseAdapter {
         TextView text3 = layout.findViewById(R.id.text3);
 
         text1.setText((String) getItem(i));
-        text3.setText(bestTimes.get(i) > 0 ? Game.getFormattedBestTime(bestTimes.get(i)) : "None yet");
+        text3.setText(bestTimes.get(i) > 0 ? Util.getFormattedTime(bestTimes.get(i)) : "None yet");
         text3.setTextColor(ContextCompat.getColor(context,
                 bestTimes.get(i) > 0 ? R.color.colorAccent : android.R.color.primary_text_light));
+
+        if (checkedItemPositions.contains(i)) {
+            layout.setBackgroundResource(R.color.colorHighlightedListItem);
+        } else {
+            layout.setBackgroundResource(android.R.color.transparent);
+        }
 
         return layout;
     }

@@ -96,6 +96,7 @@ public abstract class BaseListFragment extends ListFragment {
             clickedItemPosition = position;
             mListener.onListFragmentInteraction(ListAction.CLICK);
         }
+        mListAdapter.notifyDataSetChanged();
     }
 
     public interface OnListFragmentInteractionListener {
@@ -125,11 +126,10 @@ public abstract class BaseListFragment extends ListFragment {
         listView.setItemChecked(position, checked);
         if (checked) {
             checkedItemPositions.add(position);
-            listView.getChildAt(position).setBackgroundResource(R.color.colorHighlightedListItem);
         } else {
             checkedItemPositions.remove(Integer.valueOf(position));
-            listView.getChildAt(position).setBackgroundResource(android.R.color.transparent);
         }
+        mListAdapter.notifyDataSetChanged();
     }
 
     protected void clearSelections() {

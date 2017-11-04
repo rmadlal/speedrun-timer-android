@@ -31,11 +31,12 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static il.ronmad.speedruntimer.Util.gson;
 
 public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
 
@@ -45,8 +46,10 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private FragmentManager fragmentManager;
     private BaseListFragment currentFragment;
     private String currentFragmentTag = null;
+
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
+    private Gson gson;
 
     private List<Game> games;
     private Game currentGame;
@@ -89,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         fabAdd = findViewById(R.id.fabAdd);
         addSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
 
+        gson = new GsonBuilder().create();
         sharedPrefs = getPreferences(MODE_PRIVATE);
         String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
         if (savedData.isEmpty()) {
@@ -458,7 +462,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             if (bestTime > 0) {
                 new AlertDialog.Builder(this)
                         .setTitle(String.format("Delete %s %s?", currentGame.getName(), toRemove[0]))
-                        .setMessage(String.format("Your PB of %s will be lost.", Game.getFormattedBestTime(bestTime)))
+                        .setMessage(String.format("Your PB of %s will be lost.", Util.getFormattedTime(bestTime)))
                         .setPositiveButton(R.string.delete, (dialogInterface, i) -> removeCategories(toRemove))
                         .setNegativeButton(android.R.string.cancel, null)
                         .show();
@@ -620,20 +624,20 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
         private AlertDialog createEditPBDialog(String category) {
             LayoutInflater inflater = activity.getLayoutInflater();
-            View dialogView = inflater.inflate(R.layout.edit_pb_dialog, null);
+            View dialogView = inflater.inflate(R.layout.edit_time_dialog, null);
             EditText hoursInput = dialogView.findViewById(R.id.hours);
             EditText minutesInput = dialogView.findViewById(R.id.minutes);
             EditText secondsInput = dialogView.findViewById(R.id.seconds);
             EditText millisInput = dialogView.findViewById(R.id.milliseconds);
             long bestTime = activity.currentGame.getBestTime(category);
             if (bestTime > 0) {
-                setTextsFromBestTime(bestTime, hoursInput, minutesInput, secondsInput, millisInput);
+                Util.setEditTextsFromTime(bestTime, hoursInput, minutesInput, secondsInput, millisInput);
             }
             final AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle(String.format("Edit best time for %s %s", activity.currentGame.getName(), category))
                     .setView(dialogView)
                     .setPositiveButton(R.string.save, (dialogInterface, i) -> {
-                        long newTime = getTimeFromEditTexts(hoursInput, minutesInput, secondsInput, millisInput);
+                        long newTime = Util.getTimeFromEditTexts(hoursInput, minutesInput, secondsInput, millisInput);
                         activity.setBestTime(category, bestTime, newTime, true);
                     })
                     .setNegativeButton(R.string.pb_clear, null)
@@ -698,34 +702,6 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     }
                 });
             });
-        }
-
-        private void setTextsFromBestTime(long bestTime,
-                                          EditText hoursInput,
-                                          EditText minutesInput,
-                                          EditText secondsInput,
-                                          EditText millisInput) {
-            int[] units = Util.getTimeUnits(bestTime);
-            int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3];
-            hoursInput.setText(hours > 0 ? ""+hours : "");
-            minutesInput.setText(minutes > 0 ? ""+minutes : "");
-            secondsInput.setText(seconds > 0 ? ""+seconds : "");
-            millisInput.setText(millis > 0 ? ""+millis : "");
-        }
-
-        private long getTimeFromEditTexts(EditText hoursInput,
-                                          EditText minutesInput,
-                                          EditText secondsInput,
-                                          EditText millisInput) {
-            String hoursStr = hoursInput.getText().toString();
-            String minutesStr = minutesInput.getText().toString();
-            String secondsStr = secondsInput.getText().toString();
-            String millisStr = millisInput.getText().toString();
-            int hours = hoursStr.isEmpty() ? 0 : Integer.parseInt(hoursStr);
-            int minutes = minutesStr.isEmpty() ? 0 : Integer.parseInt(minutesStr);
-            int seconds = secondsStr.isEmpty() ? 0 : Integer.parseInt(secondsStr);
-            int millis = millisStr.isEmpty() ? 0 : Integer.parseInt(millisStr);
-            return 1000*60*60 * hours + 1000*60 * minutes + 1000 * seconds + millis;
         }
     }
 }

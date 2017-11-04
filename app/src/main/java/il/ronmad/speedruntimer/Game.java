@@ -2,7 +2,6 @@ package il.ronmad.speedruntimer;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,17 +65,5 @@ public class Game {
             return ((Game)obj).name.equals(this.name);
         }
         return obj instanceof String && obj.equals(this.name);
-    }
-
-    public static String getFormattedBestTime(long time) {
-        int[] units = Util.getTimeUnits(time);
-        int hours = units[0], minutes = units[1], seconds = units[2], millis = units[3] / 10;
-        if (hours > 0) {
-            return String.format(Locale.getDefault(), "%d:%02d:%02d.%02d", hours, minutes, seconds, millis);
-        }
-        if (minutes > 0) {
-            return String.format(Locale.getDefault(), "%d:%02d.%02d", minutes, seconds, millis);
-        }
-        return String.format(Locale.getDefault(), "%d.%02d", seconds, millis);
     }
 }

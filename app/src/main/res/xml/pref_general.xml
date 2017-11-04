@@ -5,37 +5,49 @@
         android:title="Timer color preferences">
 
         <com.jaredrummler.android.colorpicker.ColorPreference
-            android:key="@string/key_color_neutral"
-            android:title="@string/color_neutral_title"
+            android:key="@string/key_pref_color_neutral"
+            android:title="@string/pref_neutral_color_title"
             android:defaultValue="@color/colorTimerNeutralDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
         <com.jaredrummler.android.colorpicker.ColorPreference
-            android:key="@string/key_color_ahead"
-            android:title="@string/color_ahead_title"
+            android:key="@string/key_pref_color_ahead"
+            android:title="@string/pref_ahead_color_title"
             android:defaultValue="@color/colorTimerAheadDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
         <com.jaredrummler.android.colorpicker.ColorPreference
-            android:key="@string/key_color_behind"
-            android:title="@string/color_behind_title"
+            android:key="@string/key_pref_color_behind"
+            android:title="@string/pref_behind_color_title"
             android:defaultValue="@color/colorTimerBehindDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
         <com.jaredrummler.android.colorpicker.ColorPreference
-            android:key="@string/key_color_pb"
-            android:title="@string/color_pb_title"
+            android:key="@string/key_pref_color_pb"
+            android:title="@string/pref_pb_color_title"
             android:defaultValue="@color/colorTimerPBDefault"
             app:cpv_showAlphaSlider="true"
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
     </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Timing settings">
+
+        <il.ronmad.speedruntimer.CountdownPreference
+            android:key="@string/key_pref_timer_countdown"
+            android:title="@string/pref_timer_countdown_title"
+            android:defaultValue="0" />
+
+    </PreferenceCategory>
+
+
 
 </PreferenceScreen>

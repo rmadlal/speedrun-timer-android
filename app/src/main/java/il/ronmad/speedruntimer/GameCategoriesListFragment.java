@@ -3,11 +3,13 @@ package il.ronmad.speedruntimer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import static il.ronmad.speedruntimer.Util.gson;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class GameCategoriesListFragment extends BaseListFragment {
 
     private static final String ARG_GAME_JSON = "game-json";
+    private Gson gson;
     private Game mGame;
 
     public GameCategoriesListFragment() {
@@ -18,6 +20,7 @@ public class GameCategoriesListFragment extends BaseListFragment {
         GameCategoriesListFragment fragment = new GameCategoriesListFragment();
         Bundle args = new Bundle();
 
+        Gson gson = new GsonBuilder().create();
         args.putString(ARG_GAME_JSON, gson.toJson(game));
         fragment.setArguments(args);
         return fragment;
@@ -27,6 +30,7 @@ public class GameCategoriesListFragment extends BaseListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
+            gson = new GsonBuilder().create();
             mGame = gson.fromJson(getArguments().getString(ARG_GAME_JSON), Game.class);
         }
         layoutResId = R.layout.category_list_layout;
@@ -37,7 +41,7 @@ public class GameCategoriesListFragment extends BaseListFragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (mListAdapter == null) {
-            CategoryAdapter adapter = new CategoryAdapter(getContext(), mGame);
+            CategoryAdapter adapter = new CategoryAdapter(getContext(), mGame, checkedItemPositions);
             setAdapter(adapter);
         }
     }

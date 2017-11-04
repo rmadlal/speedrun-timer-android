@@ -3,6 +3,7 @@ package il.ronmad.speedruntimer;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -36,6 +37,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                     : null);
                 } else if (preference instanceof ColorPreference) {
                     return true;
+                } else if (preference instanceof CountdownPreference) {
+                    preference.setSummary("Timer starts at " + Util.getFormattedTime(-1 * (long) value));
                 } else {
                     // For all other preferences, set the summary to the value's
                     // simple string representation.
@@ -50,11 +53,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         // Trigger the listener immediately with the preference's
         // current value.
-
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getInt(preference.getKey(), 0));
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(preference.getContext());
+        if (preference instanceof ColorPreference) {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    prefs.getInt(preference.getKey(), 0));
+        } else if (preference instanceof CountdownPreference) {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    prefs.getLong(preference.getKey(), 0L));
+        }
     }
 
     @Override
@@ -106,10 +113,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_color_neutral)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_color_ahead)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_color_behind)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_color_pb)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_neutral)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_ahead)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_behind)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_pb)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)));
         }
 
         @Override
