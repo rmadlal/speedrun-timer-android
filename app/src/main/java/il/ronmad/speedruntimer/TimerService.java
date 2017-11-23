@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -21,9 +22,10 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static il.ronmad.speedruntimer.GameDatabase.currentGame;
+import static il.ronmad.speedruntimer.GameDatabase.currentCategory;
 
 public class TimerService extends Service {
 
@@ -38,7 +40,7 @@ public class TimerService extends Service {
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
 
-    private WindowManager mWindowManager;
+    WindowManager mWindowManager;
     private boolean moved;
 
     @Override
@@ -55,12 +57,9 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        Gson gson = new GsonBuilder().create();
-        Game game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
-        String category = intent.getStringExtra(getString(R.string.extra_category));
-        bestTime = game.getBestTime(category);
+        bestTime = currentGame.getBestTime(currentCategory);
 
-        Notification notification = setupNotification(game, category);
+        Notification notification = setupNotification(currentGame, currentCategory);
         startForeground(R.integer.notification_id, notification);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -85,10 +84,7 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         if (mView != null) {
-            prefs.edit()
-                    .putInt(getString(R.string.key_timer_pos_x), mWindowsParams.x)
-                    .putInt(getString(R.string.key_timer_pos_y), mWindowsParams.y)
-                    .apply();
+            currentGame.setTimerPosition(mWindowParams.x, mWindowParams.y);
             mWindowManager.removeView(mView);
         }
 
@@ -135,6 +131,19 @@ public class TimerService extends Service {
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = layoutInflater.inflate(R.layout.timer_overlay, null);
 
+        mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
+                ContextCompat.getColor(this, R.color.colorTimerBackgroundDefault)));
+        int size = Integer.parseInt(prefs.getString(getString(R.string.key_pref_timer_size), "32"));
+        TextView chronoRest = mView.findViewById(R.id.chronoRest);
+        TextView chronoMillis = mView.findViewById(R.id.chronoMillis);
+        chronoRest.setTextSize(size);
+        chronoMillis.setTextSize((float) (size * 0.75));
+
+        chronoRest.setTypeface(Typeface.createFromAsset(
+                getAssets(), "fonts/digital-7.ttf"));
+        chronoMillis.setTypeface(Typeface.createFromAsset(
+                getAssets(), "fonts/digital-7.ttf"));
+
         chronometer = new Chronometer(this, mView);
 
         mView.setLongClickable(true);
@@ -158,8 +167,8 @@ public class TimerService extends Service {
 
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        initialX = mWindowsParams.x;
-                        initialY = mWindowsParams.y;
+                        initialX = mWindowParams.x;
+                        initialY = mWindowParams.y;
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
                         touchTime = System.currentTimeMillis();
@@ -184,9 +193,9 @@ public class TimerService extends Service {
                                 Math.pow(targetX - initialX, 2) + Math.pow(targetY - initialY, 2) < 25*25)
                             break;
                         moved = true;
-                        mWindowsParams.x = targetX;
-                        mWindowsParams.y = targetY;
-                        mWindowManager.updateViewLayout(mView, mWindowsParams);
+                        mWindowParams.x = targetX;
+                        mWindowParams.y = targetY;
+                        mWindowManager.updateViewLayout(mView, mWindowParams);
                         break;
                 }
                 return false;
@@ -203,8 +212,8 @@ public class TimerService extends Service {
             } else if (!Chronometer.running) {
                 AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
                         .setTitle(bestTime == 0 ? "New personal best!" :
-                                String.format("New personal best! (-%s)",
-                                        Util.getFormattedTime(bestTime - chronometer.getTimeElapsed())))
+                                String.format("New personal best! (%s)",
+                                        Util.getFormattedTime(chronometer.getTimeElapsed() - bestTime)))
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
                             bestTime = chronometer.getTimeElapsed();
@@ -230,11 +239,11 @@ public class TimerService extends Service {
         });
     }
 
-    WindowManager.LayoutParams mWindowsParams;
+    WindowManager.LayoutParams mWindowParams;
     private void setupView() {
         DisplayMetrics metrics = new DisplayMetrics();
         mWindowManager.getDefaultDisplay().getMetrics(metrics);
-        mWindowsParams = new WindowManager.LayoutParams(
+        mWindowParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -242,14 +251,12 @@ public class TimerService extends Service {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
+        mWindowParams.gravity = Gravity.BOTTOM | Gravity.END;
 
-        mWindowsParams.gravity = Gravity.BOTTOM | Gravity.END;
-        if (prefs.contains(getString(R.string.key_timer_pos_x))) {
-            int x = prefs.getInt(getString(R.string.key_timer_pos_x), 0);
-            int y = prefs.getInt(getString(R.string.key_timer_pos_y), 0);
-            mWindowsParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowsParams.width));
-            mWindowsParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowsParams.height));
-        }
-        mWindowManager.addView(mView, mWindowsParams);
+        int x = currentGame.getTimerPosition().x;
+        int y = currentGame.getTimerPosition().y;
+        mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width));
+        mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height));
+        mWindowManager.addView(mView, mWindowParams);
     }
 }

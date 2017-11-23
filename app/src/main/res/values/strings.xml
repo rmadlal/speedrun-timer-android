@@ -45,9 +45,12 @@
     <!-- Intent actions and extras -->
     <string name="action_close_timer">il.ronmad.speedruntimer.ACTION_CLOSE_TIMER</string>
     <string name="action_save_best_time">il.ronmad.speedruntimer.ACTION_SAVE_BEST_TIME</string>
+    <string name="action_save_timer_position">il.ronmad.speedruntimer.ACTION_SAVE_TIMER_POSITION</string>
     <string name="extra_game">il.ronmad.speedruntimer.GAME</string>
     <string name="extra_category">il.ronmad.speedruntimer.CATEGORY_NAME</string>
     <string name="extra_best_time">il.ronmad.speedruntimer.BEST_TIME</string>
+    <string name="extra_timer_x">il.ronmad.speedruntimer.TIMER_X</string>
+    <string name="extra_timer_y">il.ronmad.speedruntimer.TIMER_Y</string>
 
     <integer name="notification_id">1234</integer>
     <string name="notification_channel_id">il.ronmad.speedruntimer.NOTIFICATION_CHANNEL</string>
@@ -55,11 +58,25 @@
 
     <!-- Strings related to Settings -->
 
-    <string name="pref_neutral_color_title">Neutral</string>
-    <string name="pref_ahead_color_title">Ahead</string>
-    <string name="pref_behind_color_title">Behind</string>
-    <string name="pref_pb_color_title">PB</string>
+    <string name="pref_color_neutral_title">Neutral</string>
+    <string name="pref_color_ahead_title">Ahead</string>
+    <string name="pref_color_behind_title">Behind</string>
+    <string name="pref_color_pb_title">PB</string>
+    <string name="pref_color_background_title">Timer background</string>
+    <string name="pref_timer_size_title">Timer size</string>
     <string name="pref_timer_countdown_title">Set timer countdown</string>
+
+    <string-array name="timerSize">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
+    </string-array>
+
+    <string-array name="timerSizeData">
+        <item>24</item>
+        <item>32</item>
+        <item>40</item>
+    </string-array>
 
     <!-- Keys -->
     <string name="key_games">il.ronmad.speedruntimer.GAMES</string>
@@ -69,7 +86,9 @@
     <string name="key_pref_color_ahead">color_ahead</string>
     <string name="key_pref_color_behind">color_behind</string>
     <string name="key_pref_color_pb">color_pb</string>
+    <string name="key_pref_color_background">color_background</string>
     <string name="key_pref_timer_countdown">countdown_preference</string>
+    <string name="key_pref_timer_size">timer_size</string>
     <string name="key_timer_pos_x">timer_x</string>
     <string name="key_timer_pos_y">timer_y</string>
 

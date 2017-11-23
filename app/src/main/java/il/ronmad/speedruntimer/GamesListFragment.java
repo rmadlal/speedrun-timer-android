@@ -4,8 +4,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import static il.ronmad.speedruntimer.GameDatabase.games;
 
 public class GamesListFragment extends BaseListFragment {
 
@@ -16,26 +17,16 @@ public class GamesListFragment extends BaseListFragment {
         // Required empty public constructor
     }
 
-    public static GamesListFragment newInstance(List<Game> games) {
-        GamesListFragment fragment = new GamesListFragment();
-        Bundle args = new Bundle();
-
-        ArrayList<String> gameNames = new ArrayList<>();
-        for (Game game : games) {
-            gameNames.add(game.getName());
-        }
-        args.putStringArrayList(ARG_GAME_NAMES, gameNames);
-        fragment.setArguments(args);
-        return fragment;
+    public static GamesListFragment newInstance() {
+        return new GamesListFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mGameNames = getArguments().getStringArrayList(ARG_GAME_NAMES);
-        } else {
-            mGameNames = new ArrayList<>();
+        mGameNames = new ArrayList<>();
+        for (Game game : games) {
+            mGameNames.add(game.getName());
         }
         layoutResId = R.layout.games_list_layout;
         contextMenuResId = R.menu.games_list_fragment_context_menu;
@@ -50,20 +41,12 @@ public class GamesListFragment extends BaseListFragment {
         }
     }
 
-    public void addGame(String newGame) {
-        mGameNames.add(newGame);
-        mListAdapter.notifyDataSetChanged();
-    }
-
-    public void setGameName(String oldName, String newName) {
-        mGameNames.set(mGameNames.indexOf(oldName), newName);
-        mListAdapter.notifyDataSetChanged();
+    public void update() {
         finishActionMode();
-    }
-
-    public void removeGames(String[] toRemove) {
-        mGameNames.removeAll(Arrays.asList(toRemove));
+        mGameNames.clear();
+        for (Game game : games) {
+            mGameNames.add(game.getName());
+        }
         mListAdapter.notifyDataSetChanged();
-        finishActionMode();
     }
 }

@@ -1,7 +1,6 @@
 package il.ronmad.speedruntimer;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -13,8 +12,11 @@ import java.util.Locale;
 
 public class Chronometer {
 
-    private TextView chronoMillis;
+    private TimerService service;
+    private View view;
+
     private TextView chronoRest;
+    private TextView chronoMillis;
 
     static long bestTime = 0;
     static int colorNeutral;
@@ -32,13 +34,11 @@ public class Chronometer {
     private static final int TICK_WHAT = 2;
 
     public Chronometer(Context context, View view) {
-        chronoMillis = view.findViewById(R.id.chronoMillis);
-        chronoRest = view.findViewById(R.id.chronoRest);
+        service = (TimerService) context;
+        this.view = view;
 
-        chronoMillis.setTypeface(Typeface.createFromAsset(
-                context.getAssets(), "fonts/digital-7.ttf"));
-        chronoRest.setTypeface(Typeface.createFromAsset(
-                context.getAssets(), "fonts/digital-7.ttf"));
+        chronoRest = view.findViewById(R.id.chronoRest);
+        chronoMillis = view.findViewById(R.id.chronoMillis);
 
         chronoHandler = new ChronoHandler(this);
 
@@ -101,9 +101,9 @@ public class Chronometer {
         if (bestTime == 0 || timeElapsed < 0) {
             return;
         }
-        if (timeElapsed < bestTime && chronoMillis.getCurrentTextColor() != colorAhead) {
+        if (timeElapsed < bestTime && chronoRest.getCurrentTextColor() != colorAhead) {
             setColor(colorAhead);
-        } else if (timeElapsed >= bestTime && chronoMillis.getCurrentTextColor() != colorBehind) {
+        } else if (timeElapsed >= bestTime && chronoRest.getCurrentTextColor() != colorBehind) {
             setColor(colorBehind);
         }
     }
@@ -122,8 +122,8 @@ public class Chronometer {
     }
 
     public void setColor(int color) {
-        chronoMillis.setTextColor(color);
         chronoRest.setTextColor(color);
+        chronoMillis.setTextColor(color);
     }
 
     private static class ChronoHandler extends Handler {

@@ -61,6 +61,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         } else if (preference instanceof CountdownPreference) {
             sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                     prefs.getLong(preference.getKey(), 0L));
+        } else if (preference instanceof ListPreference) {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    prefs.getString(preference.getKey(),
+                            ((ListPreference) preference).getEntryValues()[1].toString()));
         }
     }
 
@@ -117,6 +121,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_ahead)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_behind)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_pb)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_background)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_size)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)));
         }
 

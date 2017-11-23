@@ -1,5 +1,7 @@
 package il.ronmad.speedruntimer;
 
+import android.graphics.Point;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,10 +11,12 @@ public class Game {
 
     private String name;
     private Map<String, Long> categories;
+    private Point timerPosition;
 
     public Game(String name) {
         this.name = name;
         this.categories = new LinkedHashMap<>();
+        this.timerPosition = new Point();
     }
 
     public String getName() {
@@ -53,6 +57,17 @@ public class Game {
 
     public boolean hasCategory(String category) {
         return categories.containsKey(category);
+    }
+
+    public Point getTimerPosition() {
+        if (timerPosition == null) {
+            timerPosition = new Point(0, 0);
+        }
+        return timerPosition;
+    }
+
+    public void setTimerPosition(int x, int y) {
+        timerPosition.set(x, y);
     }
 
     public boolean isEmpty() {
