@@ -339,6 +339,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (categoriesListFragment != null) {
             currentFragment = categoriesListFragment;
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
+            if (currentGame == null) {
+                currentGame = categoriesListFragment.getGame();
+            }
             setActionBarTitleAndUpButton(currentGame.getName(), true);
         } else if (gamesListFragment != null) {
             currentFragment = gamesListFragment;
@@ -400,6 +403,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     .commit();
             setActionBarTitleAndUpButton(currentGame.getName(), true);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
+            if (currentGame == null) {
+                currentGame = ((GameCategoriesListFragment) currentFragment).getGame();
+            }
             currentCategory = currentFragment.getClickedItemName();
             checkPermissionAndStartTimer();
         }
@@ -502,20 +508,20 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private void addCategory(String category) {
         currentGame.addCategory(category);
-        ((GameCategoriesListFragment)currentFragment).updateData();
+        ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
     }
 
     private void removeCategories(String[] categories) {
         for (String category : categories) {
             currentGame.removeCategory(category);
         }
-        ((GameCategoriesListFragment)currentFragment).updateData();
+        ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
     }
 
     void updateBestTime(String category, long time) {
         currentGame.setBestTime(category, time);
         if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            ((GameCategoriesListFragment)currentFragment).updateData();
+            ((GameCategoriesListFragment)currentFragment).updateData(currentGame);
         }
         saveData();
     }

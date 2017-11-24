@@ -7,6 +7,8 @@ import static il.ronmad.speedruntimer.GameDatabase.currentGame;
 
 public class GameCategoriesListFragment extends BaseListFragment {
 
+    private Game game;
+
     public GameCategoriesListFragment() {
         // Required empty public constructor
     }
@@ -18,6 +20,7 @@ public class GameCategoriesListFragment extends BaseListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        game = currentGame;
         layoutResId = R.layout.category_list_layout;
         contextMenuResId = R.menu.category_list_fragment_context_menu;
     }
@@ -26,13 +29,18 @@ public class GameCategoriesListFragment extends BaseListFragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (mListAdapter == null) {
-            CategoryAdapter adapter = new CategoryAdapter(getContext(), currentGame, checkedItemPositions);
+            CategoryAdapter adapter = new CategoryAdapter(getContext(), game, checkedItemPositions);
             setAdapter(adapter);
         }
     }
 
-    public void updateData() {
+    public void updateData(Game game) {
         finishActionMode();
-        ((CategoryAdapter)mListAdapter).update();
+        this.game = game;
+        ((CategoryAdapter)mListAdapter).update(game);
+    }
+
+    public Game getGame() {
+        return game;
     }
 }

@@ -10,7 +10,6 @@ import static il.ronmad.speedruntimer.GameDatabase.games;
 
 public class GamesListFragment extends BaseListFragment {
 
-    private static final String ARG_GAME_NAMES = "game-names";
     private List<String> mGameNames;
 
     public GamesListFragment() {

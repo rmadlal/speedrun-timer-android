@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import static il.ronmad.speedruntimer.GameDatabase.currentGame;
-
 public class CategoryAdapter extends BaseAdapter {
 
     private Context context;
@@ -68,9 +66,9 @@ public class CategoryAdapter extends BaseAdapter {
         return layout;
     }
 
-    public void update() {
-        categories = new ArrayList<>(currentGame.getCategoryNames());
-        bestTimes = new ArrayList<>(currentGame.getBestTimes());
+    public void update(Game game) {
+        categories = new ArrayList<>(game.getCategoryNames());
+        bestTimes = new ArrayList<>(game.getBestTimes());
         notifyDataSetChanged();
     }
 }
