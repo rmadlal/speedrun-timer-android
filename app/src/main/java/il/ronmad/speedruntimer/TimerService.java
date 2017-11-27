@@ -24,14 +24,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import static il.ronmad.speedruntimer.GameDatabase.currentGame;
-import static il.ronmad.speedruntimer.GameDatabase.currentCategory;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class TimerService extends Service {
 
     public static boolean IS_ACTIVE = false;
 
     private SharedPreferences prefs;
+    private Game game;
+    private String category;
 
     private View mView;
     private Chronometer chronometer;
@@ -40,7 +42,7 @@ public class TimerService extends Service {
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
 
-    WindowManager mWindowManager;
+    private WindowManager mWindowManager;
     private boolean moved;
 
     @Override
@@ -57,9 +59,12 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        bestTime = currentGame.getBestTime(currentCategory);
+        Gson gson = new GsonBuilder().create();
+        game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
+        category = intent.getStringExtra(getString(R.string.extra_category));
+        bestTime = game.getBestTime(category);
 
-        Notification notification = setupNotification(currentGame, currentCategory);
+        Notification notification = setupNotification(game, category);
         startForeground(R.integer.notification_id, notification);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -84,7 +89,10 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         if (mView != null) {
-            currentGame.setTimerPosition(mWindowParams.x, mWindowParams.y);
+            Intent intent = new Intent(getString(R.string.action_save_timer_position));
+            intent.putExtra(getString(R.string.extra_timer_x), mWindowParams.x);
+            intent.putExtra(getString(R.string.extra_timer_y), mWindowParams.y);
+            sendBroadcast(intent);
             mWindowManager.removeView(mView);
         }
 
@@ -253,8 +261,8 @@ public class TimerService extends Service {
                 PixelFormat.TRANSLUCENT);
         mWindowParams.gravity = Gravity.BOTTOM | Gravity.END;
 
-        int x = currentGame.getTimerPosition().x;
-        int y = currentGame.getTimerPosition().y;
+        int x = game.getTimerPosition().x;
+        int y = game.getTimerPosition().y;
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width));
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height));
         mWindowManager.addView(mView, mWindowParams);

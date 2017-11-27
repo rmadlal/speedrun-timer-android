@@ -11,6 +11,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -30,6 +32,8 @@ public abstract class BaseListFragment extends ListFragment {
 
     protected OnListFragmentInteractionListener mListener;
 
+    private boolean viewsHaveBeenDestroyed;
+
     public BaseListFragment() {
         // Required empty public constructor
     }
@@ -45,6 +49,21 @@ public abstract class BaseListFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(layoutResId, container, false);
+    }
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        // This stops animation on rotation as we have a retained instance.
+        boolean shouldNotAnimate = enter && viewsHaveBeenDestroyed;
+        viewsHaveBeenDestroyed = false;
+        return shouldNotAnimate ? AnimationUtils.loadAnimation(getActivity(), R.anim.none)
+                : super.onCreateAnimation(transit, enter, nextAnim);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewsHaveBeenDestroyed = true;
     }
 
     @Override

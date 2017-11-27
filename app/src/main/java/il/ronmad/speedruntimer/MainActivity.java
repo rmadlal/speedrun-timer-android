@@ -36,10 +36,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import static il.ronmad.speedruntimer.GameDatabase.games;
-import static il.ronmad.speedruntimer.GameDatabase.currentGame;
-import static il.ronmad.speedruntimer.GameDatabase.currentCategory;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
 
@@ -58,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private Snackbar addSnackbar;
     private Snackbar rateSnackbar;
     private boolean rateSnackbarShown;
+
+    private List<Game> games;
+    private Game currentGame;
+    private String currentCategory;
 
     private static final String TAG_NEW_GAME_DIALOG = "NewGameDialog";
     private static final String TAG_EDIT_GAME_DIALOG = "EditGameDialog";
@@ -101,6 +102,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             Game[] gameArr = gson.fromJson(savedData, Game[].class);
             games = new ArrayList<>(Arrays.asList(gameArr));
         }
+        currentGame = null;
+        currentCategory = null;
 
         rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
         if (!rateSnackbarShown && launchCounter == 0 && !games.isEmpty()) {
@@ -280,6 +283,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             stopService(new Intent(this, TimerService.class));
         }
         Intent serviceIntent = new Intent(this, TimerService.class);
+        serviceIntent.putExtra(getString(R.string.extra_game), gson.toJson(currentGame));
+        serviceIntent.putExtra(getString(R.string.extra_category), currentCategory);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
@@ -321,12 +326,17 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                 } else if (action.equals(getString(R.string.action_save_best_time))) {
                     long time = intent.getLongExtra(getString(R.string.extra_best_time), 0);
                     updateBestTime(currentCategory, time);
+                } else if (action.equals(getString(R.string.action_save_timer_position))) {
+                    int x = intent.getIntExtra(getString(R.string.extra_timer_x), 0);
+                    int y = intent.getIntExtra(getString(R.string.extra_timer_y), 0);
+                    currentGame.setTimerPosition(x, y);
                 }
             }
         };
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(getString(R.string.action_close_timer));
         intentFilter.addAction(getString(R.string.action_save_best_time));
+        intentFilter.addAction(getString(R.string.action_save_timer_position));
         registerReceiver(receiver, intentFilter);
     }
 
@@ -339,15 +349,13 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (categoriesListFragment != null) {
             currentFragment = categoriesListFragment;
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
-            if (currentGame == null) {
-                currentGame = categoriesListFragment.getGame();
-            }
+            currentGame = games.get(games.indexOf(categoriesListFragment.getGame()));
             setActionBarTitleAndUpButton(currentGame.getName(), true);
         } else if (gamesListFragment != null) {
             currentFragment = gamesListFragment;
             currentFragmentTag = TAG_GAMES_LIST_FRAGMENT;
         } else {
-            currentFragment = GamesListFragment.newInstance();
+            currentFragment = GamesListFragment.newInstance(games);
             currentFragmentTag = TAG_GAMES_LIST_FRAGMENT;
             fragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, currentFragment, TAG_GAMES_LIST_FRAGMENT)
@@ -393,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private void listFragmentClick() {
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
             currentGame = games.get(games.indexOf(new Game(currentFragment.getClickedItemName())));
-            currentFragment = GameCategoriesListFragment.newInstance();
+            currentFragment = GameCategoriesListFragment.newInstance(currentGame);
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.fragment_transition_in, R.anim.fragment_transition_out,
@@ -403,9 +411,6 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     .commit();
             setActionBarTitleAndUpButton(currentGame.getName(), true);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            if (currentGame == null) {
-                currentGame = ((GameCategoriesListFragment) currentFragment).getGame();
-            }
             currentCategory = currentFragment.getClickedItemName();
             checkPermissionAndStartTimer();
         }
@@ -490,20 +495,20 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private void addGame(String gameName) {
         games.add(new Game(gameName));
-        ((GamesListFragment)currentFragment).update();
+        ((GamesListFragment)currentFragment).updateData(games);
     }
 
     private void editGameName(String oldName, String newName) {
         Game game = games.get(games.indexOf(new Game(oldName)));
         game.setName(newName);
-        ((GamesListFragment)currentFragment).update();
+        ((GamesListFragment)currentFragment).updateData(games);
     }
 
     private void removeGames(String[] toRemove) {
         for (String gameName : toRemove) {
             games.remove(new Game(gameName));
         }
-        ((GamesListFragment)currentFragment).update();
+        ((GamesListFragment)currentFragment).updateData(games);
     }
 
     private void addCategory(String category) {
@@ -625,12 +630,12 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             EditText minutesInput = dialogView.findViewById(R.id.minutes);
             EditText secondsInput = dialogView.findViewById(R.id.seconds);
             EditText millisInput = dialogView.findViewById(R.id.milliseconds);
-            long bestTime = currentGame.getBestTime(category);
+            long bestTime = activity.currentGame.getBestTime(category);
             if (bestTime > 0) {
                 Util.setEditTextsFromTime(bestTime, hoursInput, minutesInput, secondsInput, millisInput);
             }
             final AlertDialog dialog = new AlertDialog.Builder(activity)
-                    .setTitle(String.format("Edit best time for %s %s", currentGame.getName(), category))
+                    .setTitle(String.format("Edit best time for %s %s", activity.currentGame.getName(), category))
                     .setView(dialogView)
                     .setPositiveButton(R.string.save, (dialogInterface, i) -> {
                         long newTime = Util.getTimeFromEditTexts(hoursInput, minutesInput, secondsInput, millisInput);
@@ -686,11 +691,11 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                                             : R.string.error_empty_game));
                             return  true;
                         }
-                        if (method == activityMethod.ADD_CATEGORY && currentGame.hasCategory(newName)) {
+                        if (method == activityMethod.ADD_CATEGORY && activity.currentGame.hasCategory(newName)) {
                             textInput.setError(getString(R.string.error_category_already_exists));
                             return  true;
                         }
-                        if (method != activityMethod.ADD_CATEGORY && games.contains(new Game(newName))) {
+                        if (method != activityMethod.ADD_CATEGORY && activity.games.contains(new Game(newName))) {
                             textInput.setError(getString(R.string.error_game_already_exists));
                             return  true;
                         }
