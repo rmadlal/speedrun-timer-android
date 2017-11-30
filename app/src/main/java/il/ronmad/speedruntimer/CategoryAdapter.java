@@ -9,15 +9,14 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.List;
-import java.util.Vector;
 
 public class CategoryAdapter extends BaseAdapter {
 
     private Context context;
     private List<Category> categories;
-    private Vector<Integer> checkedItemPositions;
+    private List<Integer> checkedItemPositions;
 
-    public CategoryAdapter(Context context, Game game, Vector<Integer> checkedItemPositions) {
+    public CategoryAdapter(Context context, Game game, List<Integer> checkedItemPositions) {
         this.context = context;
         this.categories = game.categories;
         this.checkedItemPositions = checkedItemPositions;

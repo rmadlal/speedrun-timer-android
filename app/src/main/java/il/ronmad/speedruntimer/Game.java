@@ -1,7 +1,5 @@
 package il.ronmad.speedruntimer;
 
-import android.graphics.Point;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +7,7 @@ public class Game {
 
     String name;
     List<Category> categories;
-    Point timerPosition;
+    private Point timerPosition;
 
     public Game(String name) {
         this.name = name;
@@ -35,19 +33,15 @@ public class Game {
         return categories.contains(new Category(category));
     }
 
-    int getCategoryCount() {
-        return categories.size();
-    }
-
     Point getTimerPosition() {
         if (timerPosition == null) {
-            timerPosition = new Point(0, 0);
+            timerPosition = new Point();
         }
         return timerPosition;
     }
 
     void setTimerPosition(int x, int y) {
-        timerPosition = new Point(x, y);
+        timerPosition.set(x, y);
     }
 
     public boolean isEmpty() {

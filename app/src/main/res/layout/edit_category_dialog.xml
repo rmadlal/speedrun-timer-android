@@ -9,10 +9,9 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <android.support.constraint.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/pbEditTitle"
@@ -20,109 +19,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/hours" />
+            android:layout_centerVertical="true"
+            android:textAppearance="@style/TextAppearance.AppCompat" />
 
-        <EditText
-            android:id="@+id/hours"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:gravity="center"
-            android:hint="@string/hr_hint"
-            android:inputType="number"
-            android:maxLines="1"
-            android:nextFocusDown="@+id/minutes"
-            android:selectAllOnFocus="true"
-            app:layout_constraintLeft_toRightOf="@id/pbEditTitle"
-            app:layout_constraintRight_toLeftOf="@+id/hrMinColon"
-            app:layout_constraintBaseline_toBaselineOf="@id/pbEditTitle"/>
-
-        <TextView
-            android:id="@+id/hrMinColon"
+        <include layout="@layout/edit_time_layout"
+            android:id="@+id/timeViews"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=":"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            app:layout_constraintLeft_toRightOf="@id/hours"
-            app:layout_constraintRight_toLeftOf="@+id/minutes"
-            app:layout_constraintBaseline_toBaselineOf="@id/hours"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp" />
+            android:layout_marginStart="8dp" />
 
-        <EditText
-            android:id="@+id/minutes"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:hint="@string/mins_hint"
-            android:inputType="number"
-            android:maxLines="1"
-            android:nextFocusDown="@+id/seconds"
-            android:selectAllOnFocus="true"
-            app:layout_constraintLeft_toRightOf="@id/hrMinColon"
-            app:layout_constraintRight_toLeftOf="@+id/minSecColon"
-            app:layout_constraintBaseline_toBaselineOf="@id/hrMinColon" />
-
-        <TextView
-            android:id="@+id/minSecColon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=":"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            app:layout_constraintLeft_toRightOf="@id/minutes"
-            app:layout_constraintRight_toLeftOf="@+id/seconds"
-            app:layout_constraintBaseline_toBaselineOf="@id/minutes"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp" />
-
-        <EditText
-            android:id="@+id/seconds"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:hint="@string/secs_hint"
-            android:inputType="number"
-            android:maxLines="1"
-            android:nextFocusDown="@+id/milliseconds"
-            android:selectAllOnFocus="true"
-            app:layout_constraintLeft_toRightOf="@id/minSecColon"
-            app:layout_constraintRight_toLeftOf="@+id/secMillDot"
-            app:layout_constraintBaseline_toBaselineOf="@id/minSecColon" />
-
-        <TextView
-            android:id="@+id/secMillDot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="."
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            app:layout_constraintLeft_toRightOf="@id/seconds"
-            app:layout_constraintRight_toLeftOf="@+id/milliseconds"
-            app:layout_constraintBaseline_toBaselineOf="@id/seconds"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp" />
-
-        <EditText
-            android:id="@+id/milliseconds"
-            android:layout_width="56dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:hint="@string/millis_hint"
-            android:inputType="number"
-            android:maxLines="1"
-            android:selectAllOnFocus="true"
-            app:layout_constraintLeft_toRightOf="@id/secMillDot"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBaseline_toBaselineOf="@id/secMillDot" />
-
-    </android.support.constraint.ConstraintLayout>
+    </RelativeLayout>
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
 
         <TextView
             android:id="@+id/runCountEditTitle"
@@ -137,12 +48,14 @@
 
         <EditText
             android:id="@+id/runCount"
-            android:layout_width="56dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minWidth="48dp"
             android:layout_marginStart="4dp"
             android:gravity="center"
             android:inputType="number"
             android:maxLines="1"
+            android:maxLength="9"
             android:selectAllOnFocus="true"
             app:layout_constraintLeft_toRightOf="@id/runCountEditTitle"
             app:layout_constraintBaseline_toBaselineOf="@id/runCountEditTitle"/>

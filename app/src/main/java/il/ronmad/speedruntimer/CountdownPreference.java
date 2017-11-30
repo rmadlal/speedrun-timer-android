@@ -36,7 +36,7 @@ public class CountdownPreference extends DialogPreference {
     @Override
     protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
         super.onPrepareDialogBuilder(builder);
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.edit_time_dialog, null);
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.edit_time_layout, null);
         hoursInput = view.findViewById(R.id.hours);
         minutesInput = view.findViewById(R.id.minutes);
         secondsInput = view.findViewById(R.id.seconds);

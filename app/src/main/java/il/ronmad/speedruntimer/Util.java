@@ -1,6 +1,5 @@
 package il.ronmad.speedruntimer;
 
-import android.graphics.Point;
 import android.widget.EditText;
 
 import com.google.gson.JsonArray;
@@ -21,9 +20,15 @@ public class Util {
             JsonObject gameObject = gameElement.getAsJsonObject();
             String name = gameObject.get("name").getAsString();
             JsonObject categoriesObject = gameObject.get("categories").getAsJsonObject();
-            JsonObject timerPositionObject = gameObject.get("timerPosition").getAsJsonObject();
-            Point timerPosition = new Point(timerPositionObject.get("x").getAsInt(),
-                    timerPositionObject.get("y").getAsInt());
+            Point timerPosition;
+            try {
+                JsonObject timerPositionObject = gameObject.get("timerPosition").getAsJsonObject();
+                int x = timerPositionObject.get("x").getAsInt();
+                int y = timerPositionObject.get("y").getAsInt();
+                timerPosition = new Point(x, y);
+            } catch (NullPointerException e) {
+                timerPosition = new Point();
+            }
             List<Category> categories = new ArrayList<>();
             for (String key : categoriesObject.keySet()) {
                 Category category = new Category(key);

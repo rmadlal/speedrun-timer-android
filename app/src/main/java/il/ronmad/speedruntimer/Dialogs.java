@@ -116,6 +116,7 @@ public class Dialogs {
                 minutesInput.setText("");
                 secondsInput.setText("");
                 millisInput.setText("");
+                runCountInput.setText("0");
             });
         });
         return dialog;

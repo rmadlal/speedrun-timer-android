@@ -17,7 +17,8 @@ import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import il.ronmad.speedruntimer.MainActivity.ListAction;
 
@@ -25,7 +26,7 @@ public abstract class BaseListFragment extends ListFragment {
 
     protected BaseAdapter mListAdapter;
     protected ActionMode mActionMode;
-    protected Vector<Integer> checkedItemPositions;
+    protected List<Integer> checkedItemPositions;
     protected int clickedItemPosition;
     protected int layoutResId;
     protected int contextMenuResId;
@@ -41,7 +42,7 @@ public abstract class BaseListFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkedItemPositions = new Vector<>();
+        checkedItemPositions = new ArrayList<>();
         setHasOptionsMenu(true);
         setRetainInstance(true);
     }

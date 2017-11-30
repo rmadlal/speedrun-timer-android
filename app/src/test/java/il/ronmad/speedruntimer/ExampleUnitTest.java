@@ -7,7 +7,9 @@ import com.google.gson.GsonBuilder;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -41,10 +43,20 @@ public class ExampleUnitTest {
     @Test
     public void testFromJsonLegacy() throws Exception {
         Gson gson = new GsonBuilder().create();
-        String fromJsonLegacy = "[{\"categories\":{\"Any%\":2180,\"100%\":1500},\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":{},\"name\":\"Wh\",\"timerPosition\":{\"x\":0,\"y\":0}},{\"categories\":{\"Any%\":0,\"Low%\":550,\"Cat\":5000},\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
-        String fromJsonNew = "[{\"categories\":[{\"bestTime\":2180,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":1500,\"name\":\"100%\",\"runCount\":0}],\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":[],\"name\":\"Wh\",\"timerPosition\":{\"x\":0,\"y\":0}},{\"categories\":[{\"bestTime\":0,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":550,\"name\":\"Low%\",\"runCount\":0},{\"bestTime\":5000,\"name\":\"Cat\",\"runCount\":0}],\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
-        String toJsonLegacy = gson.toJson(Util.fromJsonLegacy(fromJsonLegacy));
-        String toJsonNew = gson.toJson(gson.fromJson(fromJsonNew, Game[].class));
+        String fromJsonLegacy = "[{\"categories\":{\"Any%\":2180,\"100%\":1500},\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":{},\"name\":\"Wh\"},{\"categories\":{\"Any%\":0,\"Low%\":550,\"Cat\":5000},\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
+        String fromJsonNew = "[{\"categories\":[{\"bestTime\":2180,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":1500,\"name\":\"100%\",\"runCount\":0}],\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":[],\"name\":\"Wh\"},{\"categories\":[{\"bestTime\":0,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":550,\"name\":\"Low%\",\"runCount\":0},{\"bestTime\":5000,\"name\":\"Cat\",\"runCount\":0}],\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
+        List<Game> legacyGameList = Util.fromJsonLegacy(fromJsonLegacy);
+        List<Game> newGameList = new ArrayList<>(Arrays.asList(gson.fromJson(fromJsonNew, Game[].class)));
+        assertEquals(0, newGameList.get(legacyGameList.indexOf(new Game("Wh"))).getTimerPosition().x);
+        assertEquals(0, newGameList.get(legacyGameList.indexOf(new Game("Wh"))).getTimerPosition().y);
+
+        String toJsonLegacy = gson.toJson(legacyGameList);
+        String toJsonNew = gson.toJson(newGameList);
         assertEquals(toJsonLegacy, toJsonNew);
+    }
+
+    @Test
+    public void testMisc() throws Exception {
+
     }
 }
