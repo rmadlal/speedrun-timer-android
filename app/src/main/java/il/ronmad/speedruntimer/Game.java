@@ -2,72 +2,52 @@ package il.ronmad.speedruntimer;
 
 import android.graphics.Point;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Game {
 
-    private String name;
-    private Map<String, Long> categories;
-    private Point timerPosition;
+    String name;
+    List<Category> categories;
+    Point timerPosition;
 
     public Game(String name) {
         this.name = name;
-        this.categories = new LinkedHashMap<>();
+        this.categories = new ArrayList<>();
         this.timerPosition = new Point();
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Game(String name, List<Category> categories, Point timerPosition) {
         this.name = name;
+        this.categories = categories;
+        this.timerPosition = timerPosition;
     }
 
-    public Map<String, Long> getCategories() {
-        return categories;
+    void addCategory(String category) {
+        categories.add(new Category(category));
     }
 
-    public Set<String> getCategoryNames() {
-        return categories.keySet();
+    Category getCategory(String category) {
+        return categories.get(categories.indexOf(new Category(category)));
     }
 
-    public Collection<Long> getBestTimes() {
-        return categories.values();
+    boolean hasCategory(String category) {
+        return categories.contains(new Category(category));
     }
 
-    public long getBestTime(String category) {
-        return categories.get(category);
+    int getCategoryCount() {
+        return categories.size();
     }
 
-    public void setBestTime(String category, long time) {
-        categories.put(category, time);
-    }
-
-    public void addCategory(String category) {
-        categories.put(category, 0L);
-    }
-
-    public void removeCategory(String category) {
-        categories.remove(category);
-    }
-
-    public boolean hasCategory(String category) {
-        return categories.containsKey(category);
-    }
-
-    public Point getTimerPosition() {
+    Point getTimerPosition() {
         if (timerPosition == null) {
             timerPosition = new Point(0, 0);
         }
         return timerPosition;
     }
 
-    public void setTimerPosition(int x, int y) {
-        timerPosition.set(x, y);
+    void setTimerPosition(int x, int y) {
+        timerPosition = new Point(x, y);
     }
 
     public boolean isEmpty() {

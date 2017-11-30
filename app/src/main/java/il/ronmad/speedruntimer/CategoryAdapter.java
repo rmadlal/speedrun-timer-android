@@ -8,21 +8,18 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 public class CategoryAdapter extends BaseAdapter {
 
     private Context context;
-    private List<String> categories;
-    private List<Long> bestTimes;
+    private List<Category> categories;
     private Vector<Integer> checkedItemPositions;
 
     public CategoryAdapter(Context context, Game game, Vector<Integer> checkedItemPositions) {
         this.context = context;
-        this.categories = new ArrayList<>(game.getCategoryNames());
-        this.bestTimes = new ArrayList<>(game.getBestTimes());
+        this.categories = game.categories;
         this.checkedItemPositions = checkedItemPositions;
     }
 
@@ -49,13 +46,16 @@ public class CategoryAdapter extends BaseAdapter {
         } else {
             layout = view;
         }
-        TextView text1 = layout.findViewById(R.id.text1);
-        TextView text3 = layout.findViewById(R.id.text3);
+        TextView nameText = layout.findViewById(R.id.categoryName);
+        TextView bestTimeText = layout.findViewById(R.id.pbTime);
+        TextView runCountText = layout.findViewById(R.id.runsNum);
 
-        text1.setText((String) getItem(i));
-        text3.setText(bestTimes.get(i) > 0 ? Util.getFormattedTime(bestTimes.get(i)) : "None yet");
-        text3.setTextColor(ContextCompat.getColor(context,
-                bestTimes.get(i) > 0 ? R.color.colorAccent : android.R.color.primary_text_light));
+        Category category = (Category) getItem(i);
+        nameText.setText(category.name);
+        bestTimeText.setText(category.bestTime > 0 ? Util.getFormattedTime(category.bestTime) : "None yet");
+        bestTimeText.setTextColor(ContextCompat.getColor(context,
+                category.bestTime > 0 ? R.color.colorAccent : android.R.color.primary_text_light));
+        runCountText.setText(String.valueOf(category.runCount));
 
         if (checkedItemPositions.contains(i)) {
             layout.setBackgroundResource(R.color.colorHighlightedListItem);
@@ -67,8 +67,7 @@ public class CategoryAdapter extends BaseAdapter {
     }
 
     public void update(Game game) {
-        categories = new ArrayList<>(game.getCategoryNames());
-        bestTimes = new ArrayList<>(game.getBestTimes());
+        categories = game.categories;
         notifyDataSetChanged();
     }
 }

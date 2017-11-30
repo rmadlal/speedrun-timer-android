@@ -13,23 +13,23 @@ import java.util.Vector;
 public class GamesAdapter extends BaseAdapter {
 
     private Context context;
-    private List<String> gameNames;
+    private List<Game> games;
     private Vector<Integer> checkedItemPositions;
 
-    public GamesAdapter(Context context, List<String> gameNames, Vector<Integer> checkedItemPositions) {
+    public GamesAdapter(Context context, List<Game> games, Vector<Integer> checkedItemPositions) {
         this.context = context;
-        this.gameNames = gameNames;
+        this.games = games;
         this.checkedItemPositions = checkedItemPositions;
     }
 
     @Override
     public int getCount() {
-        return gameNames.size();
+        return games.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return gameNames.get(i);
+        return games.get(i);
     }
 
     @Override
@@ -45,8 +45,8 @@ public class GamesAdapter extends BaseAdapter {
         } else {
             layout = view;
         }
-        TextView text = layout.findViewById(R.id.text1);
-        text.setText((String) getItem(i));
+        TextView text = layout.findViewById(R.id.categoryName);
+        text.setText(((Game) getItem(i)).name);
 
         if (checkedItemPositions.contains(i)) {
             layout.setBackgroundResource(R.color.colorHighlightedListItem);
@@ -55,5 +55,10 @@ public class GamesAdapter extends BaseAdapter {
         }
 
         return layout;
+    }
+
+    void update(List<Game> games) {
+        this.games = games;
+        notifyDataSetChanged();
     }
 }

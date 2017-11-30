@@ -11,6 +11,9 @@
     <string name="empty_games_list">No games</string>
     <string name="empty_category_list">No categories</string>
     <string name="pb_text">PB:</string>
+    <string name="pb_placeholder">00:00:00.00</string>
+    <string name="runs_text">Runs:</string>
+    <string name="run_count_text">Run count:</string>
     <string name="hr_hint">Hrs</string>
     <string name="mins_hint">Mins</string>
     <string name="secs_hint">Secs</string>
@@ -46,6 +49,7 @@
     <string name="action_close_timer">il.ronmad.speedruntimer.ACTION_CLOSE_TIMER</string>
     <string name="action_save_best_time">il.ronmad.speedruntimer.ACTION_SAVE_BEST_TIME</string>
     <string name="action_save_timer_position">il.ronmad.speedruntimer.ACTION_SAVE_TIMER_POSITION</string>
+    <string name="action_increment_run_count">il.ronmad.speedruntimer.ACTION_INCREMENT_RUN_COUNT</string>
     <string name="extra_game">il.ronmad.speedruntimer.GAME</string>
     <string name="extra_category">il.ronmad.speedruntimer.CATEGORY_NAME</string>
     <string name="extra_best_time">il.ronmad.speedruntimer.BEST_TIME</string>

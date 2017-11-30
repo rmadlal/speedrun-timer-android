@@ -33,11 +33,10 @@ public class TimerService extends Service {
 
     private SharedPreferences prefs;
     private Game game;
-    private String category;
+    private Category category;
 
     private View mView;
     private Chronometer chronometer;
-    private long bestTime;
 
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notificationBuilder;
@@ -61,14 +60,14 @@ public class TimerService extends Service {
 
         Gson gson = new GsonBuilder().create();
         game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
-        category = intent.getStringExtra(getString(R.string.extra_category));
-        bestTime = game.getBestTime(category);
+        String categoryName = intent.getStringExtra(getString(R.string.extra_category));
+        category = game.getCategory(categoryName);
 
-        Notification notification = setupNotification(game, category);
+        Notification notification = setupNotification();
         startForeground(R.integer.notification_id, notification);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Chronometer.bestTime = bestTime;
+        Chronometer.bestTime = category.bestTime;
         Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_pref_color_neutral),
                 ContextCompat.getColor(this, R.color.colorTimerNeutralDefault));
         Chronometer.colorAhead = prefs.getInt(getString(R.string.key_pref_color_ahead),
@@ -100,12 +99,12 @@ public class TimerService extends Service {
         super.onDestroy();
     }
 
-    private Notification setupNotification(Game game, String category) {
+    private Notification setupNotification() {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationBuilder = new NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
                 .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
                         R.drawable.ic_timer_black_48dp : R.drawable.ic_stat_timer)
-                .setContentTitle(String.format("%s %s", game.getName(), category))
+                .setContentTitle(String.format("%s %s", game.name, category.name))
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         new Intent(this, MainActivity.class),
                         PendingIntent.FLAG_UPDATE_CURRENT))
@@ -117,8 +116,8 @@ public class TimerService extends Service {
                                 PendingIntent.FLAG_UPDATE_CURRENT))
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true);
-        if (bestTime > 0) {
-            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(bestTime)));
+        if (category.bestTime > 0) {
+            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(category.bestTime)));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = new NotificationChannel(
@@ -214,26 +213,33 @@ public class TimerService extends Service {
             if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
                 return false;
             }
-            if (chronometer.getTimeElapsed() < 0
-                    || (bestTime > 0 && chronometer.getTimeElapsed() >= bestTime)) {
+            if (chronometer.getTimeElapsed() < 0) {
                 chronometer.reset();
+            } else if (category.bestTime > 0 && chronometer.getTimeElapsed() >= category.bestTime) {
+                chronometer.reset();
+                sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
             } else if (!Chronometer.running) {
                 AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
-                        .setTitle(bestTime == 0 ? "New personal best!" :
+                        .setTitle(category.bestTime == 0 ? "New personal best!" :
                                 String.format("New personal best! (%s)",
-                                        Util.getFormattedTime(chronometer.getTimeElapsed() - bestTime)))
+                                        Util.getFormattedTime(chronometer.getTimeElapsed() - category.bestTime)))
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
-                            bestTime = chronometer.getTimeElapsed();
+                            category.bestTime = chronometer.getTimeElapsed();
                             chronometer.reset();
-                            Chronometer.bestTime = bestTime;
-                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(bestTime)));
+                            Chronometer.bestTime = category.bestTime;
+                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(category.bestTime)));
                             notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
                             Intent intent = new Intent(getString(R.string.action_save_best_time));
-                            intent.putExtra(getString(R.string.extra_best_time), bestTime);
+                            intent.putExtra(getString(R.string.extra_best_time), category.bestTime);
                             sendBroadcast(intent);
+                            sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
+
                         })
-                        .setNegativeButton(R.string.reset, (dialogInterface, i) -> chronometer.reset())
+                        .setNegativeButton(R.string.reset, (dialogInterface, i) ->  {
+                            chronometer.reset();
+                            sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
+                        })
                         .setNeutralButton(android.R.string.cancel, null)
                         .create();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

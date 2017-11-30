@@ -2,49 +2,70 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingStart="@dimen/activity_horizontal_margin"
+    android:paddingEnd="@dimen/activity_horizontal_margin"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <RelativeLayout
         android:id="@+id/textsLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:minHeight="?android:attr/listPreferredItemHeight"
         android:gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/next_img"
-        app:layout_constraintHorizontal_chainStyle="spread_inside">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/text1"
+            android:id="@+id/categoryName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
             android:gravity="center_vertical"
-            android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
         <TextView
-            android:id="@+id/text2"
+            android:id="@+id/pbText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignStart="@id/categoryName"
+            android:layout_below="@id/categoryName"
+            android:gravity="center_vertical"
             android:text="@string/pb_text"
-            android:layout_below="@id/text1"
-            android:layout_alignStart="@id/text1"
-            android:textAppearance="@style/TextAppearance.AppCompat"
-            android:gravity="center_vertical"
-            android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-            android:paddingEnd="?android:attr/listPreferredItemPaddingEnd" />
+            android:textAppearance="@style/TextAppearance.AppCompat" />
 
         <TextView
-            android:id="@+id/text3"
+            android:id="@+id/pbTime"
+            android:text="@string/pb_placeholder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/text2"
-            android:layout_alignBottom="@id/text2"
-            android:textAppearance="@style/TextAppearance.AppCompat"
-            android:gravity="center_vertical" />
+            android:layout_marginStart="8dp"
+            android:layout_alignBottom="@id/pbText"
+            android:layout_toEndOf="@id/pbText"
+            android:gravity="center_vertical"
+            android:textAppearance="@style/TextAppearance.AppCompat" />
+
+        <TextView
+            android:id="@+id/runsText"
+            android:text="@string/runs_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/categoryName"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_vertical"
+            android:paddingEnd="4dp"
+            android:paddingStart="4dp"
+            android:layout_marginStart="16dp"
+            android:textAppearance="@style/TextAppearance.AppCompat" />
+
+        <TextView
+            android:id="@+id/runsNum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/runsText"
+            android:layout_toEndOf="@id/runsText"
+            android:gravity="center_vertical"
+            android:textAppearance="@style/TextAppearance.AppCompat" />
 
     </RelativeLayout>
 
@@ -52,7 +73,6 @@
         android:id="@+id/next_img"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_margin="@dimen/activity_horizontal_margin"
         android:contentDescription="@string/img_play_desc"
         app:srcCompat="@drawable/ic_action_play"
         app:layout_constraintRight_toRightOf="parent"
