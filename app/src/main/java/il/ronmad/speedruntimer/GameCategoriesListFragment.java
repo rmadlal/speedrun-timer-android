@@ -3,7 +3,12 @@ package il.ronmad.speedruntimer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class GameCategoriesListFragment extends BaseListFragment {
+
+    private static final String ARG_GAME_JSON = "game-json";
 
     private Game game;
 
@@ -11,16 +16,24 @@ public class GameCategoriesListFragment extends BaseListFragment {
         // Required empty public constructor
     }
 
-    private void init(Game game) {
-        layoutResId = R.layout.category_list_layout;
-        contextMenuResId = R.menu.category_list_fragment_context_menu;
-        this.game = game;
-    }
-
     public static GameCategoriesListFragment newInstance(Game game) {
         GameCategoriesListFragment fragment = new GameCategoriesListFragment();
-        fragment.init(game);
+        Bundle args = new Bundle();
+        Gson gson = new GsonBuilder().create();
+        args.putString(ARG_GAME_JSON, gson.toJson(game));
+        fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            Gson gson = new GsonBuilder().create();
+            game = gson.fromJson(getArguments().getString(ARG_GAME_JSON), Game.class);
+        }
+        layoutResId = R.layout.category_list_layout;
+        contextMenuResId = R.menu.category_list_fragment_context_menu;
     }
 
     @Override
@@ -35,10 +48,6 @@ public class GameCategoriesListFragment extends BaseListFragment {
     public void updateData(Game game) {
         finishActionMode();
         this.game = game;
-        ((CategoryAdapter)mListAdapter).update(game);
-    }
-
-    public Game getGame() {
-        return game;
+        ((CategoryAdapter) mListAdapter).update(game);
     }
 }

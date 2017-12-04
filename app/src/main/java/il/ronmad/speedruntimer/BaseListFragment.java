@@ -123,17 +123,17 @@ public abstract class BaseListFragment extends ListFragment {
         void onListFragmentInteraction(ListAction action);
     }
 
-    public Object[] getSelectedItems() {
-        Object[] items = new Object[checkedItemPositions.size()];
-        for (int i = 0; i < items.length; i++) {
-            int pos = checkedItemPositions.get(i);
-            items[i] = mListAdapter.getItem(pos);
+    public String[] getSelectedItemNames() {
+        String[] items = new String[checkedItemPositions.size()];
+        int i = 0;
+        for (int pos : checkedItemPositions) {
+            items[i++] = (String) mListAdapter.getItem(pos);
         }
         return items;
     }
 
-    public Object getClickedItem() {
-        return mListAdapter.getItem(clickedItemPosition);
+    public String getClickedItemName() {
+        return (String) mListAdapter.getItem(clickedItemPosition);
     }
 
     protected void setAdapter(BaseAdapter adapter) {

@@ -7,7 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
-        android:id="@+id/categoryName"
+        android:id="@+id/gameName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Title"
@@ -24,9 +24,9 @@
         android:layout_height="32dp"
         android:contentDescription="@string/img_next_desc"
         app:srcCompat="@drawable/ic_action_next"
-        app:layout_constraintLeft_toRightOf="@id/categoryName"
+        app:layout_constraintLeft_toRightOf="@id/gameName"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@id/categoryName"
-        app:layout_constraintBottom_toBottomOf="@id/categoryName"/>
+        app:layout_constraintTop_toTopOf="@id/gameName"
+        app:layout_constraintBottom_toBottomOf="@id/gameName"/>
 
 </android.support.constraint.ConstraintLayout>

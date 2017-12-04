@@ -29,7 +29,7 @@ public class CategoryAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int i) {
-        return categories.get(i);
+        return categories.get(i).name;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CategoryAdapter extends BaseAdapter {
         TextView bestTimeText = layout.findViewById(R.id.pbTime);
         TextView runCountText = layout.findViewById(R.id.runsNum);
 
-        Category category = (Category) getItem(i);
+        Category category = categories.get(i);
         nameText.setText(category.name);
         bestTimeText.setText(category.bestTime > 0 ? Util.getFormattedTime(category.bestTime) : "None yet");
         bestTimeText.setTextColor(ContextCompat.getColor(context,
@@ -65,7 +65,7 @@ public class CategoryAdapter extends BaseAdapter {
         return layout;
     }
 
-    public void update(Game game) {
+    void update(Game game) {
         categories = game.categories;
         notifyDataSetChanged();
     }

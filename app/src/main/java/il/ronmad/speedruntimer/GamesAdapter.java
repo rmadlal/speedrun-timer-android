@@ -12,23 +12,23 @@ import java.util.List;
 public class GamesAdapter extends BaseAdapter {
 
     private Context context;
-    private List<Game> games;
+    private List<String> gameNames;
     private List<Integer> checkedItemPositions;
 
-    public GamesAdapter(Context context, List<Game> games, List<Integer> checkedItemPositions) {
+    public GamesAdapter(Context context, List<String> gameNames, List<Integer> checkedItemPositions) {
         this.context = context;
-        this.games = games;
+        this.gameNames = gameNames;
         this.checkedItemPositions = checkedItemPositions;
     }
 
     @Override
     public int getCount() {
-        return games.size();
+        return gameNames.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return games.get(i);
+        return gameNames.get(i);
     }
 
     @Override
@@ -44,10 +44,8 @@ public class GamesAdapter extends BaseAdapter {
         } else {
             layout = view;
         }
-        TextView text = layout.findViewById(R.id.categoryName);
-
-        Game game = (Game) getItem(i);
-        text.setText(game.name);
+        TextView text = layout.findViewById(R.id.gameName);
+        text.setText((String) getItem(i));
 
         if (checkedItemPositions.contains(i)) {
             layout.setBackgroundResource(R.color.colorHighlightedListItem);
@@ -56,10 +54,5 @@ public class GamesAdapter extends BaseAdapter {
         }
 
         return layout;
-    }
-
-    void update(List<Game> games) {
-        this.games = games;
-        notifyDataSetChanged();
     }
 }

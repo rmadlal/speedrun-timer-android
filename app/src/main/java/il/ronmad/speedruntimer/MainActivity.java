@@ -88,13 +88,22 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             new Handler().postDelayed(() -> addSnackbar.show(), 1000);
         } else {
             try {
-                Game[] gameArr = gson.fromJson(savedData, Game[].class);
-                games = new ArrayList<>(Arrays.asList(gameArr));
+                games = new ArrayList<>(Arrays.asList(
+                        gson.fromJson(savedData, Game[].class)));
             } catch (JsonSyntaxException e) {
                 games = Util.fromJsonLegacy(savedData);
             }
         }
-        currentGame = null;
+        if (savedInstanceState != null) {
+            String currentGameName = savedInstanceState.getString("currentGame");
+            if (currentGameName != null) {
+                currentGame = getGame(currentGameName);
+            } else {
+                currentGame = null;
+            }
+        } else {
+            currentGame = null;
+        }
         currentCategory = null;
 
         rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
@@ -145,6 +154,14 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         super.onDestroy();
         stopService(new Intent(this, TimerService.class));
         unregisterReceiver(receiver);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (currentGame != null) {
+            outState.putString("currentGame", currentGame.name);
+        }
     }
 
     @Override
@@ -332,7 +349,6 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         if (categoriesListFragment != null) {
             currentFragment = categoriesListFragment;
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
-            currentGame = categoriesListFragment.getGame();
             setActionBarTitleAndUpButton(currentGame.name, true);
         } else if (gamesListFragment != null) {
             currentFragment = gamesListFragment;
@@ -383,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private void listFragmentClick() {
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            currentGame = (Game) currentFragment.getClickedItem();
+            currentGame = getGame(currentFragment.getClickedItemName());
             currentFragment = GameCategoriesListFragment.newInstance(currentGame);
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
             fragmentManager.beginTransaction()
@@ -394,26 +410,34 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     .commit();
             setActionBarTitleAndUpButton(currentGame.name, true);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            currentCategory = (Category) currentFragment.getClickedItem();
+            currentCategory = currentGame.getCategory(currentFragment.getClickedItemName());
             checkPermissionAndStartTimer();
         }
     }
 
     private void listFragmentEdit() {
-        Object selectedItem = currentFragment.getSelectedItems()[0];
+        String selectedItemName = currentFragment.getSelectedItemNames()[0];
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            Dialogs.editGameDialog(this, (Game) selectedItem).show();
+            Dialogs.editGameDialog(this, getGame(selectedItemName)).show();
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            Dialogs.editCategoryDialog(this, (Category) selectedItem).show();
+            Dialogs.editCategoryDialog(this, currentGame.getCategory(selectedItemName)).show();
         }
     }
 
     private void listFragmentDelete() {
-        Object[] selectedItems = currentFragment.getSelectedItems();
+        String[] selectedItems = currentFragment.getSelectedItemNames();
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            actionDeleteGames(Arrays.copyOf(selectedItems, selectedItems.length, Game[].class));
+            Game[] selectedGames = new Game[selectedItems.length];
+            for (int i = 0; i < selectedGames.length; i++) {
+                selectedGames[i] = getGame(selectedItems[i]);
+            }
+            actionDeleteGames(selectedGames);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            actionDeleteCategories(Arrays.copyOf(selectedItems, selectedItems.length, Category[].class));
+            Category[] selectedCategories = new Category[selectedItems.length];
+            for (int i = 0; i < selectedCategories.length; i++) {
+                selectedCategories[i] = currentGame.getCategory(selectedItems[i]);
+            }
+            actionDeleteCategories(selectedCategories);
         }
     }
 
@@ -499,5 +523,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         Snackbar.make(fabAdd, message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, view -> updateCategory(category, prevBestTime, prevRunCount))
                 .show();
+    }
+
+    private Game getGame(String gameName) {
+        return games.get(games.indexOf(new Game(gameName)));
     }
 }
