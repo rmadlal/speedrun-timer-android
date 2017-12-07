@@ -15,6 +15,14 @@ public class Game extends RealmObject {
         getRealm().executeTransaction(realm -> this.name = name);
     }
 
+    public Point getTimerPosition() {
+        if (timerPosition == null) {
+            getRealm().executeTransaction(realm ->
+                    timerPosition = realm.createObject(Point.class));
+        }
+        return timerPosition;
+    }
+
     Category getCategory(String name) {
         return categories.where().equalTo("name", name).findFirst();
     }

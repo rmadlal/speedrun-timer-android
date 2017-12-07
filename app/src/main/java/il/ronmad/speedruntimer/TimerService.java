@@ -261,8 +261,8 @@ public class TimerService extends Service {
                 PixelFormat.TRANSLUCENT);
         mWindowParams.gravity = Gravity.BOTTOM | Gravity.END;
 
-        int x = game.timerPosition.x;
-        int y = game.timerPosition.y;
+        int x = game.getTimerPosition().x;
+        int y = game.getTimerPosition().y;
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width));
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height));
         mWindowManager.addView(mView, mWindowParams);

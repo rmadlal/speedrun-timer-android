@@ -116,7 +116,9 @@ public class CategoryAutoCompleteView extends AppCompatAutoCompleteTextView {
             CategoryAutoCompleteView.categoryCache.put(gameName, results);
             view.setAdapter(new ArrayAdapter<>(view.getContext(),
                     R.layout.autocomplete_dropdown_item, results));
-            view.showDropDown();
+            if (view.isShown()) {
+                view.showDropDown();
+            }
         }
     }
 }

@@ -20,7 +20,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -53,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     Game currentGame;
     Category currentCategory;
+    PackageManager packageManager;
+    List<ApplicationInfo> installedApps;
     String[] installedGames;
 
     private static final String TAG_GAMES_LIST_FRAGMENT = "GamesListFragment";
@@ -84,19 +85,18 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         sharedPrefs = getPreferences(MODE_PRIVATE);
         Realm.init(this);
         String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
-        Log.d("savedData", savedData);
         if (savedData.isEmpty()) {
             realm = Realm.getDefaultInstance();
         } else {
             Realm.deleteRealm(Realm.getDefaultConfiguration());
             realm = Realm.getDefaultInstance();
-            realm.executeTransaction(rlm -> {
-                try {
-                    rlm.createAllFromJson(Game.class, savedData);
-                } catch (RealmException e) {
-                    rlm.createAllFromJson(Game.class, Util.migrateJson(savedData));
-                }
-            });
+            try {
+                realm.executeTransaction(rlm ->
+                        rlm.createAllFromJson(Game.class, savedData));
+            } catch (RealmException e) {
+                realm.executeTransaction(rlm ->
+                        rlm.createAllFromJson(Game.class, Util.migrateJson(savedData)));
+            }
             sharedPrefs.edit()
                        .remove(getString(R.string.key_games))
                        .apply();
@@ -114,8 +114,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
         currentCategory = null;
 
-        setupReceiver();
-        setupFragments();
+        packageManager = getPackageManager();
+        installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupInstalledGamesList();
         }
@@ -140,6 +140,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             new Handler().postDelayed(this::showRateSnackbar, 1000);
             rateSnackbarShown = true;
         }
+
+        setupReceiver();
+        setupFragments();
     }
 
     /**
@@ -179,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         super.onDestroy();
         stopService(new Intent(this, TimerService.class));
         unregisterReceiver(receiver);
+        realm.close();
     }
 
     @Override
@@ -385,11 +389,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private void setupInstalledGamesList() {
         List<String> installedGamesList = new ArrayList<>();
-        PackageManager packageManager = getPackageManager();
-        List<ApplicationInfo> packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
-        for (ApplicationInfo packageInfo : packages) {
+        for (ApplicationInfo packageInfo : installedApps) {
+            if ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
             if (packageInfo.category != ApplicationInfo.CATEGORY_GAME) continue;
-            if (packageInfo.packageName.startsWith("com.google")) continue;
             installedGamesList.add(packageManager.getApplicationLabel(packageInfo).toString());
         }
         installedGames = installedGamesList.toArray(new String[]{});
@@ -498,9 +500,10 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     private boolean tryLaunchGame() {
-        PackageManager packageManager = getPackageManager();
         ApplicationInfo game = null;
-        for (ApplicationInfo appInfo : packageManager.getInstalledApplications(PackageManager.GET_META_DATA)) {
+        for (ApplicationInfo appInfo : installedApps) {
+            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
+            if (appInfo.packageName.equals(getPackageName())) continue;
             if (currentGame.name.equals(packageManager.getApplicationLabel(appInfo).toString())) {
                 game = appInfo;
                 break;
@@ -535,14 +538,17 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         realm.executeTransaction(rlm -> {
             Game game = rlm.createObject(Game.class);
             game.name = gameName;
-            game.timerPosition = rlm.createObject(Point.class);
         });
-        ((GamesListFragment)currentFragment).updateData();
+        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
+            ((GamesListFragment) currentFragment).updateData();
+        }
     }
 
     void editGameName(Game game, String newName) {
         game.setName(newName);
-        ((GamesListFragment) currentFragment).updateData();
+        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
+            ((GamesListFragment) currentFragment).updateData();
+        }
     }
 
     void removeGames(Game[] toRemove) {
@@ -555,17 +561,23 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                         .in("name", names)
                         .findAll()
                         .deleteAllFromRealm());
-        ((GamesListFragment) currentFragment).updateData();
+        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
+            ((GamesListFragment) currentFragment).updateData();
+        }
     }
 
     void addCategory(String categoryName) {
         currentGame.addCategory(categoryName);
-        ((CategoryListFragment) currentFragment).updateData(currentGame.name);
+        if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
+            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
+        }
     }
 
     void removeCategories(Category[] toRemove) {
         currentGame.removeCategories(toRemove);
-        ((CategoryListFragment) currentFragment).updateData(currentGame.name);
+        if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
+            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
+        }
     }
 
     void updateCategory(Category category, long time, int runCount) {

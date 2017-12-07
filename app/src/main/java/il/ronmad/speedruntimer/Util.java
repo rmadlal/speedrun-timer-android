@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.Locale;
+import java.util.Map;
 
 public class Util {
 
@@ -15,16 +16,14 @@ public class Util {
         JsonArray gamesArray = new JsonParser().parse(json).getAsJsonArray();
         for (JsonElement gameElement : gamesArray) {
             JsonObject gameObject = gameElement.getAsJsonObject();
-            String name = gameObject.get("name").getAsString();
             JsonObject categoriesObject = gameObject.get("categories").getAsJsonObject();
             JsonArray categoriesArray = new JsonArray();
-            for (String key : categoriesObject.keySet()) {
+            for (Map.Entry<String, JsonElement> entry : categoriesObject.entrySet()) {
                 JsonObject categoryObject = new JsonObject();
-                categoryObject.addProperty("name", key);
-                categoryObject.addProperty("bestTime", categoriesObject.get(key).getAsLong());
+                categoryObject.addProperty("bestTime", entry.getValue().getAsLong());
+                categoryObject.addProperty("name", entry.getKey());
                 categoriesArray.add(categoryObject);
             }
-            gameObject.remove("categories");
             gameObject.add("categories", categoriesArray);
         }
         return gamesArray.toString();
