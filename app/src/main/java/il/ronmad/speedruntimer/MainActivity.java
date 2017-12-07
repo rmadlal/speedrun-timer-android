@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,18 +20,19 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.exceptions.RealmException;
 
 public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
 
@@ -42,16 +45,15 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
-    private Gson gson;
+    private Realm realm;
 
-    private FloatingActionButton fabAdd;
-    private Snackbar addSnackbar;
-    private Snackbar rateSnackbar;
+    FloatingActionButton fabAdd;
     private boolean rateSnackbarShown;
+    private boolean addGamesSnackbarShown;
 
-    List<Game> games;
     Game currentGame;
     Category currentCategory;
+    String[] installedGames;
 
     private static final String TAG_GAMES_LIST_FRAGMENT = "GamesListFragment";
     private static final String TAG_CATEGORY_LIST_FRAGMENT = "CategoryListFragment";
@@ -78,26 +80,32 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
 
         fabAdd = findViewById(R.id.fabAdd);
-        addSnackbar = Snackbar.make(fabAdd, R.string.fab_add_str, Snackbar.LENGTH_LONG);
 
-        gson = new GsonBuilder().create();
         sharedPrefs = getPreferences(MODE_PRIVATE);
+        Realm.init(this);
         String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
+        Log.d("savedData", savedData);
         if (savedData.isEmpty()) {
-            games = new ArrayList<>();
-            new Handler().postDelayed(() -> addSnackbar.show(), 1000);
+            realm = Realm.getDefaultInstance();
         } else {
-            try {
-                games = new ArrayList<>(Arrays.asList(
-                        gson.fromJson(savedData, Game[].class)));
-            } catch (JsonSyntaxException e) {
-                games = Util.fromJsonLegacy(savedData);
-            }
+            Realm.deleteRealm(Realm.getDefaultConfiguration());
+            realm = Realm.getDefaultInstance();
+            realm.executeTransaction(rlm -> {
+                try {
+                    rlm.createAllFromJson(Game.class, savedData);
+                } catch (RealmException e) {
+                    rlm.createAllFromJson(Game.class, Util.migrateJson(savedData));
+                }
+            });
+            sharedPrefs.edit()
+                       .remove(getString(R.string.key_games))
+                       .apply();
         }
+
         if (savedInstanceState != null) {
             String currentGameName = savedInstanceState.getString("currentGame");
             if (currentGameName != null) {
-                currentGame = getGame(currentGameName);
+                currentGame = realm.where(Game.class).equalTo("name", currentGameName).findFirst();
             } else {
                 currentGame = null;
             }
@@ -106,19 +114,32 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
         currentCategory = null;
 
-        rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
-        if (!rateSnackbarShown && launchCounter == 0 && !games.isEmpty()) {
-            int savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0);
-            launchCounter = Math.min(3, savedLaunchCounter) + 1;
-            if (launchCounter == 3) {
-                setupRateSnackbar();
-                new Handler().postDelayed(() -> rateSnackbar.show(), 1000);
-                rateSnackbarShown = true;
-            }
-        }
-
         setupReceiver();
         setupFragments();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setupInstalledGamesList();
+        }
+
+        boolean toShowRateSnackbar = false;
+        boolean toShowAddGamesSnackbar;
+        rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
+        if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty()) {
+            int savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0);
+            launchCounter = Math.min(3, savedLaunchCounter) + 1;
+            toShowRateSnackbar = launchCounter == 3;
+        }
+
+        addGamesSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_add_games_snackbar_shown), false);
+        toShowAddGamesSnackbar = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && canAddInstalledGames() && !addGamesSnackbarShown;
+
+        if (toShowAddGamesSnackbar) {
+            new Handler().postDelayed(this::showAddInstalledGamesSnackbar, 1000);
+            addGamesSnackbarShown = true;
+        } else if (toShowRateSnackbar) {
+            new Handler().postDelayed(this::showRateSnackbar, 1000);
+            rateSnackbarShown = true;
+        }
     }
 
     /**
@@ -146,7 +167,11 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     @Override
     protected void onStop() {
         super.onStop();
-        saveData();
+        sharedPrefs.edit()
+                .putInt(getString(R.string.key_launch_counter), launchCounter)
+                .putBoolean(getString(R.string.key_rate_snackbar_shown), rateSnackbarShown)
+                .putBoolean(getString(R.string.key_add_games_snackbar_shown), addGamesSnackbarShown)
+                .apply();
     }
 
     @Override
@@ -186,6 +211,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity_actions, menu);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            menu.findItem(R.id.menu_add_games).setVisible(false);
+        }
         return true;
     }
 
@@ -194,6 +222,9 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         switch (item.getItemId()) {
             case R.id.menu_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.menu_add_games:
+                addInstalledGames();
                 return true;
             case android.R.id.home:
                 backToGamesListFragment();
@@ -217,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         setActionBarTitleAndUpButton(getString(R.string.app_name), false);
         currentFragment = (BaseListFragment) fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
         currentFragmentTag = TAG_GAMES_LIST_FRAGMENT;
+        currentGame = null;
     }
 
     final static int OVERLAY_REQUEST_CODE = 251;
@@ -281,18 +313,19 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     /**
-     * Minimize app, start timer service with the current game&category info only if inactive
+     * Start game or minimize app, start timer service with the current game&category info only if inactive
      */
     private void startTimerService() {
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        startActivity(homeIntent);
-
+        if (!tryLaunchGame()) {
+            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+            homeIntent.addCategory(Intent.CATEGORY_HOME);
+            startActivity(homeIntent);
+        }
         if (TimerService.IS_ACTIVE) {
             stopService(new Intent(this, TimerService.class));
         }
         Intent serviceIntent = new Intent(this, TimerService.class);
-        serviceIntent.putExtra(getString(R.string.extra_game), gson.toJson(currentGame));
+        serviceIntent.putExtra(getString(R.string.extra_game), currentGame.name);
         serviceIntent.putExtra(getString(R.string.extra_category), currentCategory.name);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
@@ -320,23 +353,11 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     } else {
                         stopService(new Intent(context, TimerService.class));
                     }
-                } else if (action.equals(getString(R.string.action_save_best_time))) {
-                    long time = intent.getLongExtra(getString(R.string.extra_best_time), 0);
-                    updateCategory(currentCategory, time);
-                } else if (action.equals(getString(R.string.action_save_timer_position))) {
-                    int x = intent.getIntExtra(getString(R.string.extra_timer_x), 0);
-                    int y = intent.getIntExtra(getString(R.string.extra_timer_y), 0);
-                    currentGame.setTimerPosition(x, y);
-                } else if (action.equals(getString(R.string.action_increment_run_count))) {
-                    updateCategory(currentCategory, currentCategory.runCount + 1);
                 }
             }
         };
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(getString(R.string.action_close_timer));
-        intentFilter.addAction(getString(R.string.action_save_best_time));
-        intentFilter.addAction(getString(R.string.action_save_timer_position));
-        intentFilter.addAction(getString(R.string.action_increment_run_count));
         registerReceiver(receiver, intentFilter);
     }
 
@@ -344,8 +365,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         fragmentManager = getSupportFragmentManager();
         GamesListFragment gamesListFragment =
                 (GamesListFragment) fragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT);
-        GameCategoriesListFragment categoriesListFragment =
-                (GameCategoriesListFragment) fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
+        CategoryListFragment categoriesListFragment =
+                (CategoryListFragment) fragmentManager.findFragmentByTag(TAG_CATEGORY_LIST_FRAGMENT);
         if (categoriesListFragment != null) {
             currentFragment = categoriesListFragment;
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
@@ -354,7 +375,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
             currentFragment = gamesListFragment;
             currentFragmentTag = TAG_GAMES_LIST_FRAGMENT;
         } else {
-            currentFragment = GamesListFragment.newInstance(games);
+            currentFragment = GamesListFragment.newInstance();
             currentFragmentTag = TAG_GAMES_LIST_FRAGMENT;
             fragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, currentFragment, TAG_GAMES_LIST_FRAGMENT)
@@ -362,10 +383,22 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
     }
 
-    private void setupRateSnackbar() {
-        rateSnackbar = Snackbar.make(fabAdd, "If you like this app, please rate it in the Play Store.",
+    private void setupInstalledGamesList() {
+        List<String> installedGamesList = new ArrayList<>();
+        PackageManager packageManager = getPackageManager();
+        List<ApplicationInfo> packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        for (ApplicationInfo packageInfo : packages) {
+            if (packageInfo.category != ApplicationInfo.CATEGORY_GAME) continue;
+            if (packageInfo.packageName.startsWith("com.google")) continue;
+            installedGamesList.add(packageManager.getApplicationLabel(packageInfo).toString());
+        }
+        installedGames = installedGamesList.toArray(new String[]{});
+    }
+
+    private void showRateSnackbar() {
+        Snackbar snackbar = Snackbar.make(fabAdd, getString(R.string.rate_snackbar),
                 Snackbar.LENGTH_LONG);
-        rateSnackbar.setAction(R.string.rate, view -> {
+        snackbar.setAction(R.string.rate, view -> {
             Intent marketIntent = new Intent(Intent.ACTION_VIEW,
                     Uri.parse("market://details?id=" + getPackageName()));
             marketIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
@@ -379,14 +412,13 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                         Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
             }
         });
+        snackbar.show();
     }
 
-    private void saveData() {
-        sharedPrefs.edit()
-                .putString(getString(R.string.key_games), games.isEmpty() ? "" : gson.toJson(games))
-                .putInt(getString(R.string.key_launch_counter), launchCounter)
-                .putBoolean(getString(R.string.key_rate_snackbar_shown), rateSnackbarShown)
-                .apply();
+    private void showAddInstalledGamesSnackbar() {
+        Snackbar snackbar = Snackbar.make(fabAdd, getString(R.string.add_games_snackbar), Snackbar.LENGTH_LONG);
+        snackbar.setAction(R.string.add, view -> addInstalledGames());
+        snackbar.show();
     }
 
     private void setActionBarTitleAndUpButton(String title, boolean enableUpButton) {
@@ -399,8 +431,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
     private void listFragmentClick() {
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            currentGame = getGame(currentFragment.getClickedItemName());
-            currentFragment = GameCategoriesListFragment.newInstance(currentGame);
+            currentGame = (Game) currentFragment.getClickedItem();
+            currentFragment = CategoryListFragment.newInstance(currentGame.name);
             currentFragmentTag = TAG_CATEGORY_LIST_FRAGMENT;
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.fragment_transition_in, R.anim.fragment_transition_out,
@@ -410,45 +442,75 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
                     .commit();
             setActionBarTitleAndUpButton(currentGame.name, true);
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            currentCategory = currentGame.getCategory(currentFragment.getClickedItemName());
+            currentCategory = (Category) currentFragment.getClickedItem();
             checkPermissionAndStartTimer();
         }
     }
 
     private void listFragmentEdit() {
-        String selectedItemName = currentFragment.getSelectedItemNames()[0];
+        Object selectedItem = currentFragment.getSelectedItems()[0];
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            Dialogs.editGameDialog(this, getGame(selectedItemName)).show();
+            Dialogs.editGameDialog(this, (Game) selectedItem).show();
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            Dialogs.editCategoryDialog(this, currentGame.getCategory(selectedItemName)).show();
+            Dialogs.editCategoryDialog(this, (Category) selectedItem).show();
         }
     }
 
     private void listFragmentDelete() {
-        String[] selectedItems = currentFragment.getSelectedItemNames();
+        Object[] selectedItems = currentFragment.getSelectedItems();
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            Game[] selectedGames = new Game[selectedItems.length];
-            for (int i = 0; i < selectedGames.length; i++) {
-                selectedGames[i] = getGame(selectedItems[i]);
-            }
-            actionDeleteGames(selectedGames);
+            actionDeleteGames(Arrays.copyOf(selectedItems, selectedItems.length, Game[].class));
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            Category[] selectedCategories = new Category[selectedItems.length];
-            for (int i = 0; i < selectedCategories.length; i++) {
-                selectedCategories[i] = currentGame.getCategory(selectedItems[i]);
-            }
-            actionDeleteCategories(selectedCategories);
+            actionDeleteCategories(Arrays.copyOf(selectedItems, selectedItems.length, Category[].class));
         }
     }
 
     public void addFabButtonPressed(View view) {
-        addSnackbar.dismiss();
         if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
             Dialogs.newGameDialog(this).show();
         } else if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
             Dialogs.newCategoryDialog(this).show();
         }
         currentFragment.finishActionMode();
+    }
+
+    private boolean canAddInstalledGames() {
+        int availableCount = installedGames.length == 0 ? 0
+                : (int) realm.where(Game.class).in("name", installedGames).count();
+        return availableCount < installedGames.length;
+    }
+
+    private void addInstalledGames() {
+        List<String> gameNames = new ArrayList<>();
+        for (String name : installedGames) {
+            if (!gameExists(name)) {
+                gameNames.add(name);
+            }
+        }
+        if (gameNames.isEmpty()) {
+            Toast.makeText(this, "There are no games to add", Toast.LENGTH_SHORT).show();
+        } else {
+            Dialogs.addInstalledGamesDialog(this, gameNames).show();
+            if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
+                ((GamesListFragment) currentFragment).updateData();
+            }
+        }
+    }
+
+    private boolean tryLaunchGame() {
+        PackageManager packageManager = getPackageManager();
+        ApplicationInfo game = null;
+        for (ApplicationInfo appInfo : packageManager.getInstalledApplications(PackageManager.GET_META_DATA)) {
+            if (currentGame.name.equals(packageManager.getApplicationLabel(appInfo).toString())) {
+                game = appInfo;
+                break;
+            }
+        }
+        if (game != null) {
+            Toast.makeText(this, "Launching " + currentGame.name + "...", Toast.LENGTH_SHORT).show();
+            startActivity(packageManager.getLaunchIntentForPackage(game.packageName));
+        }
+        return game != null;
     }
 
     private void actionDeleteCategories(final Category[] toRemove) {
@@ -470,45 +532,47 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     void addGame(String gameName) {
-        games.add(new Game(gameName));
-        ((GamesListFragment)currentFragment).updateData(games);
+        realm.executeTransaction(rlm -> {
+            Game game = rlm.createObject(Game.class);
+            game.name = gameName;
+            game.timerPosition = rlm.createObject(Point.class);
+        });
+        ((GamesListFragment)currentFragment).updateData();
     }
 
     void editGameName(Game game, String newName) {
-        game.name = newName;
-        ((GamesListFragment) currentFragment).updateData(games);
+        game.setName(newName);
+        ((GamesListFragment) currentFragment).updateData();
     }
 
     void removeGames(Game[] toRemove) {
-        games.removeAll(Arrays.asList(toRemove));
-        ((GamesListFragment) currentFragment).updateData(games);
+        String[] names = new String[toRemove.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = toRemove[i].name;
+        }
+        realm.executeTransaction(rlm ->
+                rlm.where(Game.class)
+                        .in("name", names)
+                        .findAll()
+                        .deleteAllFromRealm());
+        ((GamesListFragment) currentFragment).updateData();
     }
 
-    void addCategory(String category) {
-        currentGame.addCategory(category);
-        ((GameCategoriesListFragment) currentFragment).updateData(currentGame);
+    void addCategory(String categoryName) {
+        currentGame.addCategory(categoryName);
+        ((CategoryListFragment) currentFragment).updateData(currentGame.name);
     }
 
     void removeCategories(Category[] toRemove) {
-        currentGame.categories.removeAll(Arrays.asList(toRemove));
-        ((GameCategoriesListFragment) currentFragment).updateData(currentGame);
+        currentGame.removeCategories(toRemove);
+        ((CategoryListFragment) currentFragment).updateData(currentGame.name);
     }
 
     void updateCategory(Category category, long time, int runCount) {
-        category.bestTime = time;
-        category.runCount = runCount;
+        category.setData(time, runCount);
         if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            ((GameCategoriesListFragment) currentFragment).updateData(currentGame);
+            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
         }
-        saveData();
-    }
-
-    void updateCategory(Category category, long time) {
-        updateCategory(category, time, category.runCount);
-    }
-
-    void updateCategory(Category category, int runCount) {
-        updateCategory(category, category.bestTime, runCount);
     }
 
     void editCategory(Category category, long newBestTime, int newRunCount) {
@@ -518,14 +582,18 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         showEditedCategorySnackbar(category, prevBestTime, prevRunCount);
     }
 
+    boolean gameExists(String name) {
+        return realm.where(Game.class).equalTo("name", name).count() > 0;
+    }
+
+    boolean categoryExists(String name) {
+        return currentGame.categoryExists(name);
+    }
+
     private void showEditedCategorySnackbar(Category category, long prevBestTime, int prevRunCount) {
         String message = String.format("%s %s has been edited.", currentGame.name, category.name);
         Snackbar.make(fabAdd, message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, view -> updateCategory(category, prevBestTime, prevRunCount))
                 .show();
-    }
-
-    private Game getGame(String gameName) {
-        return games.get(games.indexOf(new Game(gameName)));
     }
 }

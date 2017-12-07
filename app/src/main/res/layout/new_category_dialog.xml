@@ -8,7 +8,7 @@
     android:paddingRight="@dimen/dialog_padding"
     tools:context=".MainActivity">
 
-    <il.ronmad.speedruntimer.MyAutoCompleteTextView
+    <il.ronmad.speedruntimer.CategoryAutoCompleteView
         android:id="@+id/newCategoryInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

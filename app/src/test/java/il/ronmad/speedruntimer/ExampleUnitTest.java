@@ -1,12 +1,22 @@
 package il.ronmad.speedruntimer;
 
 import android.graphics.Color;
+import android.net.Uri;
+import android.util.Xml;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.junit.Test;
 
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,22 +51,24 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void testFromJsonLegacy() throws Exception {
-        Gson gson = new GsonBuilder().create();
-        String fromJsonLegacy = "[{\"categories\":{\"Any%\":2180,\"100%\":1500},\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":{},\"name\":\"Wh\"},{\"categories\":{\"Any%\":0,\"Low%\":550,\"Cat\":5000},\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
-        String fromJsonNew = "[{\"categories\":[{\"bestTime\":2180,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":1500,\"name\":\"100%\",\"runCount\":0}],\"name\":\"Dudes\",\"timerPosition\":{\"x\":557,\"y\":1012}},{\"categories\":[],\"name\":\"Wh\"},{\"categories\":[{\"bestTime\":0,\"name\":\"Any%\",\"runCount\":0},{\"bestTime\":550,\"name\":\"Low%\",\"runCount\":0},{\"bestTime\":5000,\"name\":\"Cat\",\"runCount\":0}],\"name\":\"No\",\"timerPosition\":{\"x\":10,\"y\":20}}]";
-        List<Game> legacyGameList = Util.fromJsonLegacy(fromJsonLegacy);
-        List<Game> newGameList = new ArrayList<>(Arrays.asList(gson.fromJson(fromJsonNew, Game[].class)));
-        assertEquals(0, newGameList.get(legacyGameList.indexOf(new Game("Wh"))).getTimerPosition().x);
-        assertEquals(0, newGameList.get(legacyGameList.indexOf(new Game("Wh"))).getTimerPosition().y);
+    public void testSpeedrunComCategories() throws Exception {
+        String srcApi = "https://www.speedrun.com/api/v1";
+        String gameName = URLEncoder.encode("Monument Valley", "UTF-8");
+        URL u = new URL(srcApi + "/games?name=" + gameName);
+        HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+        InputStreamReader reader = new InputStreamReader(conn.getInputStream());
+        JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+        JsonObject gameData = json.get("data").getAsJsonArray().get(0).getAsJsonObject();
+        String id = gameData.get("id").getAsString();
 
-        String toJsonLegacy = gson.toJson(legacyGameList);
-        String toJsonNew = gson.toJson(newGameList);
-        assertEquals(toJsonLegacy, toJsonNew);
-    }
-
-    @Test
-    public void testMisc() throws Exception {
-
+        u = new URL(srcApi + "/games/" + id + "/categories");
+        conn = (HttpURLConnection) u.openConnection();
+        reader = new InputStreamReader(conn.getInputStream());
+        json = new JsonParser().parse(reader).getAsJsonObject();
+        JsonArray categoriesData = json.get("data").getAsJsonArray();
+        for (JsonElement categoryElement : categoriesData) {
+            JsonObject categoryObject = categoryElement.getAsJsonObject();
+            System.out.println(categoryObject.get("name").getAsString());
+        }
     }
 }

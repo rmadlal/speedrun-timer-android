@@ -24,13 +24,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import io.realm.Realm;
 
 public class TimerService extends Service {
 
     public static boolean IS_ACTIVE = false;
 
+    private Realm realm;
     private SharedPreferences prefs;
     private Game game;
     private Category category;
@@ -58,9 +58,10 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        Gson gson = new GsonBuilder().create();
-        game = gson.fromJson(intent.getStringExtra(getString(R.string.extra_game)), Game.class);
+        realm = Realm.getDefaultInstance();
+        String gameName = intent.getStringExtra(getString(R.string.extra_game));
         String categoryName = intent.getStringExtra(getString(R.string.extra_category));
+        game = realm.where(Game.class).equalTo("name", gameName).findFirst();
         category = game.getCategory(categoryName);
 
         Notification notification = setupNotification();
@@ -88,10 +89,7 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         if (mView != null) {
-            Intent intent = new Intent(getString(R.string.action_save_timer_position));
-            intent.putExtra(getString(R.string.extra_timer_x), mWindowParams.x);
-            intent.putExtra(getString(R.string.extra_timer_y), mWindowParams.y);
-            sendBroadcast(intent);
+            game.timerPosition.set(mWindowParams.x, mWindowParams.y);
             mWindowManager.removeView(mView);
         }
 
@@ -217,28 +215,24 @@ public class TimerService extends Service {
                 chronometer.reset();
             } else if (category.bestTime > 0 && chronometer.getTimeElapsed() >= category.bestTime) {
                 chronometer.reset();
-                sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
+                category.incrementRunCount();
             } else if (!Chronometer.running) {
+                long time = chronometer.getTimeElapsed();
                 AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
                         .setTitle(category.bestTime == 0 ? "New personal best!" :
                                 String.format("New personal best! (%s)",
-                                        Util.getFormattedTime(chronometer.getTimeElapsed() - category.bestTime)))
+                                        Util.getFormattedTime(time - category.bestTime)))
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
-                            category.bestTime = chronometer.getTimeElapsed();
                             chronometer.reset();
-                            Chronometer.bestTime = category.bestTime;
-                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(category.bestTime)));
+                            Chronometer.bestTime = time;
+                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(time)));
                             notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
-                            Intent intent = new Intent(getString(R.string.action_save_best_time));
-                            intent.putExtra(getString(R.string.extra_best_time), category.bestTime);
-                            sendBroadcast(intent);
-                            sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
-
+                            category.setData(time, category.runCount + 1);
                         })
                         .setNegativeButton(R.string.reset, (dialogInterface, i) ->  {
                             chronometer.reset();
-                            sendBroadcast(new Intent(getString(R.string.action_increment_run_count)));
+                            category.incrementRunCount();
                         })
                         .setNeutralButton(android.R.string.cancel, null)
                         .create();
@@ -267,8 +261,8 @@ public class TimerService extends Service {
                 PixelFormat.TRANSLUCENT);
         mWindowParams.gravity = Gravity.BOTTOM | Gravity.END;
 
-        int x = game.getTimerPosition().x;
-        int y = game.getTimerPosition().y;
+        int x = game.timerPosition.x;
+        int y = game.timerPosition.y;
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width));
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height));
         mWindowManager.addView(mView, mWindowParams);

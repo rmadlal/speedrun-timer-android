@@ -3,24 +3,20 @@ package il.ronmad.speedruntimer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+public class CategoryListFragment extends BaseListFragment {
 
-public class GameCategoriesListFragment extends BaseListFragment {
-
-    private static final String ARG_GAME_JSON = "game-json";
+    private static final String ARG_GAME_NAME = "game-name";
 
     private Game game;
 
-    public GameCategoriesListFragment() {
+    public CategoryListFragment() {
         // Required empty public constructor
     }
 
-    public static GameCategoriesListFragment newInstance(Game game) {
-        GameCategoriesListFragment fragment = new GameCategoriesListFragment();
+    public static CategoryListFragment newInstance(String gameName) {
+        CategoryListFragment fragment = new CategoryListFragment();
         Bundle args = new Bundle();
-        Gson gson = new GsonBuilder().create();
-        args.putString(ARG_GAME_JSON, gson.toJson(game));
+        args.putString(ARG_GAME_NAME, gameName);
         fragment.setArguments(args);
         return fragment;
     }
@@ -29,8 +25,8 @@ public class GameCategoriesListFragment extends BaseListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            Gson gson = new GsonBuilder().create();
-            game = gson.fromJson(getArguments().getString(ARG_GAME_JSON), Game.class);
+            String gameName = getArguments().getString(ARG_GAME_NAME);
+            game = realm.where(Game.class).equalTo("name", gameName).findFirst();
         }
         layoutResId = R.layout.category_list_layout;
         contextMenuResId = R.menu.category_list_fragment_context_menu;
@@ -45,9 +41,15 @@ public class GameCategoriesListFragment extends BaseListFragment {
         }
     }
 
-    public void updateData(Game game) {
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((CategoryAdapter) mListAdapter).update(game);
+    }
+
+    public void updateData(String gameName) {
         finishActionMode();
-        this.game = game;
+        this.game = realm.where(Game.class).equalTo("name", gameName).findFirst();
         ((CategoryAdapter) mListAdapter).update(game);
     }
 }

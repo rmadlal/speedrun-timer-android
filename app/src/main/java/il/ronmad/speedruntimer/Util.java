@@ -7,37 +7,27 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 public class Util {
 
-    static List<Game> fromJsonLegacy(String json) {
-        List<Game> games = new ArrayList<>();
+    static String migrateJson(String json) {
         JsonArray gamesArray = new JsonParser().parse(json).getAsJsonArray();
         for (JsonElement gameElement : gamesArray) {
             JsonObject gameObject = gameElement.getAsJsonObject();
             String name = gameObject.get("name").getAsString();
             JsonObject categoriesObject = gameObject.get("categories").getAsJsonObject();
-            Point timerPosition;
-            try {
-                JsonObject timerPositionObject = gameObject.get("timerPosition").getAsJsonObject();
-                int x = timerPositionObject.get("x").getAsInt();
-                int y = timerPositionObject.get("y").getAsInt();
-                timerPosition = new Point(x, y);
-            } catch (NullPointerException e) {
-                timerPosition = new Point();
-            }
-            List<Category> categories = new ArrayList<>();
+            JsonArray categoriesArray = new JsonArray();
             for (String key : categoriesObject.keySet()) {
-                Category category = new Category(key);
-                category.bestTime = categoriesObject.get(key).getAsInt();
-                categories.add(category);
+                JsonObject categoryObject = new JsonObject();
+                categoryObject.addProperty("name", key);
+                categoryObject.addProperty("bestTime", categoriesObject.get(key).getAsLong());
+                categoriesArray.add(categoryObject);
             }
-            games.add(new Game(name, categories, timerPosition));
+            gameObject.remove("categories");
+            gameObject.add("categories", categoriesArray);
         }
-        return games;
+        return gamesArray.toString();
     }
 
     static int[] getTimeUnits(long time) {

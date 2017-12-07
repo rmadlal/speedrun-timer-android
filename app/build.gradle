@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
 
 android {
     signingConfigs {
@@ -7,13 +8,13 @@ android {
         }
     }
     compileSdkVersion 27
-    buildToolsVersion "27.0.1"
+    buildToolsVersion "27.0.2"
     defaultConfig {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 20
-        versionName '2.2'
+        versionCode 21
+        versionName '2.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -44,4 +45,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.jaredrummler:colorpicker:1.0.1'
     testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support:support-annotations:27.0.2'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test:rules:1.0.1'
 }

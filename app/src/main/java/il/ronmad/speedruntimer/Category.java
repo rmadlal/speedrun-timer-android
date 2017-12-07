@@ -1,24 +1,23 @@
 package il.ronmad.speedruntimer;
 
-public class Category {
+import io.realm.RealmObject;
+import io.realm.annotations.Required;
 
-    String name;
-    long bestTime;
-    int runCount;
+public class Category extends RealmObject {
 
-    public Category(String name) {
-        this.name = name;
-        bestTime = 0L;
-        runCount = 0;
+    @Required
+    public String name;
+    public long bestTime;
+    public int runCount;
+
+    void incrementRunCount() {
+        getRealm().executeTransaction(realm -> this.runCount++);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Category category = (Category) o;
-
-        return name.equals(category.name);
+    void setData(long bestTime, int runCount) {
+        getRealm().executeTransaction(realm -> {
+            this.bestTime = bestTime;
+            this.runCount = runCount;
+        });
     }
 }

@@ -2,30 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<!--    <item
-        android:id="@+id/action_edit_pb"
-        android:icon="@drawable/ic_edit_black_24dp"
-        android:title="@string/menu_edit_pb"
+    <item
+        android:id="@+id/menu_add_games"
+        android:title="@string/menu_add_installed_games"
         android:orderInCategory="1"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_delete_cat"
-        android:icon="@drawable/ic_delete_black_24dp"
-        android:title="@string/delete"
-        android:orderInCategory="2"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_delete_game"
-        android:title="@string/menu_delete_game"
-        android:orderInCategory="3"
-        app:showAsAction="never" />-->
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_settings"
         android:title="@string/menu_settings"
-        android:orderInCategory="4"
+        android:orderInCategory="100"
         app:showAsAction="never" />
 
 </menu>

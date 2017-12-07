@@ -4,12 +4,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+
+import java.util.List;
 
 public class Dialogs {
 
@@ -39,7 +42,8 @@ public class Dialogs {
 
     static AlertDialog newCategoryDialog(MainActivity activity) {
         View dialogView = activity.getLayoutInflater().inflate(R.layout.new_category_dialog, null);
-        EditText newCategoryInput = dialogView.findViewById(R.id.newCategoryInput);
+        CategoryAutoCompleteView newCategoryInput = dialogView.findViewById(R.id.newCategoryInput);
+        newCategoryInput.setCategories(activity.currentGame.name);
         AlertDialog dialog =  new AlertDialog.Builder(activity)
                 .setTitle("New category")
                 .setView(dialogView)
@@ -170,6 +174,27 @@ public class Dialogs {
                 .create();
     }
 
+    static AlertDialog addInstalledGamesDialog(MainActivity activity, List<String> gameNamesList) {
+        String[] gameNames = gameNamesList.toArray(new String[]{});
+        boolean[] checked = new boolean[gameNames.length];
+        return new AlertDialog.Builder(activity)
+                .setTitle("Select games")
+                .setPositiveButton(R.string.add, (dialogInterface, i) -> {
+                    boolean atLeastOne = false;
+                    for (int j = 0; j < gameNames.length; j++) {
+                        if (checked[j]) {
+                            activity.addGame(gameNames[j]);
+                            atLeastOne = true;
+                        }
+                    }
+                    if (atLeastOne) {
+                        Snackbar.make(activity.fabAdd, "Games added", Snackbar.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .setMultiChoiceItems(gameNames, checked, (dialogInterface, i, b) -> checked[i] = b)
+                .create();
+    }
 
     static AlertDialog deleteGamesDialog(MainActivity activity, Game[] toRemove) {
         return new AlertDialog.Builder(activity)
@@ -186,7 +211,7 @@ public class Dialogs {
             editText.setError(activity.getString(R.string.error_empty_game));
             return true;
         }
-        if (activity.games.contains(new Game(newGameName))) {
+        if (activity.gameExists(newGameName)) {
             editText.setError(activity.getString(R.string.error_game_already_exists));
             return true;
         }
@@ -198,7 +223,7 @@ public class Dialogs {
         if (newCategoryName.isEmpty()) {
             editText.setError(activity.getString(R.string.error_empty_category));
             return true;
-        } else if (activity.currentGame.hasCategory(newCategoryName)) {
+        } else if (activity.categoryExists(newCategoryName)) {
             editText.setError(activity.getString(R.string.error_category_already_exists));
             return true;
         }
