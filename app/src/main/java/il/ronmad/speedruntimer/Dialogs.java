@@ -6,18 +6,16 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
-import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 
-import java.util.List;
-
 public class Dialogs {
 
     static AlertDialog newGameDialog(MainActivity activity) {
-        View dialogView = activity.getLayoutInflater().inflate(R.layout.new_game_dialog, null);
+        View dialogView = View.inflate(activity, R.layout.new_game_dialog, null);
         EditText newGameInput = dialogView.findViewById(R.id.newGameNameInput);
         AlertDialog dialog =  new AlertDialog.Builder(activity)
                 .setTitle("New game")
@@ -41,7 +39,7 @@ public class Dialogs {
     }
 
     static AlertDialog newCategoryDialog(MainActivity activity) {
-        View dialogView = activity.getLayoutInflater().inflate(R.layout.new_category_dialog, null);
+        View dialogView = View.inflate(activity, R.layout.new_category_dialog, null);
         CategoryAutoCompleteView newCategoryInput = dialogView.findViewById(R.id.newCategoryInput);
         newCategoryInput.setCategories(activity.currentGame.name);
         AlertDialog dialog =  new AlertDialog.Builder(activity)
@@ -66,7 +64,7 @@ public class Dialogs {
     }
 
     static AlertDialog editGameDialog(MainActivity activity, Game game) {
-        View dialogView = activity.getLayoutInflater().inflate(R.layout.new_game_dialog, null);
+        View dialogView = View.inflate(activity, R.layout.new_game_dialog, null);
         EditText newGameInput = dialogView.findViewById(R.id.newGameNameInput);
         AlertDialog dialog = new AlertDialog.Builder(activity)
                 .setTitle("Edit name")
@@ -90,8 +88,7 @@ public class Dialogs {
     }
 
     static AlertDialog editCategoryDialog(MainActivity activity, Category category) {
-        LayoutInflater inflater = activity.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.edit_category_dialog, null);
+        View dialogView = View.inflate(activity, R.layout.edit_category_dialog, null);
         EditText hoursInput = dialogView.findViewById(R.id.hours);
         EditText minutesInput = dialogView.findViewById(R.id.minutes);
         EditText secondsInput = dialogView.findViewById(R.id.seconds);
@@ -133,10 +130,11 @@ public class Dialogs {
                         context.stopService(new Intent(context, TimerService.class)))
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
-        } else {
-            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setType(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    : WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
         }
         return dialog;
     }
@@ -152,6 +150,7 @@ public class Dialogs {
                     homeIntent.addCategory(Intent.CATEGORY_HOME);
                     activity.startActivity(homeIntent);
                 })
+                .setCancelable(false)
                 .create();
     }
 
@@ -174,8 +173,7 @@ public class Dialogs {
                 .create();
     }
 
-    static AlertDialog addInstalledGamesDialog(MainActivity activity, List<String> gameNamesList) {
-        String[] gameNames = gameNamesList.toArray(new String[]{});
+    static AlertDialog addInstalledGamesDialog(MainActivity activity, String[] gameNames) {
         boolean[] checked = new boolean[gameNames.length];
         return new AlertDialog.Builder(activity)
                 .setTitle("Select games")

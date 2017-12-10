@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
@@ -18,20 +17,24 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 
 public class TimerService extends Service {
 
     public static boolean IS_ACTIVE = false;
 
     private Realm realm;
+    private RealmChangeListener<Realm> realmChangeListener;
     private SharedPreferences prefs;
+    private String gameName;
+    private String categoryName;
     private Game game;
     private Category category;
 
@@ -52,15 +55,18 @@ public class TimerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        realm = Realm.getDefaultInstance();
+        realmChangeListener = realm -> onDataChange();
+        realm.addChangeListener(realmChangeListener);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         IS_ACTIVE = true;
 
-        realm = Realm.getDefaultInstance();
-        String gameName = intent.getStringExtra(getString(R.string.extra_game));
-        String categoryName = intent.getStringExtra(getString(R.string.extra_category));
+        gameName = intent.getStringExtra(getString(R.string.extra_game));
+        categoryName = intent.getStringExtra(getString(R.string.extra_category));
         game = realm.where(Game.class).equalTo("name", gameName).findFirst();
         category = game.getCategory(categoryName);
 
@@ -78,6 +84,7 @@ public class TimerService extends Service {
         Chronometer.colorPB = prefs.getInt(getString(R.string.key_pref_color_pb),
                 ContextCompat.getColor(this, R.color.colorTimerPBDefault));
         Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L);
+        Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true);
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         setupLayoutComponents();
@@ -88,13 +95,24 @@ public class TimerService extends Service {
 
     @Override
     public void onDestroy() {
+        realm.removeChangeListener(realmChangeListener);
         if (mView != null) {
-            game.timerPosition.set(mWindowParams.x, mWindowParams.y);
+            if (game != null) {
+                game.timerPosition.set(mWindowParams.x, mWindowParams.y);
+            }
             mWindowManager.removeView(mView);
         }
-
+        realm.close();
         IS_ACTIVE = false;
         super.onDestroy();
+    }
+
+    private void onDataChange() {
+        Chronometer.bestTime = category.bestTime;
+        notificationBuilder.setContentText(category.bestTime > 0 ?
+                String.format("PB: %s", Util.getFormattedTime(category.bestTime))
+                : null);
+        notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
     }
 
     private Notification setupNotification() {
@@ -133,8 +151,7 @@ public class TimerService extends Service {
 
     private void setupLayoutComponents() {
         setTheme(R.style.AppTheme);
-        LayoutInflater layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mView = layoutInflater.inflate(R.layout.timer_overlay, null);
+        mView = View.inflate(this, R.layout.timer_overlay, null);
 
         mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
                 ContextCompat.getColor(this, R.color.colorTimerBackgroundDefault)));
@@ -203,21 +220,22 @@ public class TimerService extends Service {
                         mWindowManager.updateViewLayout(mView, mWindowParams);
                         break;
                 }
+                v.performClick();
                 return false;
             }
         });
 
         mView.setOnLongClickListener(view -> {
-            if (moved || !Chronometer.started || Chronometer.running || chronometer.getTimeElapsed() == 0) {
+            long time = chronometer.getTimeElapsed();
+            if (moved || !Chronometer.started || Chronometer.running || time == 0) {
                 return false;
             }
-            if (chronometer.getTimeElapsed() < 0) {
+            if (time < 0) {
                 chronometer.reset();
-            } else if (category.bestTime > 0 && chronometer.getTimeElapsed() >= category.bestTime) {
+            } else if (category.bestTime > 0 && time >= category.bestTime) {
                 chronometer.reset();
                 category.incrementRunCount();
             } else if (!Chronometer.running) {
-                long time = chronometer.getTimeElapsed();
                 AlertDialog resetDialog = new AlertDialog.Builder(TimerService.this)
                         .setTitle(category.bestTime == 0 ? "New personal best!" :
                                 String.format("New personal best! (%s)",
@@ -225,9 +243,6 @@ public class TimerService extends Service {
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset, (dialogInterface, i) -> {
                             chronometer.reset();
-                            Chronometer.bestTime = time;
-                            notificationBuilder.setContentText(String.format("PB: %s", Util.getFormattedTime(time)));
-                            notificationManager.notify(R.integer.notification_id, notificationBuilder.build());
                             category.setData(time, category.runCount + 1);
                         })
                         .setNegativeButton(R.string.reset, (dialogInterface, i) ->  {
@@ -236,10 +251,11 @@ public class TimerService extends Service {
                         })
                         .setNeutralButton(android.R.string.cancel, null)
                         .create();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
-                } else {
-                    resetDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+                Window window = resetDialog.getWindow();
+                if (window != null) {
+                    window.setType(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                            : WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
                 }
                 resetDialog.show();
             }

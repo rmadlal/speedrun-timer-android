@@ -14,11 +14,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import il.ronmad.speedruntimer.MainActivity.ListAction;
 import io.realm.Realm;
@@ -26,9 +22,8 @@ import io.realm.Realm;
 public abstract class BaseListFragment extends ListFragment {
 
     protected Realm realm;
-    protected BaseAdapter mListAdapter;
+    protected MyBaseAdapter mListAdapter;
     protected ActionMode mActionMode;
-    protected List<Integer> checkedItemPositions;
     protected int clickedItemPosition;
     protected int layoutResId;
     protected int contextMenuResId;
@@ -44,10 +39,8 @@ public abstract class BaseListFragment extends ListFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        realm = Realm.getDefaultInstance();
-        checkedItemPositions = new ArrayList<>();
-        setHasOptionsMenu(true);
         setRetainInstance(true);
+        realm = Realm.getDefaultInstance();
     }
 
     @Override
@@ -88,6 +81,12 @@ public abstract class BaseListFragment extends ListFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        update();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
@@ -100,67 +99,43 @@ public abstract class BaseListFragment extends ListFragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-//        inflater.inflate(R.menu.main_activity_actions, menu);
+    public void onDestroy() {
+        super.onDestroy();
+        realm.close();
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         if (mActionMode != null) {
-            setChecked(position, l.isItemChecked(position));
-            if (checkedItemPositions.isEmpty()) {
+            mListAdapter.setItemChecked(position, !mListAdapter.isItemChecked(position));
+            if (mListAdapter.checkedItems.isEmpty()) {
                 mActionMode.finish();
             } else {
                 mActionMode.invalidate();
             }
         } else {
-            setChecked(position, false);
             clickedItemPosition = position;
             mListener.onListFragmentInteraction(ListAction.CLICK);
         }
-        mListAdapter.notifyDataSetChanged();
     }
 
     public interface OnListFragmentInteractionListener {
         void onListFragmentInteraction(ListAction action);
     }
 
+    protected abstract void update();
+
     public Object[] getSelectedItems() {
-        Object[] items = new Object[checkedItemPositions.size()];
-        for (int i = 0; i < items.length; i++) {
-            items[i] = mListAdapter.getItem(checkedItemPositions.get(i));
-        }
-        return items;
+        return mListAdapter.checkedItems.toArray();
     }
 
     public Object getClickedItem() {
         return mListAdapter.getItem(clickedItemPosition);
     }
 
-    protected void setAdapter(BaseAdapter adapter) {
+    protected void setAdapter(MyBaseAdapter adapter) {
         mListAdapter = adapter;
         setListAdapter(mListAdapter);
-    }
-
-    protected void setChecked(int position, boolean checked) {
-        ListView listView = getListView();
-        listView.setItemChecked(position, checked);
-        if (checked) {
-            checkedItemPositions.add(position);
-        } else {
-            checkedItemPositions.remove(Integer.valueOf(position));
-        }
-        mListAdapter.notifyDataSetChanged();
-    }
-
-    protected void clearSelections() {
-        if (mListAdapter.isEmpty()) {
-            checkedItemPositions.clear();
-        }
-        else while (!checkedItemPositions.isEmpty()) {
-            setChecked(checkedItemPositions.get(0), false);
-        }
     }
 
     public void finishActionMode() {
@@ -176,10 +151,13 @@ public abstract class BaseListFragment extends ListFragment {
             if (mActionMode != null) {
                 return false;
             }
-            mActionMode = getActivity().startActionMode(actionModeCallback);
-            setChecked(i, true);
-            mActionMode.invalidate();
-            return true;
+            if (getActivity() != null) {
+                mActionMode = getActivity().startActionMode(actionModeCallback);
+                mListAdapter.setItemChecked(i, true);
+                mActionMode.invalidate();
+                return true;
+            }
+            return false;
         });
     }
 
@@ -193,8 +171,8 @@ public abstract class BaseListFragment extends ListFragment {
 
         @Override
         public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-            actionMode.setTitle(String.valueOf(checkedItemPositions.size()));
-            menu.findItem(R.id.menu_edit).setVisible(checkedItemPositions.size() == 1);
+            actionMode.setTitle(String.valueOf(mListAdapter.checkedItems.size()));
+            menu.findItem(R.id.menu_edit).setVisible(mListAdapter.checkedItems.size() == 1);
             return true;
         }
 
@@ -214,7 +192,7 @@ public abstract class BaseListFragment extends ListFragment {
 
         @Override
         public void onDestroyActionMode(ActionMode actionMode) {
-            clearSelections();
+            mListAdapter.clearSelections();
             mActionMode = null;
         }
     };

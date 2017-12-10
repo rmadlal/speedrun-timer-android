@@ -2,10 +2,12 @@ package il.ronmad.speedruntimer;
 
 
 import android.annotation.TargetApi;
-import android.content.Intent;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.support.v7.app.ActionBar;
@@ -16,43 +18,44 @@ import android.support.v4.app.NavUtils;
 
 import com.jaredrummler.android.colorpicker.ColorPreference;
 
+import java.util.List;
+
 public class SettingsActivity extends AppCompatPreferenceActivity {
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
+
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener =
             (preference, value) -> {
                 String stringValue = String.valueOf(value);
                 if (preference instanceof ListPreference) {
-                    // For list preferences, look up the correct display value in
-                    // the preference's 'entries' list.
                     ListPreference listPreference = (ListPreference) preference;
                     int index = listPreference.findIndexOfValue(stringValue);
-
-                    // Set the summary to reflect the new value.
                     preference.setSummary(
                             index >= 0
                                     ? listPreference.getEntries()[index]
                                     : null);
+                } else if (preference instanceof CheckBoxPreference) {
+                    if (preference.getKey().equals(preference.getContext().getString(R.string.key_pref_launch_games))) {
+                        preference.setSummary(preference.getContext().getString((boolean) value ?
+                                R.string.pref_launch_games_summary_true
+                                : R.string.pref_launch_games_summary_false));
+                    }
                 } else if (preference instanceof ColorPreference) {
                     return true;
                 } else if (preference instanceof CountdownPreference) {
                     preference.setSummary("Timer starts at " + Util.getFormattedTime(-1 * (long) value));
-                } else {
-                    // For all other preferences, set the summary to the value's
-                    // simple string representation.
+                }  else {
                     preference.setSummary(stringValue);
                 }
                 return true;
             };
 
+    private static boolean isXLargeTablet(Context context) {
+        return (context.getResources().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
+    }
+
     private static void bindPreferenceSummaryToValue(Preference preference) {
-        // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
-        // Trigger the listener immediately with the preference's
-        // current value.
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(preference.getContext());
         if (preference instanceof ColorPreference) {
@@ -65,6 +68,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                     prefs.getString(preference.getKey(),
                             ((ListPreference) preference).getEntryValues()[1].toString()));
+        } else if (preference instanceof CheckBoxPreference) {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    prefs.getBoolean(preference.getKey(), true));
         }
     }
 
@@ -72,14 +78,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
-
     }
 
     private void setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
@@ -96,41 +99,113 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return super.onMenuItemSelected(featureId, item);
     }
 
-    /**
-     * This method stops fragment injection in malicious applications.
-     * Make sure to deny any unknown fragments here.
-     */
+    @Override
+    public boolean onIsMultiPane() {
+        return isXLargeTablet(this);
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void onBuildHeaders(List<Header> target) {
+        loadHeadersFromResource(R.xml.pref_headers, target);
+    }
+
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
-                || GeneralPreferenceFragment.class.getName().equals(fragmentName);
+                || TimerColorsPreferenceFragment.class.getName().equals(fragmentName)
+                || TimingPreferenceFragment.class.getName().equals(fragmentName)
+                || DisplayPreferenceFragment.class.getName().equals(fragmentName)
+                || AppBehaviorPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
+    public static class TimerColorsPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
+            addPreferencesFromResource(R.xml.pref_timer_colors);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_neutral)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_ahead)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_behind)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_pb)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_background)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_size)));
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)));
         }
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), MainActivity.class));
+                getActivity().onBackPressed();
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class DisplayPreferenceFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_display);
+            setHasOptionsMenu(true);
+
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_background)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_size)));
+        }
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                getActivity().onBackPressed();
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class TimingPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_timing);
+            setHasOptionsMenu(true);
+
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)));
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                getActivity().onBackPressed();
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class AppBehaviorPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_app_behavior);
+            setHasOptionsMenu(true);
+
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_launch_games)));
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                getActivity().onBackPressed();
                 return true;
             }
             return super.onOptionsItemSelected(item);

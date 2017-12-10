@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.jaredrummler.android.colorpicker.ColorPreference
+        android:key="@string/key_pref_color_background"
+        android:title="@string/pref_color_background_title"
+        android:defaultValue="@color/colorTimerBackgroundDefault"
+        app:cpv_showAlphaSlider="true"
+        app:cpv_allowPresets="false"
+        app:cpv_dialogType="custom" />
+
+    <ListPreference
+        android:key="@string/key_pref_timer_size"
+        android:title="@string/pref_timer_size_title"
+        android:entries="@array/timer_sizes"
+        android:entryValues="@array/timer_sizes_values"
+        android:defaultValue="32" />
+
+</PreferenceScreen>

@@ -24,6 +24,7 @@ public class Chronometer {
     static int colorBehind;
     static int colorPB;
     static long countdown;
+    static boolean showMillis;
     static boolean started;
     static boolean running;
 
@@ -39,6 +40,10 @@ public class Chronometer {
 
         chronoRest = view.findViewById(R.id.chronoRest);
         chronoMillis = view.findViewById(R.id.chronoMillis);
+
+        if (!showMillis) {
+            chronoMillis.setVisibility(View.GONE);
+        }
 
         chronoHandler = new ChronoHandler(this);
 

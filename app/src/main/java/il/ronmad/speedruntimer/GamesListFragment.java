@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 
 public class GamesListFragment extends BaseListFragment {
 
+    private GamesAdapter adapter;
+
     public GamesListFragment() {
         // Required empty public constructor
     }
@@ -23,19 +25,12 @@ public class GamesListFragment extends BaseListFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        GamesAdapter adapter = new GamesAdapter(getContext(),
-                realm.where(Game.class).findAll(), checkedItemPositions);
+        adapter = new GamesAdapter(getContext(), realm.where(Game.class).findAll());
         setAdapter(adapter);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ((GamesAdapter) mListAdapter).update(realm.where(Game.class).findAll());
-    }
-
-    public void updateData() {
+    protected void update() {
         finishActionMode();
-        ((GamesAdapter) mListAdapter).update(realm.where(Game.class).findAll());
+        adapter.setData(realm.where(Game.class).findAll());
     }
 }

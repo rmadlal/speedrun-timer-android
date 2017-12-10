@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -31,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.exceptions.RealmException;
 
 public class MainActivity extends AppCompatActivity implements BaseListFragment.OnListFragmentInteractionListener {
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     private BroadcastReceiver receiver;
     private SharedPreferences sharedPrefs;
     private Realm realm;
+    private RealmChangeListener<Realm> realmChangeListener;
 
     FloatingActionButton fabAdd;
     private boolean rateSnackbarShown;
@@ -82,25 +85,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
 
         fabAdd = findViewById(R.id.fabAdd);
 
-        sharedPrefs = getPreferences(MODE_PRIVATE);
-        Realm.init(this);
-        String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
-        if (savedData.isEmpty()) {
-            realm = Realm.getDefaultInstance();
-        } else {
-            Realm.deleteRealm(Realm.getDefaultConfiguration());
-            realm = Realm.getDefaultInstance();
-            try {
-                realm.executeTransaction(rlm ->
-                        rlm.createAllFromJson(Game.class, savedData));
-            } catch (RealmException e) {
-                realm.executeTransaction(rlm ->
-                        rlm.createAllFromJson(Game.class, Util.migrateJson(savedData)));
-            }
-            sharedPrefs.edit()
-                       .remove(getString(R.string.key_games))
-                       .apply();
-        }
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        setupRealm();
 
         if (savedInstanceState != null) {
             String currentGameName = savedInstanceState.getString("currentGame");
@@ -114,33 +100,8 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
         currentCategory = null;
 
-        packageManager = getPackageManager();
-        installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            setupInstalledGamesList();
-        }
-
-        boolean toShowRateSnackbar = false;
-        boolean toShowAddGamesSnackbar;
-        rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
-        if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty()) {
-            int savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0);
-            launchCounter = Math.min(3, savedLaunchCounter) + 1;
-            toShowRateSnackbar = launchCounter == 3;
-        }
-
-        addGamesSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_add_games_snackbar_shown), false);
-        toShowAddGamesSnackbar = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                && canAddInstalledGames() && !addGamesSnackbarShown;
-
-        if (toShowAddGamesSnackbar) {
-            new Handler().postDelayed(this::showAddInstalledGamesSnackbar, 1000);
-            addGamesSnackbarShown = true;
-        } else if (toShowRateSnackbar) {
-            new Handler().postDelayed(this::showRateSnackbar, 1000);
-            rateSnackbarShown = true;
-        }
-
+        setupInstalledAppsLists();
+        setupSnackbars();
         setupReceiver();
         setupFragments();
     }
@@ -182,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         super.onDestroy();
         stopService(new Intent(this, TimerService.class));
         unregisterReceiver(receiver);
+        realm.removeChangeListener(realmChangeListener);
         realm.close();
     }
 
@@ -339,11 +301,50 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         TimerService.IS_ACTIVE = true;
     }
 
-    /**
-     * Listen for timer events:
-     * - User clicked on "Close Timer" from the notification
-     * - User clicked on "Save & Reset" in the Timer press-and-hold dialog
-     */
+    private void setupRealm() {
+        String savedData = sharedPrefs.getString(getString(R.string.key_games), "");
+        if (savedData.isEmpty()) {
+            realm = Realm.getDefaultInstance();
+        } else {
+            Realm.deleteRealm(Realm.getDefaultConfiguration());
+            realm = Realm.getDefaultInstance();
+            try {
+                realm.executeTransaction(realm ->
+                        realm.createAllFromJson(Game.class, savedData));
+            } catch (RealmException e) {
+                realm.executeTransaction(realm ->
+                        realm.createAllFromJson(Game.class, Util.migrateJson(savedData)));
+            }
+            sharedPrefs.edit()
+                    .remove(getString(R.string.key_games))
+                    .apply();
+        }
+        realmChangeListener = realm -> currentFragment.update();
+        realm.addChangeListener(realmChangeListener);
+    }
+
+    private void setupSnackbars() {
+        boolean toShowRateSnackbar = false;
+        boolean toShowAddGamesSnackbar;
+        rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false);
+        if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty()) {
+            int savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0);
+            launchCounter = Math.min(3, savedLaunchCounter) + 1;
+            toShowRateSnackbar = launchCounter == 3;
+        }
+
+        addGamesSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_add_games_snackbar_shown), false);
+        toShowAddGamesSnackbar = countAvailableInstalledGames() > 0 && !addGamesSnackbarShown;
+
+        if (toShowAddGamesSnackbar) {
+            new Handler().postDelayed(this::showAddInstalledGamesSnackbar, 1000);
+            addGamesSnackbarShown = true;
+        } else if (toShowRateSnackbar) {
+            new Handler().postDelayed(this::showRateSnackbar, 1000);
+            rateSnackbarShown = true;
+        }
+    }
+
     private void setupReceiver() {
         receiver = new BroadcastReceiver() {
             @Override
@@ -387,12 +388,19 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         }
     }
 
-    private void setupInstalledGamesList() {
+    private void setupInstalledAppsLists() {
+        packageManager = getPackageManager();
+        List<ApplicationInfo> allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        installedApps = new ArrayList<>();
         List<String> installedGamesList = new ArrayList<>();
-        for (ApplicationInfo packageInfo : installedApps) {
-            if ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
-            if (packageInfo.category != ApplicationInfo.CATEGORY_GAME) continue;
-            installedGamesList.add(packageManager.getApplicationLabel(packageInfo).toString());
+        for (ApplicationInfo packageInfo : allInstalledApps) {
+            if ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                    || packageInfo.packageName.equals(getPackageName())) continue;
+            installedApps.add(packageInfo);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    && packageInfo.category == ApplicationInfo.CATEGORY_GAME) {
+                installedGamesList.add(packageManager.getApplicationLabel(packageInfo).toString());
+            }
         }
         installedGames = installedGamesList.toArray(new String[]{});
     }
@@ -476,34 +484,33 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         currentFragment.finishActionMode();
     }
 
-    private boolean canAddInstalledGames() {
-        int availableCount = installedGames.length == 0 ? 0
+    private int countAvailableInstalledGames() {
+        int existsCount = installedGames.length == 0 ? 0
                 : (int) realm.where(Game.class).in("name", installedGames).count();
-        return availableCount < installedGames.length;
+        return installedGames.length - existsCount;
     }
 
     private void addInstalledGames() {
-        List<String> gameNames = new ArrayList<>();
+        String[] gameNames = new String[countAvailableInstalledGames()];
+        int idx = 0;
         for (String name : installedGames) {
             if (!gameExists(name)) {
-                gameNames.add(name);
+                gameNames[idx++] = name;
             }
         }
-        if (gameNames.isEmpty()) {
-            Toast.makeText(this, "There are no games to add", Toast.LENGTH_SHORT).show();
+        if (gameNames.length == 0) {
+            Toast.makeText(this, getString(R.string.no_games_to_add), Toast.LENGTH_SHORT).show();
         } else {
             Dialogs.addInstalledGamesDialog(this, gameNames).show();
-            if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-                ((GamesListFragment) currentFragment).updateData();
-            }
         }
     }
 
     private boolean tryLaunchGame() {
+        if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
+            return false;
+        }
         ApplicationInfo game = null;
         for (ApplicationInfo appInfo : installedApps) {
-            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
-            if (appInfo.packageName.equals(getPackageName())) continue;
             if (currentGame.name.equals(packageManager.getApplicationLabel(appInfo).toString())) {
                 game = appInfo;
                 break;
@@ -535,20 +542,14 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
     }
 
     void addGame(String gameName) {
-        realm.executeTransaction(rlm -> {
-            Game game = rlm.createObject(Game.class);
+        realm.executeTransaction(realm -> {
+            Game game = realm.createObject(Game.class);
             game.name = gameName;
         });
-        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            ((GamesListFragment) currentFragment).updateData();
-        }
     }
 
     void editGameName(Game game, String newName) {
         game.setName(newName);
-        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            ((GamesListFragment) currentFragment).updateData();
-        }
     }
 
     void removeGames(Game[] toRemove) {
@@ -556,35 +557,23 @@ public class MainActivity extends AppCompatActivity implements BaseListFragment.
         for (int i = 0; i < names.length; i++) {
             names[i] = toRemove[i].name;
         }
-        realm.executeTransaction(rlm ->
-                rlm.where(Game.class)
-                        .in("name", names)
-                        .findAll()
-                        .deleteAllFromRealm());
-        if (currentFragmentTag.equals(TAG_GAMES_LIST_FRAGMENT)) {
-            ((GamesListFragment) currentFragment).updateData();
-        }
+        realm.executeTransaction(realm ->
+                realm.where(Game.class)
+                   .in("name", names)
+                   .findAll()
+                   .deleteAllFromRealm());
     }
 
     void addCategory(String categoryName) {
         currentGame.addCategory(categoryName);
-        if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
-        }
     }
 
     void removeCategories(Category[] toRemove) {
         currentGame.removeCategories(toRemove);
-        if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
-        }
     }
 
     void updateCategory(Category category, long time, int runCount) {
         category.setData(time, runCount);
-        if (currentFragmentTag.equals(TAG_CATEGORY_LIST_FRAGMENT)) {
-            ((CategoryListFragment) currentFragment).updateData(currentGame.name);
-        }
     }
 
     void editCategory(Category category, long newBestTime, int newRunCount) {

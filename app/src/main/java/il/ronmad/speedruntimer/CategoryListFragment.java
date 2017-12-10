@@ -8,6 +8,7 @@ public class CategoryListFragment extends BaseListFragment {
     private static final String ARG_GAME_NAME = "game-name";
 
     private Game game;
+    private CategoryAdapter adapter;
 
     public CategoryListFragment() {
         // Required empty public constructor
@@ -35,21 +36,12 @@ public class CategoryListFragment extends BaseListFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (mListAdapter == null) {
-            CategoryAdapter adapter = new CategoryAdapter(getContext(), game, checkedItemPositions);
-            setAdapter(adapter);
-        }
+        adapter = new CategoryAdapter(getContext(), game.categories);
+        setAdapter(adapter);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ((CategoryAdapter) mListAdapter).update(game);
-    }
-
-    public void updateData(String gameName) {
+    protected void update() {
         finishActionMode();
-        this.game = realm.where(Game.class).equalTo("name", gameName).findFirst();
-        ((CategoryAdapter) mListAdapter).update(game);
+        adapter.setData(game.categories);
     }
 }
