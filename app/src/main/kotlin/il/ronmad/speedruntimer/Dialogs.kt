@@ -30,7 +30,7 @@ object Dialogs {
         dialog.setOnShowListener {
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
-                if (gameNameInput.isValidForGame(realm)) {
+                if (!gameNameInput.isValidForGame(realm)) {
                     gameNameInput.requestFocus()
                 } else {
                     realm.addGame(gameNameInput.text.toString())
@@ -54,7 +54,7 @@ object Dialogs {
         dialog.setOnShowListener {
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
-                if (categoryNameInput.isValidForCategory(game)) {
+                if (!categoryNameInput.isValidForCategory(game)) {
                     categoryNameInput.requestFocus()
                 } else {
                     game.addCategory(categoryNameInput.text.toString())
@@ -68,6 +68,8 @@ object Dialogs {
     internal fun editGameDialog(context: Context, realm: Realm, game: Game): AlertDialog {
         val dialogView = View.inflate(context, R.layout.new_game_dialog, null)
         val gameNameInput = dialogView.newGameNameInput
+        gameNameInput.setText(game.name)
+        gameNameInput.setSelection(gameNameInput.text.length)
         val dialog = AlertDialog.Builder(context)
                 .setTitle("Edit name")
                 .setView(dialogView)
@@ -77,10 +79,15 @@ object Dialogs {
         dialog.setOnShowListener {
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
-                if (gameNameInput.isValidForGame(realm)) {
+                val newName = gameNameInput.text.toString()
+                if (newName == game.name) {
+                    dialog.dismiss()
+                    return@setOnClickListener
+                }
+                if (!gameNameInput.isValidForGame(realm)) {
                     gameNameInput.requestFocus()
                 } else {
-                    game.setGameName(gameNameInput.text.toString())
+                    game.setGameName(newName)
                     dialog.dismiss()
                 }
             }
@@ -88,8 +95,10 @@ object Dialogs {
         return dialog
     }
 
-    internal fun editCategoryDialog(categoryListFragment: CategoryListFragment, category: Category): AlertDialog {
+    internal fun editCategoryDialog(categoryListFragment: CategoryListFragment, game: Game, category: Category): AlertDialog {
         val dialogView = View.inflate(categoryListFragment.context, R.layout.edit_category_dialog, null)
+        dialogView.categoryName.setText(category.name)
+        dialogView.categoryName.setSelection(dialogView.categoryName.text.length)
         if (category.bestTime > 0) {
             category.bestTime.setEditTextsFromTime(
                     dialogView.hours,
@@ -99,28 +108,36 @@ object Dialogs {
         }
         dialogView.runCount.setText(category.runCount.toString())
         val dialog = AlertDialog.Builder(categoryListFragment.context!!)
-                .setTitle("Edit ${category.name}")
+                .setTitle("Edit category")
                 .setView(dialogView)
-                .setPositiveButton(R.string.save) { _, _ ->
-                    val newTime = Util.getTimeFromEditTexts(dialogView.hours,
-                            dialogView.minutes,
-                            dialogView.seconds,
-                            dialogView.milliseconds)
-                    val newRunCountStr = dialogView.runCount.text.toString()
-                    val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
-                    categoryListFragment.editCategory(category, newTime, newRunCount)
-                }
+                .setPositiveButton(R.string.save, null)
                 .setNegativeButton(R.string.pb_clear, null)
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
         dialog.setOnShowListener {
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
+            val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
                 dialogView.hours.setText("")
                 dialogView.minutes.setText("")
                 dialogView.seconds.setText("")
                 dialogView.milliseconds.setText("")
                 dialogView.runCount.setText("0")
+            }
+            saveButton.setOnClickListener {
+                val newName = dialogView.categoryName.text.toString()
+                if (newName != category.name && !dialogView.categoryName.isValidForCategory(game)) {
+                    dialogView.categoryName.requestFocus()
+                    return@setOnClickListener
+                }
+                val newTime = Util.getTimeFromEditTexts(dialogView.hours,
+                        dialogView.minutes,
+                        dialogView.seconds,
+                        dialogView.milliseconds)
+                val newRunCountStr = dialogView.runCount.text.toString()
+                val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
+                categoryListFragment.editCategory(category, newName, newTime, newRunCount)
+                dialog.dismiss()
             }
         }
         return dialog

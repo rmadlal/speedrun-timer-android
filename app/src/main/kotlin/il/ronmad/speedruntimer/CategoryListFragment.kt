@@ -81,11 +81,13 @@ class CategoryListFragment : BaseListFragment() {
     }
 
     override fun onMenuEditPressed() {
+        if (selectedItems.isEmpty()) return
         val selectedItem = selectedItems[0]
-        Dialogs.editCategoryDialog(this, selectedItem as Category).show()
+        Dialogs.editCategoryDialog(this, game, selectedItem as Category).show()
     }
 
     override fun onMenuDeletePressed() {
+        if (selectedItems.isEmpty()) return
         val selectedItems = selectedItems
         actionDeleteCategories(selectedItems.map { it as Category })
     }
@@ -191,17 +193,18 @@ class CategoryListFragment : BaseListFragment() {
 
     }
 
-    fun editCategory(category: Category, newBestTime: Long, newRunCount: Int) {
+    fun editCategory(category: Category, newName: String, newBestTime: Long, newRunCount: Int) {
+        val prevName = category.name
         val prevBestTime = category.bestTime
         val prevRunCount = category.runCount
-        category.setData(newBestTime, newRunCount)
-        showEditedCategorySnackbar(category, prevBestTime, prevRunCount)
+        category.setData(newBestTime, newRunCount, newName)
+        showEditedCategorySnackbar(category, prevName, prevBestTime, prevRunCount)
     }
 
-    private fun showEditedCategorySnackbar(category: Category, prevBestTime: Long, prevRunCount: Int) {
-        val message = "${game.name} ${category.name} has been edited."
+    private fun showEditedCategorySnackbar(category: Category, prevName: String, prevBestTime: Long, prevRunCount: Int) {
+        val message = "${game.name} $prevName has been edited."
         Snackbar.make(view!!, message, Snackbar.LENGTH_LONG)
-                .setAction(R.string.undo) { category.setData(prevBestTime, prevRunCount) }
+                .setAction(R.string.undo) { category.setData(prevBestTime, prevRunCount, prevName) }
                 .show()
     }
 

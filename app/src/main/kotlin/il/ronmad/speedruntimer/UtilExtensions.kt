@@ -8,13 +8,13 @@ fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
         this.text.isNullOrBlank() -> {
             this.error = "Title must not be empty"
-            true
+            false
         }
         realm.gameExists(this.text.toString()) -> {
             this.error = "This game already exists"
-            true
+            false
         }
-        else -> false
+        else -> true
     }
 }
 
@@ -22,13 +22,13 @@ fun EditText.isValidForCategory(game: Game): Boolean {
     return when {
         this.text.isNullOrBlank() -> {
             this.error = "Category must not be empty"
-            true
+            false
         }
         game.categoryExists(this.text.toString()) -> {
             this.error = "This category already exists"
-            true
+            false
         }
-        else -> false
+        else -> true
     }
 }
 

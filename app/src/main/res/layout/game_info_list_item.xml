@@ -1,111 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:minHeight="?android:attr/listPreferredItemHeight">
 
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
         android:id="@+id/titleLayout"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="1"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/activity_horizontal_margin"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/showMoreButton"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="Any%" />
 
         <ImageButton
             android:id="@+id/showMoreButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="0"
             android:background="@android:color/transparent"
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="@string/img_show_more_desc"
+            app:layout_constraintTop_toTopOf="@id/title"
+            app:layout_constraintStart_toEndOf="@id/title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/title"
             app:srcCompat="@drawable/ic_expand_more_black_24dp" />
 
-    </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
 
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
         android:id="@+id/infoLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/titleLayout"
-        app:layout_constraintLeft_toLeftOf="@id/titleLayout"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/numOfRunsText"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/wrText"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="No. of runs on the leaderboard: 24" />
 
         <TextView
             android:id="@+id/wrText"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            app:layout_constraintTop_toBottomOf="@id/numOfRunsText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/placeText"
+            tools:text="WR is 16:03.94 by UncleRonny on PC" />
 
         <TextView
             android:id="@+id/placeText"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+            android:layout_marginBottom="4dp"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            app:layout_constraintTop_toBottomOf="@id/wrText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/buttonLBLink"
+            tools:text="Your PB would put you at 1st place!" />
 
-        <LinearLayout
+        <ImageView
+            android:id="@+id/linkImg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            android:layout_gravity="center"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@string/img_link_desc"
+            app:layout_constraintTop_toTopOf="@+id/buttonLBLink"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonLBLink"
+            app:layout_constraintBottom_toBottomOf="@+id/buttonLBLink"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:srcCompat="@drawable/ic_link_black_24dp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:contentDescription="@string/img_link_desc"
-                app:srcCompat="@drawable/ic_link_black_24dp"/>
+        <Button
+            android:id="@+id/buttonLBLink"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_lb_link"
+            android:textColor="@color/colorAccent"
+            app:layout_constraintTop_toBottomOf="@id/placeText"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonWRLink"
+            app:layout_constraintStart_toEndOf="@id/linkImg" />
 
-            <Button
-                android:id="@+id/buttonLBLink"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/button_lb_link"
-                android:textColor="@color/colorAccent"
-                style="?android:attr/borderlessButtonStyle" />
+        <Button
+            android:id="@+id/buttonWRLink"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_wr_link"
+            android:textColor="@color/colorAccent"
+            app:layout_constraintTop_toTopOf="@id/buttonLBLink"
+            app:layout_constraintBottom_toBottomOf="@id/buttonLBLink"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/buttonLBLink" />
 
-            <Button
-                android:id="@+id/buttonWRLink"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/button_wr_link"
-                android:textColor="@color/colorAccent"
-                style="?android:attr/borderlessButtonStyle" />
+    </android.support.constraint.ConstraintLayout>
 
-        </LinearLayout>
-
-    </LinearLayout>
-
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>

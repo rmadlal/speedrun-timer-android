@@ -59,6 +59,11 @@ class TimerService : Service() {
             gameName = it.getStringExtra(getString(R.string.extra_game))
             categoryName = it.getStringExtra(getString(R.string.extra_category))
         }
+        if (gameName.isEmpty() || categoryName.isEmpty()) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
         category = game.getCategory(categoryName)!!
 

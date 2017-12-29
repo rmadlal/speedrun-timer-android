@@ -52,11 +52,13 @@ class GamesListFragment : BaseListFragment() {
     }
 
     override fun onMenuEditPressed() {
+        if (selectedItems.isEmpty()) return
         val selectedItem = selectedItems[0]
         Dialogs.editGameDialog(activity, realm, selectedItem as Game).show()
     }
 
     override fun onMenuDeletePressed() {
+        if (selectedItems.isEmpty()) return
         val selectedItems = selectedItems
         actionDeleteGames(selectedItems.map { it as Game })
     }

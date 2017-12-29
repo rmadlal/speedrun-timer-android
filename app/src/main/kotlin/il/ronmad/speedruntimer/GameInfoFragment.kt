@@ -47,7 +47,7 @@ class GameInfoFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setupListView()
-        swipeRefreshLayout.setOnRefreshListener { refreshData() }
+        swipeRefreshLayout.setOnRefreshListener { refreshData(true) }
     }
 
     override fun onDestroy() {
@@ -56,12 +56,16 @@ class GameInfoFragment : Fragment() {
         realm.close()
     }
 
-    internal fun refreshData() {
+    internal fun refreshData(forceFetch: Boolean = false) {
         pbs = mapOf()
         game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }
         launch(UI) {
             swipeRefreshLayout.isRefreshing = true
-            displayData(Src.fetchLeaderboardsForGame(getContext()!!, game.name))
+            val application = getContext()!!.applicationContext as MyApplication
+            val leaderboards = if (!forceFetch && application.srcLeaderboardCache.containsKey(game.name))
+                application.srcLeaderboardCache[game.name]!!
+            else Src.fetchLeaderboardsForGame(getContext()!!, game.name)
+            displayData(leaderboards)
             if (getContext() == null) return@launch
             swipeRefreshLayout.isRefreshing = false
         }
@@ -97,7 +101,9 @@ class GameInfoFragment : Fragment() {
                     LayoutInflater.from(context).inflate(R.layout.game_info_list_item, container, false)
 
             val leaderboard = getItem(position)
-            listItem.title.text = leaderboard.categoryName
+            listItem.title.text = if (leaderboard.subcategories.isEmpty())
+                    leaderboard.categoryName
+            else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
             if (leaderboard.runs.isEmpty()) {
                 listItem.numOfRunsText.text = context?.getString(R.string.empty_leaderboard)
                 context?.let {
@@ -115,8 +121,14 @@ class GameInfoFragment : Fragment() {
                                 " by ${leaderboard.wrRunners} on ${leaderboard.wrPlatform}"
 
                 listItem.placeText.visibility = View.GONE
-                val categories = game.categories
-                        .where().equalTo("name", leaderboard.categoryName, Case.INSENSITIVE).findFirst()
+                val categories = if(leaderboard.subcategories.isEmpty())
+                    game.categories
+                            .where().equalTo("name", leaderboard.categoryName, Case.INSENSITIVE).findFirst()
+                else {
+                    val extendedCategoryName = "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
+                    game.categories
+                            .where().equalTo("name", extendedCategoryName, Case.INSENSITIVE).findFirst()
+                }
                 categories?.let {
                     val pb = it.bestTime
                     if (pb > 0) {

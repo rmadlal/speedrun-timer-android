@@ -6,9 +6,11 @@ import android.support.v7.widget.AppCompatAutoCompleteTextView
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
+import com.google.common.collect.Lists
 
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import java.lang.IllegalArgumentException
 
 class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
 
@@ -17,24 +19,29 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     internal fun setCategories(gameName: String) {
-        if (gameName in categoryCache) {
-            setAdapter(ArrayAdapter(context,
-                    R.layout.autocomplete_dropdown_item, categoryCache[gameName]))
-        } else {
-            launch(UI) {
-                val categories = Src.fetchCategoriesForGame(getContext(), gameName)
-                val categoryNames = if (categories.isEmpty())
-                    listOf("Any%", "100%", "Low%")
-                else
-                    categories.map { it.name }
-                categoryCache += gameName to categoryNames
-                setAdapter(ArrayAdapter(getContext(),
-                        R.layout.autocomplete_dropdown_item, categoryNames))
-                if (isShown) {
-                    showDropDown()
+        launch(UI) {
+            val game = Src.fetchGameData(getContext(), gameName)
+            val categoryNames = game?.categories?.flatMap { category ->
+                if (category.subCategories.isEmpty())
+                    listOf(category.name)
+                else {
+                    val subcategories = category.subCategories.map {
+                        it.values.map { it.label }
+                    }
+                    try {
+                        Lists.cartesianProduct(subcategories).map {
+                            "${category.name} - ${it.joinToString(" ")}"
+                        }
+                    } catch (e: IllegalArgumentException) {
+                        listOf(category.name)
+                    }
                 }
+            } ?: listOf("Any%", "100%", "Low%")
+            setAdapter(ArrayAdapter(getContext(),
+                    R.layout.autocomplete_dropdown_item, categoryNames))
+            if (isShown) {
+                showDropDown()
             }
-
         }
     }
 
@@ -54,9 +61,4 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     }
 
     override fun enoughToFilter() = true
-
-    companion object {
-
-        private var categoryCache: Map<String, List<String>> = mapOf()
-    }
 }

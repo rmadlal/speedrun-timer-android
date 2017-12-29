@@ -39,7 +39,8 @@ fun Game.getPosition(): Point {
 
 fun Category.incrementRunCount() = realm.executeTransaction { this.runCount++ }
 
-fun Category.setData(bestTime: Long, runCount: Int) = realm.executeTransaction {
+fun Category.setData(bestTime: Long, runCount: Int, name: String = this.name) = realm.executeTransaction {
+    this.name = name
     this.bestTime = bestTime
     this.runCount = runCount
 }
