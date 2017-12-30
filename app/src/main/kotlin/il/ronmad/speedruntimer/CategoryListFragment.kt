@@ -41,7 +41,7 @@ class CategoryListFragment : BaseListFragment() {
         if (backFromPermissionCheck) {
             backFromPermissionCheck = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {
-                if (Settings.canDrawOverlays(activity)) {
+                if (Settings.canDrawOverlays(context)) {
                     startTimerService()
                 } else {
                     checkPermissionAndStartTimerDelayed()
@@ -56,7 +56,7 @@ class CategoryListFragment : BaseListFragment() {
         when (requestCode) {
             OVERLAY_REQUEST_CODE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (Settings.canDrawOverlays(activity)) {
+                    if (Settings.canDrawOverlays(context)) {
                         startTimerService()
                     }
                 } else {
@@ -100,7 +100,7 @@ class CategoryListFragment : BaseListFragment() {
     @SuppressLint("RestrictedApi")
     private fun checkPermissionAndStartTimer() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(activity)) {
+            if (!Settings.canDrawOverlays(context)) {
                 backFromPermissionCheck = true
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + activity.packageName))
@@ -123,15 +123,15 @@ class CategoryListFragment : BaseListFragment() {
         }
         val handler = Handler()
         handler.postDelayed({
-            if (Settings.canDrawOverlays(activity)) {
+            if (Settings.canDrawOverlays(context)) {
                 startTimerService()
             } else {
                 handler.postDelayed({
-                    if (Settings.canDrawOverlays(activity)) {
+                    if (Settings.canDrawOverlays(context)) {
                         startTimerService()
                     } else {
                         handler.postDelayed({
-                            if (Settings.canDrawOverlays(activity)) {
+                            if (Settings.canDrawOverlays(context)) {
                                 startTimerService()
                             }
                         }, 500)

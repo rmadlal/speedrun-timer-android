@@ -43,6 +43,8 @@ class TimerService : Service() {
     private lateinit var mWindowParams: WindowManager.LayoutParams
     private var moved: Boolean = false
 
+    private var startedProperly = false
+
     override fun onBind(intent: Intent?) = null
 
     override fun onCreate() {
@@ -61,6 +63,7 @@ class TimerService : Service() {
         }
         if (gameName.isEmpty() || categoryName.isEmpty()) {
             stopSelf()
+            startedProperly = false
             return START_NOT_STICKY
         }
 
@@ -76,13 +79,16 @@ class TimerService : Service() {
         setupLayoutComponents()
         setupView()
 
+        startedProperly = true
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
         realm.removeChangeListener(realmChangeListener)
-        game.getPosition().set(mWindowParams.x, mWindowParams.y)
-        mWindowManager.removeView(mView)
+        if (startedProperly) {
+            game.getPosition().set(mWindowParams.x, mWindowParams.y)
+            mWindowManager.removeView(mView)
+        }
         realm.close()
         IS_ACTIVE = false
         super.onDestroy()

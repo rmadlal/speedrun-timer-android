@@ -2,6 +2,7 @@ package il.ronmad.speedruntimer
 
 import android.content.Context
 import android.graphics.Rect
+import android.os.Handler
 import android.support.v7.widget.AppCompatAutoCompleteTextView
 import android.util.AttributeSet
 import android.view.View
@@ -39,9 +40,7 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
             } ?: listOf("Any%", "100%", "Low%")
             setAdapter(ArrayAdapter(getContext(),
                     R.layout.autocomplete_dropdown_item, categoryNames))
-            if (isShown) {
-                showDropDown()
-            }
+            Handler().postDelayed({ if (isShown) showDropDown() }, 200)
         }
     }
 

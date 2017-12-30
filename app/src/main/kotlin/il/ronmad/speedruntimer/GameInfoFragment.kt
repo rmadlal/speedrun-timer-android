@@ -101,9 +101,13 @@ class GameInfoFragment : Fragment() {
                     LayoutInflater.from(context).inflate(R.layout.game_info_list_item, container, false)
 
             val leaderboard = getItem(position)
+
+            listItem.infoLayout.visibility = View.GONE
+            listItem.showMoreButton.scaleY = Math.abs(listItem.showMoreButton.scaleY)
             listItem.title.text = if (leaderboard.subcategories.isEmpty())
                     leaderboard.categoryName
             else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
+
             if (leaderboard.runs.isEmpty()) {
                 listItem.numOfRunsText.text = context?.getString(R.string.empty_leaderboard)
                 context?.let {
@@ -115,6 +119,15 @@ class GameInfoFragment : Fragment() {
                 listItem.placeText.visibility = View.GONE
                 listItem.buttonWRLink.visibility = View.GONE
             } else {
+                context?.let {
+                    listItem.numOfRunsText.setTextColor(ContextCompat.getColor(it,
+                            android.R.color.primary_text_light))
+                }
+                listItem.numOfRunsText.setTypeface(listItem.numOfRunsText.typeface, Typeface.NORMAL)
+                listItem.wrText.visibility = View.VISIBLE
+                listItem.placeText.visibility = View.VISIBLE
+                listItem.buttonWRLink.visibility = View.VISIBLE
+
                 val wrRun = leaderboard.runs[0]
                 listItem.numOfRunsText.text = "No. of runs on the leaderboard: ${leaderboard.runs.size}"
                 listItem.wrText.text = "WR is ${wrRun.time.getFormattedTime()}" +
@@ -154,14 +167,14 @@ class GameInfoFragment : Fragment() {
                 context?.startActivity(lbIntent)
             }
 
-            val expand = {
+            val toggleExpandInfo = {
                 listItem.infoLayout.visibility = if (listItem.infoLayout.visibility == View.GONE)
                     View.VISIBLE else View.GONE
                 listItem.showMoreButton.scaleY *= -1
             }
 
-            listItem.titleLayout.setOnClickListener { expand() }
-            listItem.showMoreButton.setOnClickListener { expand() }
+            listItem.titleLayout.setOnClickListener { toggleExpandInfo() }
+            listItem.showMoreButton.setOnClickListener { toggleExpandInfo() }
 
             return listItem
         }
