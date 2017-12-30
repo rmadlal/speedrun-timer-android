@@ -43,6 +43,7 @@
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+-keep class org.jetbrains.kotlinx.**
 
 # Retrofit
 -dontnote retrofit2.Platform
@@ -50,6 +51,7 @@
 -dontwarn okio.**
 -dontwarn retrofit2.**
 -dontwarn javax.annotation.**
+-keep class ru.gildor.coroutines.**
 
 # Guava
 -dontwarn com.google.**
