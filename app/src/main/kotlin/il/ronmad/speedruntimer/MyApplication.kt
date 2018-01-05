@@ -14,10 +14,6 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Realm.init(this)
-        srcApi = Retrofit.Builder()
-                .addConverterFactory(Src.gsonConverter())
-                .baseUrl(SRC_API)
-                .build()
-                .create(SrcAPI::class.java)
+        srcApi = Src.srcAPI()
     }
 }

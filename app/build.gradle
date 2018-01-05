@@ -10,8 +10,8 @@ android {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 26
-        versionName '3.1'
+        versionCode 28
+        versionName '3.2'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -51,7 +51,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.jaredrummler:colorpicker:1.0.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.20'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.21'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
     implementation 'ru.gildor.coroutines:kotlin-coroutines-retrofit:0.8.2'

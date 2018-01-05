@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
 import retrofit2.Call
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import ru.gildor.coroutines.retrofit.Result
@@ -78,6 +79,14 @@ data class SrcVariable(val id: String, val name: String, val values: List<SrcVal
 data class SrcValue(val id: String, val label: String)
 
 object Src {
+
+    fun srcAPI(): SrcAPI {
+        return Retrofit.Builder()
+                .addConverterFactory(Src.gsonConverter())
+                .baseUrl(SRC_API)
+                .build()
+                .create(SrcAPI::class.java)
+    }
 
     private fun categoriesDeserializer(json: JsonArray): List<SrcCategory> {
         return json
@@ -166,39 +175,40 @@ object Src {
                 .create())
     }
 
-    suspend fun fetchGameData(context: Context, gameName: String): SrcGame? {
-        val application = context.applicationContext as MyApplication
-        val game = if (application.srcGameCache.containsKey(gameName))
-            application.srcGameCache[gameName]!!
-        else {
-            val srcApi = application.srcApi
+    suspend fun fetchGameData(context: Context?, gameName: String): SrcGame? {
+        val application = context?.applicationContext as? MyApplication
+        return if (application != null && application.srcGameCache.containsKey(gameName)) {
+            application.srcGameCache[gameName]
+        } else {
+            val srcApi = application?.srcApi ?: srcAPI()
             val gameRes = srcApi.game(gameName).awaitResult()
             when (gameRes) {
                 is Result.Ok -> {
-                    if (gameRes.value.name.toLowerCase() == gameName.toLowerCase()) {
-                        gameRes.value
+                    val game = gameRes.value
+                    if (game.name.toLowerCase() == gameName.toLowerCase()) {
+                        if (application != null) application.srcGameCache += gameName to game
+                        game
                     } else null
                 }
                 else -> null
             }
         }
-        application.srcGameCache += gameName to game
-        return game
     }
 
-    suspend fun fetchLeaderboardsForGame(context: Context, gameName: String): List<SrcLeaderboard> {
-        val application = context.applicationContext as MyApplication
-        val srcApi = application.srcApi
+    suspend fun fetchLeaderboardsForGame(context: Context?, gameName: String): List<SrcLeaderboard> {
+        val application = context?.applicationContext as? MyApplication
+        val srcApi = application?.srcApi ?: srcAPI()
         val game = fetchGameData(context, gameName)
-        val leaderboards: List<SrcLeaderboard> = game?.categories?.flatMap { category ->
+        val leaderboards = game?.categories?.flatMap { category ->
             if (category.leaderboardUrl == null)  return@flatMap emptyList<SrcLeaderboard>()
             if (category.subCategories.isEmpty()) {
                 val leaderboardRes = srcApi.leaderboard(category.leaderboardUrl).awaitResult()
                 when (leaderboardRes) {
                     is Result.Ok -> {
-                        leaderboardRes.value.categoryName = category.name
-                        leaderboardRes.value.initWrData(srcApi)
-                        listOf(leaderboardRes.value)
+                        val leaderboard = leaderboardRes.value
+                        leaderboard.categoryName = category.name
+                        leaderboard.initWrData(srcApi)
+                        listOf(leaderboard)
                     }
                     else -> emptyList()
                 }
@@ -211,20 +221,20 @@ object Src {
                         "var-${it.first.id}" to it.second.id
                     }.toMap()
                     val leaderboardRes = srcApi.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
-                    val leaderboard = when (leaderboardRes) {
+                    when (leaderboardRes) {
                         is Result.Ok -> {
-                            leaderboardRes.value.categoryName = category.name
-                            leaderboardRes.value.subcategories = varValPairList.map { it.second.label }
-                            leaderboardRes.value.initWrData(srcApi)
-                            leaderboardRes.value
+                            val leaderboard = leaderboardRes.value
+                            leaderboard.categoryName = category.name
+                            leaderboard.subcategories = varValPairList.map { it.second.label }
+                            leaderboard.initWrData(srcApi)
+                            leaderboard
                         }
                         else -> null
                     }
-                    leaderboard
                 }
             }
         } ?: emptyList()
-        application.srcLeaderboardCache += gameName to leaderboards
+        if (application != null) application.srcLeaderboardCache += gameName to leaderboards
         return leaderboards
     }
 }

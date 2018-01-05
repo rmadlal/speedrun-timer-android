@@ -29,29 +29,33 @@
 -keepattributes Signature
 -keepattributes Exceptions
 -keepattributes *Annotation*
+
+-keepclasseswithmembers public class * {
+    public static void main(java.lang.String[]);
+}
 -keep class il.ronmad.speedruntimer.** { *; }
+-keep class kotlin.jvm.functions.**
+-keep class kotlin.jvm.internal.**
 
 # Gson
+-keep class com.google.gson.**
 -dontwarn sun.misc.**
--keep class com.google.gson.examples.android.model.** { *; }
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
 
 # Coroutines
--dontwarn org.jetbrains.kotlinx.**
+-keep class kotlinx.coroutines.**
+-keep class kotlin.coroutines.**
+-keep class ru.gildor.coroutines.**
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
--keep class org.jetbrains.kotlinx.**
 
 # Retrofit
 -dontnote retrofit2.Platform
+-dontnote okhttp3.internal.platform.**
 -dontwarn retrofit2.Platform$Java8
 -dontwarn okio.**
 -dontwarn retrofit2.**
 -dontwarn javax.annotation.**
--keep class ru.gildor.coroutines.**
 
 # Guava
 -dontwarn com.google.**
@@ -64,6 +68,9 @@
 -dontwarn afu.org.checkerframework.**
 -dontwarn org.checkerframework.**
 
--keep class com.google.common.collect.Lists {
-    public static ** cartesianProduct(**);
-}
+# Realm
+-keep class io.realm.**
+-dontwarn javax.**
+
+# ColorPicker
+-keep class com.jaredrummler.**

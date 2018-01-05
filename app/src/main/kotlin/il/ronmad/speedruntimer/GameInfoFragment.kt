@@ -61,10 +61,13 @@ class GameInfoFragment : Fragment() {
         game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }
         launch(UI) {
             swipeRefreshLayout.isRefreshing = true
-            val application = getContext()!!.applicationContext as MyApplication
-            val leaderboards = if (!forceFetch && application.srcLeaderboardCache.containsKey(game.name))
-                application.srcLeaderboardCache[game.name]!!
-            else Src.fetchLeaderboardsForGame(getContext()!!, game.name)
+            val application = getContext()?.applicationContext as? MyApplication
+            val leaderboards = if (!forceFetch) {
+                application?.srcLeaderboardCache?.getOrElse(game.name) {
+                    Src.fetchLeaderboardsForGame(getContext(), game.name)
+                } ?: Src.fetchLeaderboardsForGame(getContext(), game.name)
+            }
+            else Src.fetchLeaderboardsForGame(getContext(), game.name)
             displayData(leaderboards)
             if (getContext() == null) return@launch
             swipeRefreshLayout.isRefreshing = false
@@ -104,9 +107,9 @@ class GameInfoFragment : Fragment() {
 
             listItem.infoLayout.visibility = View.GONE
             listItem.showMoreButton.scaleY = Math.abs(listItem.showMoreButton.scaleY)
-            listItem.title.text = if (leaderboard.subcategories.isEmpty())
-                    leaderboard.categoryName
-            else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
+            listItem.title.text = if (leaderboard.subcategories.isEmpty()) {
+                leaderboard.categoryName
+            } else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
 
             if (leaderboard.runs.isEmpty()) {
                 listItem.numOfRunsText.text = context?.getString(R.string.empty_leaderboard)
@@ -134,10 +137,10 @@ class GameInfoFragment : Fragment() {
                                 " by ${leaderboard.wrRunners} on ${leaderboard.wrPlatform}"
 
                 listItem.placeText.visibility = View.GONE
-                val categories = if(leaderboard.subcategories.isEmpty())
+                val categories = if(leaderboard.subcategories.isEmpty()) {
                     game.categories
                             .where().equalTo("name", leaderboard.categoryName, Case.INSENSITIVE).findFirst()
-                else {
+                } else {
                     val extendedCategoryName = "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
                     game.categories
                             .where().equalTo("name", extendedCategoryName, Case.INSENSITIVE).findFirst()

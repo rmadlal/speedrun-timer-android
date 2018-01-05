@@ -40,6 +40,7 @@
     <string name="menu_edit_game">Edit name</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_add_installed_games">Add installed games</string>
+    <string name="menu_toggle_src_categories">Hide auto categories</string>
     <string name="img_next_desc">Go to game categories</string>
     <string name="img_play_desc">Open timer</string>
     <string name="img_show_more_desc">Show more</string>
@@ -108,5 +109,6 @@
     <string name="key_pref_timer_countdown">countdown_preference</string>
     <string name="key_pref_timer_show_millis">il.ronmad.speedruntimer.key.SHOW_MILLIS</string>
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>
+    <string name="key_auto_load_categories">il.ronmad.speedruntimer.key.AUTO_LOAD_CATEGORIES</string>
 
 </resources>
