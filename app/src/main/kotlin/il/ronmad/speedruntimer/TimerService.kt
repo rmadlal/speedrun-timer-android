@@ -234,15 +234,15 @@ class TimerService : Service() {
 
         mView.setOnLongClickListener {
             val time = chronometer.timeElapsed
-            if (moved || !Chronometer.started || Chronometer.running) {
+            if (moved) {
                 return@setOnLongClickListener false
             }
-            if (time < 0) {
+            if (time <= 0) {
                 chronometer.reset()
-            } else if (category.bestTime > 0 && category.bestTime in 0..time) {
+            } else if (Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time)) {
                 chronometer.reset()
                 category.incrementRunCount()
-            } else if (!Chronometer.running) {
+            } else {
                 val resetDialog = AlertDialog.Builder(this)
                         .setTitle(if (category.bestTime == 0L)
                             "New personal best!"

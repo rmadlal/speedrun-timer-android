@@ -53,6 +53,7 @@ class Chronometer(val context: Context, val view: View) {
     }
 
     internal fun reset() {
+        stop()
         init()
     }
 
