@@ -2,14 +2,13 @@ package il.ronmad.speedruntimer
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ListView
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_games_list.*
 
-class GamesListFragment : BaseListFragment() {
+class GamesListFragment : BaseListFragment<Game>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,7 @@ class GamesListFragment : BaseListFragment() {
         super.onListItemClick(l, v, position, id)
 
         if (mActionMode == null) {
-            val game = (mListAdapter as GamesAdapter).getItem(position)
+            val game = mListAdapter[position]
             fragmentManager?.beginTransaction()
                     ?.setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
                             R.anim.fade_in, R.anim.fade_out)
@@ -48,23 +47,21 @@ class GamesListFragment : BaseListFragment() {
 
     override fun update() {
         finishActionMode()
-        (mListAdapter as GamesAdapter).data = realm.where<Game>().findAll()
+        mListAdapter.data = realm.where<Game>().findAll()
     }
 
     override fun onMenuEditPressed() {
         if (selectedItems.isEmpty()) return
         val selectedItem = selectedItems[0]
-        Dialogs.editGameDialog(activity, realm, selectedItem as Game).show()
+        Dialogs.editGameDialog(activity, realm, selectedItem).show()
     }
 
     override fun onMenuDeletePressed() {
         if (selectedItems.isEmpty()) return
-        val selectedItems = selectedItems
-        actionDeleteGames(selectedItems.map { it as Game })
+        actionDeleteGames(selectedItems)
     }
 
     override fun onFabAddPressed() {
-        Log.v(TAG_GAMES_LIST_FRAGMENT, "onFabAddPressed")
         Dialogs.newGameDialog(activity, realm).show()
     }
 

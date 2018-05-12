@@ -176,65 +176,67 @@ object Src {
     }
 
     suspend fun fetchGameData(context: Context?, gameName: String): SrcGame? {
-        val application = context?.applicationContext as? MyApplication
-        return if (application != null && application.srcGameCache.containsKey(gameName)) {
-            application.srcGameCache[gameName]
-        } else {
-            val srcApi = application?.srcApi ?: srcAPI()
-            val gameRes = srcApi.game(gameName).awaitResult()
-            when (gameRes) {
-                is Result.Ok -> {
-                    val game = gameRes.value
-                    if (game.name.toLowerCase() == gameName.toLowerCase()) {
-                        if (application != null) application.srcGameCache += gameName to game
-                        game
-                    } else null
+        (context?.applicationContext as? MyApplication)?.let {
+            return if (it.srcGameCache.containsKey(gameName)) {
+                it.srcGameCache[gameName]
+            } else {
+                val gameRes = it.srcApi.game(gameName).awaitResult()
+                when (gameRes) {
+                    is Result.Ok -> {
+                        val game = gameRes.value
+                        if (game.name.toLowerCase() == gameName.toLowerCase()) {
+                            it.srcGameCache += gameName to game
+                            game
+                        } else null
+                    }
+                    else -> null
                 }
-                else -> null
             }
         }
+        return null
     }
 
     suspend fun fetchLeaderboardsForGame(context: Context?, gameName: String): List<SrcLeaderboard> {
-        val application = context?.applicationContext as? MyApplication
-        val srcApi = application?.srcApi ?: srcAPI()
-        val game = fetchGameData(context, gameName)
-        val leaderboards = game?.categories?.flatMap { category ->
-            if (category.leaderboardUrl == null)  return@flatMap emptyList<SrcLeaderboard>()
-            if (category.subCategories.isEmpty()) {
-                val leaderboardRes = srcApi.leaderboard(category.leaderboardUrl).awaitResult()
-                when (leaderboardRes) {
-                    is Result.Ok -> {
-                        val leaderboard = leaderboardRes.value
-                        leaderboard.categoryName = category.name
-                        leaderboard.initWrData(srcApi)
-                        listOf(leaderboard)
-                    }
-                    else -> emptyList()
-                }
-            } else {
-                val pairs = category.subCategories.map { variable ->
-                    variable.values.map { variable to it }
-                }
-                Lists.cartesianProduct(pairs).mapNotNull { varValPairList ->
-                    val varQuery: Map<String, String> = varValPairList.map {
-                        "var-${it.first.id}" to it.second.id
-                    }.toMap()
-                    val leaderboardRes = srcApi.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
+        (context?.applicationContext as? MyApplication)?.let {
+            val game = fetchGameData(context, gameName)
+            val leaderboards = game?.categories?.flatMap { category ->
+                if (category.leaderboardUrl == null)  return@flatMap emptyList<SrcLeaderboard>()
+                if (category.subCategories.isEmpty()) {
+                    val leaderboardRes = it.srcApi.leaderboard(category.leaderboardUrl).awaitResult()
                     when (leaderboardRes) {
                         is Result.Ok -> {
                             val leaderboard = leaderboardRes.value
                             leaderboard.categoryName = category.name
-                            leaderboard.subcategories = varValPairList.map { it.second.label }
-                            leaderboard.initWrData(srcApi)
-                            leaderboard
+                            leaderboard.initWrData(it.srcApi)
+                            listOf(leaderboard)
                         }
-                        else -> null
+                        else -> emptyList()
+                    }
+                } else {
+                    val pairs = category.subCategories.map { variable ->
+                        variable.values.map { variable to it }
+                    }
+                    Lists.cartesianProduct(pairs).mapNotNull { varValPairList ->
+                        val varQuery: Map<String, String> = varValPairList.map {
+                            "var-${it.first.id}" to it.second.id
+                        }.toMap()
+                        val leaderboardRes = it.srcApi.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
+                        when (leaderboardRes) {
+                            is Result.Ok -> {
+                                val leaderboard = leaderboardRes.value
+                                leaderboard.categoryName = category.name
+                                leaderboard.subcategories = varValPairList.map { it.second.label }
+                                leaderboard.initWrData(it.srcApi)
+                                leaderboard
+                            }
+                            else -> null
+                        }
                     }
                 }
-            }
-        } ?: emptyList()
-        if (application != null) application.srcLeaderboardCache += gameName to leaderboards
-        return leaderboards
+            } ?: emptyList()
+            it.srcLeaderboardCache += gameName to leaderboards
+            return leaderboards
+        }
+        return emptyList()
     }
 }

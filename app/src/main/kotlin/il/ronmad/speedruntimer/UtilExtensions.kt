@@ -1,8 +1,9 @@
 package il.ronmad.speedruntimer
 
+import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.widget.EditText
 import io.realm.Realm
-import java.util.*
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -32,29 +33,36 @@ fun EditText.isValidForCategory(game: Game): Boolean {
     }
 }
 
-fun Long.getTimeUnits(): IntArray {
-    val hours = this.toInt() / (1000 * 3600)
-    var remaining = (this % (3600 * 1000)).toInt()
+fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
+    val time = Math.abs(this)
+    val hours = time.toInt() / (1000 * 3600)
+    var remaining = (time % (3600 * 1000)).toInt()
     val minutes = remaining / (60 * 1000)
     remaining %= (60 * 1000)
     val seconds = remaining / 1000
-    val millis = remaining % 1000
+    val millis = if (twoDecimalPlaces) ((remaining % 1000) / 10) else (remaining % 1000)
     return intArrayOf(hours, minutes, seconds, millis)
 }
 
-fun Long.getFormattedTime(): String {
-    val units = Math.abs(this).getTimeUnits()
-    val hours = units[0]
-    val minutes = units[1]
-    val seconds = units[2]
-    val millis = units[3] / 10
+fun Long.getFormattedTime(withMillis: Boolean = true,
+                          forceMinutes: Boolean = false,
+                          plusSign: Boolean = false): String {
+    val (hours, minutes, seconds, millis) = getTimeUnits(true)
     var formattedTime = when {
-        hours > 0 -> String.format(Locale.getDefault(), "%d:%02d:%02d.%02d", hours, minutes, seconds, millis)
-        minutes > 0 -> String.format(Locale.getDefault(), "%d:%02d.%02d", minutes, seconds, millis)
-        else -> String.format(Locale.getDefault(), "%d.%02d", seconds, millis)
+        hours > 0 ->
+            if (withMillis) "%d:%02d:%02d.%02d".format(hours, minutes, seconds, millis)
+            else "%d:%02d:%02d".format(hours, minutes, seconds)
+        minutes > 0 || forceMinutes ->
+            if (withMillis) "%d:%02d.%02d".format(minutes, seconds, millis)
+            else "%d:%02d".format(minutes, seconds)
+        else ->
+            if (withMillis) "%d.%02d".format(seconds, millis)
+            else "%d".format(seconds)
     }
     if (this < 0) {
-        formattedTime = "-" + formattedTime
+        formattedTime = "-$formattedTime"
+    } else if (plusSign) {
+        formattedTime = "+$formattedTime"
     }
     return formattedTime
 }
@@ -63,23 +71,25 @@ fun Long.setEditTextsFromTime(hoursInput: EditText,
                               minutesInput: EditText,
                               secondsInput: EditText,
                               millisInput: EditText) {
-    val units = this.getTimeUnits()
-    val hours = units[0]
-    val minutes = units[1]
-    val seconds = units[2]
-    val millis = units[3]
-    hoursInput.setText(if (hours > 0) "" + hours else "")
-    minutesInput.setText(if (minutes > 0) "" + minutes else "")
-    secondsInput.setText(if (seconds > 0) "" + seconds else "")
-    millisInput.setText(if (millis > 0) "" + millis else "")
+    val (hours, minutes, seconds, millis) = getTimeUnits()
+    hoursInput.setText(if (hours > 0) "$hours" else "")
+    minutesInput.setText(if (minutes > 0) "$minutes" else "")
+    secondsInput.setText(if (seconds > 0) "$seconds" else "")
+    millisInput.setText(if (millis > 0) "$millis" else "")
 }
 
 fun Int.toOrdinal(): String {
-    return "$this${ when {
+    val suffix = when {
         this in 10..19 -> "th"
         this % 10 == 1 -> "st"
         this % 10 == 2 -> "nd"
         this % 10 == 3 -> "rd"
         else -> "th"
-    }}"
+    }
+    return "$this$suffix"
 }
+
+inline operator fun <reified T> MyBaseListFragmentAdapter<T>.get(position: Int) =
+        this.getItem(position)
+
+fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)

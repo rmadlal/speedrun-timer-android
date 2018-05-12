@@ -8,14 +8,19 @@ import android.view.View
 import kotlinx.android.synthetic.main.timer_overlay.view.*
 
 import java.lang.ref.WeakReference
-import java.util.Locale
 
 class Chronometer(val context: Context, val view: View) {
 
-    private var base: Long = 0
+    private var base = 0L
+
+    private val service: TimerService
+        get() = context as TimerService
 
     internal var timeElapsed: Long = 0
         private set
+
+    private val compareAgainst
+        get() = service.currentSegmentPBTime
 
     private val chronoHandler: Handler
 
@@ -35,19 +40,19 @@ class Chronometer(val context: Context, val view: View) {
     }
 
     internal fun start() {
+        if (compareAgainst == 0L) {
+            setColor(colorNeutral)
+        }
         started = true
         running = true
         base = SystemClock.elapsedRealtime() - timeElapsed
         updateRunning()
-        if (bestTime == 0L) {
-            setColor(colorNeutral)
-        }
     }
 
     internal fun stop() {
         running = false
         updateRunning()
-        if (timeElapsed > 0 && (bestTime == 0L || timeElapsed < bestTime)) {
+        if (timeElapsed > 0 && (compareAgainst == 0L || timeElapsed < compareAgainst)) {
             setColor(colorPB)
         }
     }
@@ -64,26 +69,20 @@ class Chronometer(val context: Context, val view: View) {
     }
 
     private fun setChronoTextFromTime(time: Long) {
-        val units = Math.abs(time).getTimeUnits()
-        val hours = units[0]
-        val minutes = units[1]
-        val seconds = units[2]
-        val millis = units[3] / 10
-        view.chronoRest.text = if (hours > 0)
-                String.format(Locale.getDefault(),
-                        if (time < 0) "-%d:%02d:%02d" else "%d:%02d:%02d", hours, minutes, seconds)
-            else String.format(Locale.getDefault(),
-                        if (time < 0) "-%d:%02d" else "%d:%02d", minutes, seconds)
-        view.chronoMillis.text = String.format(Locale.getDefault(), ".%02d", millis)
+        val units = time.getTimeUnits(true)
+        val (_, _, _, millis) = units
+
+        view.chronoRest.text = time.getFormattedTime(withMillis = false, forceMinutes = true)
+        view.chronoMillis.text = ".%02d".format(millis)
     }
 
     private fun updateColor() {
-        if (bestTime == 0L || timeElapsed < 0) {
+        if (compareAgainst == 0L || timeElapsed < 0) {
             return
         }
-        if (timeElapsed < bestTime && view.chronoRest.currentTextColor != colorAhead) {
+        if (timeElapsed < compareAgainst && view.chronoRest.currentTextColor != colorAhead) {
             setColor(colorAhead)
-        } else if (timeElapsed >= bestTime && view.chronoRest.currentTextColor != colorBehind) {
+        } else if (timeElapsed >= compareAgainst && view.chronoRest.currentTextColor != colorBehind) {
             setColor(colorBehind)
         }
     }
@@ -119,15 +118,15 @@ class Chronometer(val context: Context, val view: View) {
 
     companion object {
 
-        internal var bestTime: Long = 0
-        internal var colorNeutral: Int = 0
-        internal var colorAhead: Int = 0
-        internal var colorBehind: Int = 0
-        internal var colorPB: Int = 0
-        internal var countdown: Long = 0
-        internal var showMillis: Boolean = false
-        internal var started: Boolean = false
-        internal var running: Boolean = false
-        private val TICK_WHAT = 2
+        var colorNeutral = 0
+        var colorAhead = 0
+        var colorBehind = 0
+        var colorPB = 0
+        var colorBestSegment = 0
+        var countdown = 0L
+        var showMillis = false
+        var started = false
+        var running = false
+        const val TICK_WHAT = 2
     }
 }

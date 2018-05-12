@@ -114,8 +114,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             sharedPrefs.edit()
-                       .remove(getString(R.string.key_games))
-                       .apply()
+                    .remove(getString(R.string.key_games))
+                    .apply()
         }
     }
 
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 Snackbar.LENGTH_LONG)
         snackbar.setAction(R.string.rate) {
             val marketIntent = Intent(Intent.ACTION_VIEW,
-                    Uri.parse("market://details?id=" + packageName))
+                    Uri.parse("market://details?id=$packageName"))
             marketIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                     or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                             Intent.FLAG_ACTIVITY_NEW_DOCUMENT
@@ -195,7 +195,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(marketIntent)
             } catch (e: ActivityNotFoundException) {
                 startActivity(Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://play.google.com/store/apps/details?id=" + packageName)))
+                        Uri.parse("http://play.google.com/store/apps/details?id=$packageName")))
             }
         }
         snackbar.show()

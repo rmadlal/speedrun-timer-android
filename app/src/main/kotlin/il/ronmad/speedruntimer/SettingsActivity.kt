@@ -61,6 +61,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_ahead)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_behind)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_pb)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_best_segment)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -125,6 +126,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
             setHasOptionsMenu(true)
 
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_launch_games)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_save_time_data)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -156,11 +158,17 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                                 R.string.pref_launch_games_summary_true
                             else
                                 R.string.pref_launch_games_summary_false)
+                    } else if (preference.key == preference.context.getString(R.string.key_pref_save_time_data)) {
+                        preference.summary = preference.context.getString(
+                                if (value as Boolean)
+                                    R.string.pref_save_time_data_summary_true
+                                else
+                                    R.string.pref_save_time_data_summary_false)
                     }
                 }
                 is ColorPreference -> {}
                 is CountdownPreference ->
-                    preference.summary = "Timer starts at " + (-1 * value as Long).getFormattedTime()
+                    preference.summary = "Timer starts at ${(-1 * value as Long).getFormattedTime()}"
                 else -> preference.summary = stringValue
             }
             true

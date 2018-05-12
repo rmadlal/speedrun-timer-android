@@ -33,4 +33,12 @@
         app:cpv_allowPresets="false"
         app:cpv_dialogType="custom" />
 
+    <com.jaredrummler.android.colorpicker.ColorPreference
+        android:key="@string/key_pref_color_best_segment"
+        android:title="@string/pref_color_best_segment_title"
+        android:defaultValue="@color/colorTimerBestSegmentDefault"
+        app:cpv_showAlphaSlider="true"
+        app:cpv_allowPresets="false"
+        app:cpv_dialogType="custom" />
+
 </PreferenceScreen>

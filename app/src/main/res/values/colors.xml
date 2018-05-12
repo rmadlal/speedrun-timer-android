@@ -10,6 +10,7 @@
     <color name="colorTimerAheadDefault">#A0006000</color>
     <color name="colorTimerBehindDefault">#A0600000</color>
     <color name="colorTimerPBDefault">#A00000A0</color>
+    <color name="colorTimerBestSegmentDefault">#A0FFD700</color>
     <color name="colorTimerBackgroundDefault">#00AAAAAA</color>
 
 </resources>

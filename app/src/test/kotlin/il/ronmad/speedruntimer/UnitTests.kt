@@ -17,6 +17,7 @@ class UnitTests {
     @Throws(Exception::class)
     fun testTimeSplit() {
         val bestTime = (43 + 1000 * 27 + 1000 * 60 * 5).toLong()
+
         val hours = (bestTime / (3600 * 1000)).toInt()
         var remaining = (bestTime % (3600 * 1000)).toInt()
         val minutes = remaining / (60 * 1000)

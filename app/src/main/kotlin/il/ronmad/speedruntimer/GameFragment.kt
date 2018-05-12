@@ -100,12 +100,14 @@ class GameFragment : Fragment() {
                     TAB_CATEGORIES -> activity.fabAdd.show()
                     TAB_INFO -> {
                         activity.fabAdd.hide()
-                        (viewPagerAdapter.getRegisteredFragment(TAB_INFO) as? GameInfoFragment)?.let {
-                            if (!it.isDataShowing) {
-                                it.refreshData()
-                            }
-                        }
-                        (viewPagerAdapter.getRegisteredFragment(TAB_CATEGORIES) as? CategoryListFragment)?.finishActionMode()
+                        (viewPagerAdapter.getRegisteredFragment(TAB_INFO) as? GameInfoFragment)
+                                ?.let {
+                                    if (!it.isDataShowing) {
+                                        it.refreshData()
+                                    }
+                                }
+                        (viewPagerAdapter.getRegisteredFragment(TAB_CATEGORIES) as? CategoryListFragment)
+                                ?.finishActionMode()
                     }
                 }
             }
@@ -116,10 +118,9 @@ class GameFragment : Fragment() {
 
     companion object {
 
-        private val TAB_CATEGORIES = 0
-        private val TAB_INFO = 1
+        const val TAB_CATEGORIES = 0
+        const val TAB_INFO = 1
 
-        private val ARG_GAME_NAME = "game-name"
         fun newInstance(gameName: String): GameFragment {
             val fragment = GameFragment()
             val args = Bundle()

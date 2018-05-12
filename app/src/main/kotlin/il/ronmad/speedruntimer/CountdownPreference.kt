@@ -1,5 +1,6 @@
 package il.ronmad.speedruntimer
 
+import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -12,9 +13,11 @@ import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
 class CountdownPreference : DialogPreference {
 
+    @TargetApi(21)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    @TargetApi(21)
     constructor(context: Context?) : super(context)
 
     private var countdown: Long = 0L

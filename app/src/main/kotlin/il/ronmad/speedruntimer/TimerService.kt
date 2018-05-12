@@ -14,13 +14,10 @@ import android.graphics.Typeface
 import android.os.Build
 import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
-import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
-import android.view.Gravity
-import android.view.MotionEvent
-import android.view.View
-import android.view.WindowManager
+import android.util.Log
+import android.view.*
 
 import io.realm.Realm
 import io.realm.RealmChangeListener
@@ -32,8 +29,15 @@ class TimerService : Service() {
     private lateinit var realm: Realm
     private lateinit var realmChangeListener: RealmChangeListener<Realm>
     private lateinit var prefs: SharedPreferences
+    private lateinit var chronometer: Chronometer
     private lateinit var game: Game
     private lateinit var category: Category
+    private lateinit var splitsIter: MutableListIterator<Split>
+    private var splitTimes = mutableListOf<Long>()
+    private lateinit var currentSplit: Split
+    private var currentSplitStartTime = 0L
+    var currentSegmentPBTime = 0L
+    private var hasSplits = false
 
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationBuilder: NotificationCompat.Builder
@@ -41,7 +45,7 @@ class TimerService : Service() {
     private lateinit var mView: View
     private lateinit var mWindowManager: WindowManager
     private lateinit var mWindowParams: WindowManager.LayoutParams
-    private var moved: Boolean = false
+    private var moved = false
 
     private var startedProperly = false
 
@@ -69,7 +73,8 @@ class TimerService : Service() {
 
         game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
         category = game.getCategory(categoryName)!!
-
+        splitsIter = category.splits.listIterator()
+        hasSplits = splitsIter.hasNext()
         val notification = setupNotification()
         startForeground(R.integer.notification_id, notification)
 
@@ -95,7 +100,6 @@ class TimerService : Service() {
     }
 
     private fun onDataChange() {
-        Chronometer.bestTime = category.bestTime
         notificationBuilder.setContentText(if (category.bestTime > 0)
             "PB: ${category.bestTime.getFormattedTime()}"
         else
@@ -105,15 +109,16 @@ class TimerService : Service() {
 
     private fun setupChronometerPrefs() {
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        Chronometer.bestTime = category.bestTime
         Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_pref_color_neutral),
-                ContextCompat.getColor(this, R.color.colorTimerNeutralDefault))
+                getColorCpt(R.color.colorTimerNeutralDefault))
         Chronometer.colorAhead = prefs.getInt(getString(R.string.key_pref_color_ahead),
-                ContextCompat.getColor(this, R.color.colorTimerAheadDefault))
+                getColorCpt(R.color.colorTimerAheadDefault))
         Chronometer.colorBehind = prefs.getInt(getString(R.string.key_pref_color_behind),
-                ContextCompat.getColor(this, R.color.colorTimerBehindDefault))
+                getColorCpt(R.color.colorTimerBehindDefault))
         Chronometer.colorPB = prefs.getInt(getString(R.string.key_pref_color_pb),
-                ContextCompat.getColor(this, R.color.colorTimerPBDefault))
+                getColorCpt(R.color.colorTimerPBDefault))
+        Chronometer.colorBestSegment = prefs.getInt(getString(R.string.key_pref_color_best_segment),
+                getColorCpt(R.color.colorTimerBestSegmentDefault))
         Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
         Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
     }
@@ -165,18 +170,9 @@ class TimerService : Service() {
         setTheme(R.style.AppTheme)
         mView = View.inflate(this, R.layout.timer_overlay, null)
 
-        mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
-                ContextCompat.getColor(this, R.color.colorTimerBackgroundDefault)))
-        val size = Integer.parseInt(prefs.getString(getString(R.string.key_pref_timer_size), "32"))
-        mView.chronoRest.textSize = size.toFloat()
-        mView.chronoMillis.textSize = (size * 0.75).toFloat()
+        setupDisplayPrefs()
 
-        mView.chronoRest.typeface = Typeface.createFromAsset(
-                assets, "fonts/digital-7.ttf")
-        mView.chronoMillis.typeface = Typeface.createFromAsset(
-                assets, "fonts/digital-7.ttf")
-
-        val chronometer = Chronometer(this, mView)
+        chronometer = Chronometer(this, mView)
 
         mView.isLongClickable = true
         mView.setOnTouchListener(object : View.OnTouchListener {
@@ -206,12 +202,30 @@ class TimerService : Service() {
                         moved = false
                     }
                     MotionEvent.ACTION_UP -> {
-                        if (!moved && System.currentTimeMillis() - touchTime < 250) {
-                            if (Chronometer.running) {
-                                chronometer.stop()
+                        if (moved || System.currentTimeMillis() - touchTime >= 250) return false
+                        if (Chronometer.running) {
+                            if (chronometer.timeElapsed < 0) return false
+                            if (hasSplits) {
+                                // Split, or stop if on final split.
+                                val splitTime = chronometer.timeElapsed
+                                val segmentTime = splitTime - currentSplitStartTime
+                                splitTimes.add(segmentTime)
+                                if (category.bestTime > 0) {
+                                    updateDelta(splitTime, segmentTime)
+                                }
+
+                                if (splitsIter.hasNext()) {
+                                    timerSplit(splitTime)
+                                } else {
+                                    chronometer.stop()
+                                    mView.currentSplit.visibility = View.GONE
+                                }
                             } else {
-                                chronometer.start()
+                                // No splits, so just stop.
+                                chronometer.stop()
                             }
+                        } else {
+                            timerStart()
                         }
                     }
                     MotionEvent.ACTION_MOVE -> {
@@ -239,10 +253,14 @@ class TimerService : Service() {
             }
             if (time <= 0) {
                 chronometer.reset()
+                resetSplits()
             } else if (Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time)) {
-                chronometer.reset()
-                category.incrementRunCount()
+                timerReset()
             } else {
+                if (!prefs.getBoolean(getString(R.string.key_pref_save_time_data), true)) {
+                    timerReset(updateData = false)
+                    return@setOnLongClickListener true
+                }
                 val resetDialog = AlertDialog.Builder(this)
                         .setTitle(if (category.bestTime == 0L)
                             "New personal best!"
@@ -250,12 +268,10 @@ class TimerService : Service() {
                             "New personal best! (${(time - category.bestTime).getFormattedTime()})")
                         .setMessage("Save it?")
                         .setPositiveButton(R.string.save_reset) { _, _ ->
-                            chronometer.reset()
-                            category.setData(time, category.runCount + 1)
+                            timerReset(time)
                         }
                         .setNegativeButton(R.string.reset) { _, _ ->
-                            chronometer.reset()
-                            category.incrementRunCount()
+                            timerReset()
                         }
                         .setNeutralButton(android.R.string.cancel, null)
                         .create()
@@ -267,6 +283,39 @@ class TimerService : Service() {
             }
             true
         }
+
+        mView.setOnKeyListener { v, keyCode, event ->
+            when (keyCode) {
+                KeyEvent.KEYCODE_VOLUME_DOWN ->  {
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        Log.d("KeyListener", "Vol Down: ${event.action}")
+                        true
+                    } else false
+                }
+                KeyEvent.KEYCODE_VOLUME_UP -> {
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        Log.d("KeyListener", "Vol Up")
+                        true
+                    } else false
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun setupDisplayPrefs() {
+        mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
+                getColorCpt(R.color.colorTimerBackgroundDefault)))
+        val size = prefs.getString(getString(R.string.key_pref_timer_size), "32").toFloat()
+        mView.chronoRest.textSize = size
+        mView.chronoMillis.textSize = size * 0.75f
+        mView.delta.textSize = size * 0.375f
+        mView.currentSplit.textSize = size * 0.5f
+
+        mView.chronoRest.typeface = Typeface.createFromAsset(
+                assets, "fonts/digital-7.ttf")
+        mView.chronoMillis.typeface = Typeface.createFromAsset(
+                assets, "fonts/digital-7.ttf")
     }
 
     private fun setupView() {
@@ -289,6 +338,60 @@ class TimerService : Service() {
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width))
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height))
         mWindowManager.addView(mView, mWindowParams)
+    }
+
+    private fun timerReset(newPB: Long = 0L, updateData: Boolean = true) {
+        chronometer.reset()
+        if (updateData) {
+            if (newPB == 0L) {
+                category.incrementRunCount()
+                category.updateSplits(splitTimes, false)
+            } else {
+                category.updateData(bestTime = newPB, runCount = category.runCount + 1)
+                category.updateSplits(splitTimes, true)
+            }
+        }
+        resetSplits()
+    }
+
+    private fun resetSplits() {
+        splitsIter = category.splits.listIterator()
+        splitTimes.clear()
+        mView.delta.visibility = View.GONE
+        mView.currentSplit.visibility = View.GONE
+    }
+
+    private fun timerSplit(splitTime: Long) {
+        currentSplit = splitsIter.next()
+        currentSegmentPBTime += currentSplit.pbTime
+        currentSplitStartTime = splitTime
+        mView.currentSplit.text = currentSplit.name
+    }
+
+    private fun timerStart() {
+        if (hasSplits) {
+            if (!splitsIter.hasNext()) return
+            currentSplit = splitsIter.next()
+            currentSegmentPBTime = currentSplit.pbTime
+            mView.currentSplit.text = currentSplit.name
+            mView.currentSplit.visibility = View.VISIBLE
+        } else {
+            currentSegmentPBTime = category.bestTime
+        }
+        currentSplitStartTime = 0L
+        chronometer.start()
+
+    }
+
+    private fun updateDelta(splitTime: Long, segmentTime: Long) {
+        val delta = splitTime - currentSegmentPBTime
+        mView.delta.text = delta.getFormattedTime(plusSign = true)
+        mView.delta.setTextColor(when {
+            segmentTime < currentSplit.bestTime -> Chronometer.colorBestSegment
+            delta < 0 -> Chronometer.colorAhead
+            else -> Chronometer.colorBehind
+        })
+        mView.delta.visibility = View.VISIBLE
     }
 
     companion object {

@@ -29,6 +29,7 @@
 -keepattributes Signature
 -keepattributes Exceptions
 -keepattributes *Annotation*
+-ignorewarnings
 
 -keepclasseswithmembers public class * {
     public static void main(java.lang.String[]);
@@ -39,7 +40,7 @@
 
 # Gson
 -keep class com.google.gson.**
--dontwarn sun.misc.**
+# -dontwarn sun.misc.**
 
 # Coroutines
 -keep class kotlinx.coroutines.**

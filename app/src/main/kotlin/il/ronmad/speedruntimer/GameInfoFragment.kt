@@ -195,8 +195,6 @@ class GameInfoFragment : Fragment() {
 
     companion object {
 
-        private val ARG_GAME_NAME = "game-name"
-
         fun newInstance(gameName: String): GameInfoFragment {
             val fragment = GameInfoFragment()
             val args = Bundle()

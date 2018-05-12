@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
+        android:layout_height="match_parent"
+        tools:listitem="@layout/category_list_item" />
     
     <TextView
         android:id="@android:id/empty"
@@ -18,6 +19,7 @@
         android:text="@string/empty_category_list"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@android:color/secondary_text_light_nodisable"
-        android:textStyle="italic" />
+        android:textStyle="italic"
+        tools:visibility="gone" />
     
 </FrameLayout>

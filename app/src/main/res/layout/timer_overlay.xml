@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/timer_overlay"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
@@ -11,8 +12,10 @@
         android:layout_height="wrap_content"
         android:text="@string/chrono_rest"
         android:textSize="32sp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/chronoMillis"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/chronoMillis"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/currentSplit" />
 
     <TextView
         android:id="@+id/chronoMillis"
@@ -20,7 +23,32 @@
         android:layout_height="wrap_content"
         android:text="@string/chrono_millis"
         android:textSize="24sp"
-        app:layout_constraintLeft_toRightOf="@id/chronoRest"
-        app:layout_constraintBaseline_toBaselineOf="@id/chronoRest"/>
+        app:layout_constraintStart_toEndOf="@id/chronoRest"
+        app:layout_constraintBaseline_toBaselineOf="@id/chronoRest"
+        app:layout_constraintEnd_toStartOf="@+id/delta" />
 
-</android.support.constraint.ConstraintLayout>
+    <TextView
+        android:id="@+id/delta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/chronoMillis"
+        app:layout_constraintTop_toTopOf="@id/chronoRest"
+        tools:text="-2.14"
+        tools:visibility="visible"
+        tools:textColor="@color/colorTimerAheadDefault"/>
+
+    <TextView
+        android:id="@+id/currentSplit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/chronoRest"
+        app:layout_constraintStart_toStartOf="@id/chronoRest"
+        tools:text="Wall Jump"
+        tools:visibility="visible"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

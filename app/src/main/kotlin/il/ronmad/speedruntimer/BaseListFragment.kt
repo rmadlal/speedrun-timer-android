@@ -15,16 +15,16 @@ import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.activity_main.*
 
-abstract class BaseListFragment : ListFragment() {
+abstract class BaseListFragment<T> : ListFragment() {
 
     protected lateinit var realm: Realm
     private val realmChangeListener = RealmChangeListener<Realm> { update() }
-    protected lateinit var mListAdapter: MyBaseListFragmentAdapter<*>
+    protected lateinit var mListAdapter: MyBaseListFragmentAdapter<T>
     protected var mActionMode: ActionMode? = null
     protected var layoutResId: Int = 0
     protected var contextMenuResId: Int = 0
 
-    internal val selectedItems: List<*>
+    val selectedItems: List<T>
         get() = mListAdapter.checkedItems
 
     protected val activity: MainActivity
@@ -38,8 +38,8 @@ abstract class BaseListFragment : ListFragment() {
         }
 
         override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
-            actionMode.title = mListAdapter.checkedItems.size.toString()
-            menu.findItem(R.id.menu_edit).isVisible = mListAdapter.checkedItems.size == 1
+            actionMode.title = selectedItems.size.toString()
+            menu.findItem(R.id.menu_edit).isVisible = selectedItems.size == 1
             return true
         }
 
@@ -97,7 +97,7 @@ abstract class BaseListFragment : ListFragment() {
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
         mActionMode?.let {
             mListAdapter.setItemChecked(position, !mListAdapter.isItemChecked(position))
-            if (mListAdapter.checkedItems.isEmpty()) {
+            if (selectedItems.isEmpty()) {
                 it.finish()
             } else {
                 it.invalidate()

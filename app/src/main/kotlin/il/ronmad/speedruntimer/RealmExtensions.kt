@@ -30,19 +30,44 @@ fun Game.removeCategories(toRemove: List<Category>) {
     }
 }
 
-fun Game.getPosition(): Point {
-    if (this.timerPosition == null) {
-        realm.executeTransaction { this.timerPosition = realm.createObject() }
-    }
-    return this.timerPosition!!
-}
+fun Game.getPosition(): Point =
+        this.timerPosition ?:
+        run {
+            realm.executeTransaction { this.timerPosition = realm.createObject() }
+        this.timerPosition!! }
 
 fun Category.incrementRunCount() = realm.executeTransaction { this.runCount++ }
 
-fun Category.setData(bestTime: Long, runCount: Int, name: String = this.name) = realm.executeTransaction {
+fun Category.updateData(name: String = this.name,
+                        bestTime: Long = this.bestTime,
+                        runCount: Int = this.runCount) = realm.executeTransaction {
     this.name = name
     this.bestTime = bestTime
     this.runCount = runCount
+}
+
+fun Category.addSplit(name: String) = realm.executeTransaction {
+    val split = realm.createObject<Split>()
+    split.name = name
+    this.splits.add(split)
+}
+
+fun Category.removeSplits(toRemove: List<Split>) {
+    val names = toRemove.map { it.name as? String }.toTypedArray()
+    realm.executeTransaction {
+        this.splits.where()
+                .oneOf("name", names)
+                .findAll()
+                .deleteAllFromRealm()
+    }
+}
+
+fun Split.updateData(name: String = this.name,
+                     pbTime: Long = this.pbTime,
+                     bestTime: Long = this.bestTime) = realm.executeTransaction {
+    this.name = name
+    this.pbTime = pbTime
+    this.bestTime = bestTime
 }
 
 fun Point.set(x: Int, y: Int) = realm.executeTransaction {
@@ -53,6 +78,7 @@ fun Point.set(x: Int, y: Int) = realm.executeTransaction {
 fun Realm.addGame(gameName: String) = this.executeTransaction {
     val game = this.createObject<Game>()
     game.name = gameName
+    game.timerPosition = this.createObject()
 }
 
 fun Realm.gameExists(name: String) =

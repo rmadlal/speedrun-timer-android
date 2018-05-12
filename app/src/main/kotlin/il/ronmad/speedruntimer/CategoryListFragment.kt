@@ -9,13 +9,12 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.provider.Settings
 import android.support.design.widget.Snackbar
-import android.util.Log
 import android.view.View
 import android.widget.ListView
 import android.widget.Toast
 import io.realm.kotlin.where
 
-class CategoryListFragment : BaseListFragment() {
+class CategoryListFragment : BaseListFragment<Category>() {
 
     private lateinit var game: Game
     private var categoryPosition: Int = 0
@@ -77,23 +76,21 @@ class CategoryListFragment : BaseListFragment() {
 
     override fun update() {
         finishActionMode()
-        (mListAdapter as CategoryAdapter).data = game.categories
+        mListAdapter.data = game.categories
     }
 
     override fun onMenuEditPressed() {
         if (selectedItems.isEmpty()) return
-        val selectedItem = selectedItems[0]
-        Dialogs.editCategoryDialog(this, game, selectedItem as Category).show()
+        val selectedCategory = selectedItems[0]
+        Dialogs.editCategoryDialog(this, game, selectedCategory).show()
     }
 
     override fun onMenuDeletePressed() {
         if (selectedItems.isEmpty()) return
-        val selectedItems = selectedItems
-        actionDeleteCategories(selectedItems.map { it as Category })
+        actionDeleteCategories(selectedItems)
     }
 
     override fun onFabAddPressed() {
-        Log.v(TAG_CATEGORY_LIST_FRAGMENT, "onFabAddPressed")
         Dialogs.newCategoryDialog(activity, game).show()
     }
 
@@ -103,7 +100,7 @@ class CategoryListFragment : BaseListFragment() {
             if (!Settings.canDrawOverlays(context)) {
                 backFromPermissionCheck = true
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + activity.packageName))
+                        Uri.parse("package:${activity.packageName}"))
                 startActivityForResult(intent, OVERLAY_REQUEST_CODE, Bundle())
             } else {
                 startTimerService()
@@ -167,10 +164,9 @@ class CategoryListFragment : BaseListFragment() {
         if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
             return false
         }
-        val game = activity.installedApps.find {
+        activity.installedApps.find {
             activity.packageManager.getApplicationLabel(it).toString().toLowerCase() == game.name.toLowerCase()
-        }
-        game?.let {
+        }?.let {
             Toast.makeText(activity,
                     "Launching ${activity.packageManager.getApplicationLabel(it)}...", Toast.LENGTH_SHORT).show()
             startActivity(activity.packageManager.getLaunchIntentForPackage(it.packageName))
@@ -197,23 +193,21 @@ class CategoryListFragment : BaseListFragment() {
         val prevName = category.name
         val prevBestTime = category.bestTime
         val prevRunCount = category.runCount
-        category.setData(newBestTime, newRunCount, newName)
+        category.updateData(newName, newBestTime, newRunCount)
         showEditedCategorySnackbar(category, prevName, prevBestTime, prevRunCount)
     }
 
     private fun showEditedCategorySnackbar(category: Category, prevName: String, prevBestTime: Long, prevRunCount: Int) {
         val message = "${game.name} $prevName has been edited."
         Snackbar.make(view!!, message, Snackbar.LENGTH_LONG)
-                .setAction(R.string.undo) { category.setData(prevBestTime, prevRunCount, prevName) }
+                .setAction(R.string.undo) { category.updateData(prevName, prevBestTime, prevRunCount) }
                 .show()
     }
 
     companion object {
 
         private var backFromPermissionCheck = false
-        private val OVERLAY_REQUEST_CODE = 251
-
-        private val ARG_GAME_NAME = "game-name"
+        private const val OVERLAY_REQUEST_CODE = 251
 
         fun newInstance(gameName: String): CategoryListFragment {
             val fragment = CategoryListFragment()
