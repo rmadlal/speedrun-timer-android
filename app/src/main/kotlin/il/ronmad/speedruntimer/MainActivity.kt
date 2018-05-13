@@ -42,13 +42,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setSupportActionBar(toolbar)
+        // Set toolbar elevation to 4dp
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val scale = resources.displayMetrics.density
+            appBarLayout.elevation = (4 * scale + 0.5f).toInt().toFloat()
+        }
+
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
         setupInstalledAppsLists()
         setupSnackbars()
         setupReceiver()
-        setupFragments()
+
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, GamesListFragment.newInstance(), TAG_GAMES_LIST_FRAGMENT)
+                    .commit()
+        }
     }
 
     override fun onResume() {
@@ -157,15 +169,6 @@ class MainActivity : AppCompatActivity() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(getString(R.string.action_close_timer))
         registerReceiver(receiver, intentFilter)
-    }
-
-    private fun setupFragments() {
-        val gamesListFragment = supportFragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT) as? GamesListFragment
-        if (gamesListFragment == null) {
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, GamesListFragment.newInstance(), TAG_GAMES_LIST_FRAGMENT)
-                    .commit()
-        }
     }
 
     private fun setupInstalledAppsLists() {

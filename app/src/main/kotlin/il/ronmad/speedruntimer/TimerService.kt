@@ -252,8 +252,7 @@ class TimerService : Service() {
                 return@setOnLongClickListener false
             }
             if (time <= 0) {
-                chronometer.reset()
-                resetSplits()
+                timerReset(updateData = false)
             } else if (Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time)) {
                 timerReset()
             } else {
@@ -342,6 +341,7 @@ class TimerService : Service() {
 
     private fun timerReset(newPB: Long = 0L, updateData: Boolean = true) {
         chronometer.reset()
+        currentSegmentPBTime = 0L
         if (updateData) {
             if (newPB == 0L) {
                 category.incrementRunCount()
@@ -366,21 +366,17 @@ class TimerService : Service() {
         currentSegmentPBTime += currentSplit.pbTime
         currentSplitStartTime = splitTime
         mView.currentSplit.text = currentSplit.name
+        mView.currentSplit.visibility = View.VISIBLE
     }
 
     private fun timerStart() {
         if (hasSplits) {
             if (!splitsIter.hasNext()) return
-            currentSplit = splitsIter.next()
-            currentSegmentPBTime = currentSplit.pbTime
-            mView.currentSplit.text = currentSplit.name
-            mView.currentSplit.visibility = View.VISIBLE
+            timerSplit(0)
         } else {
             currentSegmentPBTime = category.bestTime
         }
-        currentSplitStartTime = 0L
         chronometer.start()
-
     }
 
     private fun updateDelta(splitTime: Long, segmentTime: Long) {

@@ -1,7 +1,9 @@
 package il.ronmad.speedruntimer
 
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ListFragment
+import android.support.v7.app.ActionBar
 import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.Menu
@@ -29,6 +31,12 @@ abstract class BaseListFragment<T> : ListFragment() {
 
     protected val activity: MainActivity
         get() = getActivity() as MainActivity
+
+    protected var mActionBar: ActionBar? = null
+        get() = activity.supportActionBar
+
+    protected val fabAdd: FloatingActionButton
+        get() = activity.fabAdd
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(actionMode: ActionMode, menu: Menu): Boolean {
@@ -75,7 +83,7 @@ abstract class BaseListFragment<T> : ListFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setupListView()
-        activity.fabAdd.setOnClickListener { onFabAddPressed() }
+        fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
     override fun onResume() {

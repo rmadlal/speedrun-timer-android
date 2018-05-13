@@ -1,12 +1,9 @@
 package il.ronmad.speedruntimer
 
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.ListView
 import io.realm.kotlin.where
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_games_list.*
 
 class GamesListFragment : BaseListFragment<Game>() {
 
@@ -18,15 +15,9 @@ class GamesListFragment : BaseListFragment<Game>() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        activity.setSupportActionBar(toolbar)
-        // Set toolbar elevation to 4dp
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val scale = resources.displayMetrics.density
-            appBarLayout.elevation = (4 * scale + 0.5f).toInt().toFloat()
-        }
-        activity.supportActionBar?.title = activity.getString(R.string.app_name)
-        activity.supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        activity.fabAdd.show()
+        mActionBar?.title = activity.getString(R.string.app_name)
+        mActionBar?.setDisplayHomeAsUpEnabled(false)
+        fabAdd.show()
         mListAdapter = GamesAdapter(activity, realm.where<Game>().findAll())
         listAdapter = mListAdapter
     }

@@ -2,10 +2,11 @@ package il.ronmad.speedruntimer
 
 import io.realm.RealmList
 import io.realm.RealmObject
+import io.realm.annotations.Index
 
 open class Category : RealmObject() {
 
-    var name: String = ""
+    @Index var name: String = ""
     var bestTime: Long = 0
     var runCount: Int = 0
     var splits: RealmList<Split> = RealmList()

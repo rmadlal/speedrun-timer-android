@@ -1,30 +1,23 @@
 package il.ronmad.speedruntimer
 
-import android.os.Build
 import android.os.Bundle
+import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
 import android.view.*
-import io.realm.Realm
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_game.*
 
-class GameFragment : Fragment() {
+class GameFragment : BaseFragment() {
 
-    private lateinit var realm: Realm
     private lateinit var game: Game
-
     private lateinit var viewPagerAdapter: SmartFragmentStatePagerAdapter
-
-    private val activity: MainActivity
-        get() = getActivity() as MainActivity
+    private lateinit var tabLayout: TabLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
 
-        realm = Realm.getDefaultInstance()
         arguments?.let {
             val gameName = it.getString(ARG_GAME_NAME)
             game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
@@ -36,27 +29,24 @@ class GameFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        activity.setSupportActionBar(toolbar)
-        // Set toolbar elevation to 4dp
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val scale = resources.displayMetrics.density
-            appBarLayout.elevation = (4 * scale + 0.5f).toInt().toFloat()
-        }
-        activity.supportActionBar?.title = game.name
-        activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        mActionBar?.title = game.name
+        mActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        tabLayout = activity.tabLayout
         setupViewPager()
+        tabLayout.visibility = View.VISIBLE
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        realm.close()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        activity.tabLayout.visibility = View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         item?.let {
             return when (it.itemId) {
                 android.R.id.home -> {
+                    activity.appBarLayout.removeView(tabLayout)
                     activity.onBackPressed()
                     true
                 }

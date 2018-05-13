@@ -1,10 +1,11 @@
 package il.ronmad.speedruntimer
 
 import io.realm.RealmObject
+import io.realm.annotations.Index
 
 open class Split : RealmObject() {
 
-    var name: String = ""
+    @Index var name: String = ""
     var pbTime: Long = 0
     var bestTime: Long = 0
 
