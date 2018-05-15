@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.category_list_item.view.*
 
-class CategoryAdapter(context: Context, categories: List<Category>)
+class CategoryAdapter(context: Context,
+                      categories: List<Category>,
+                      private val nextClickListener: (Int) -> Unit)
     : MyBaseListFragmentAdapter<Category>(context, categories, R.layout.category_list_item) {
 
     override fun getView(i: Int, view: View?, viewGroup: ViewGroup): View {
@@ -18,6 +20,8 @@ class CategoryAdapter(context: Context, categories: List<Category>)
         listItemView.pbTime.setTextColor(ContextCompat.getColor(context,
                 if (category.bestTime > 0) R.color.colorAccent else android.R.color.primary_text_light))
         listItemView.runsNum.text = category.runCount.toString()
+
+        listItemView.next_img.setOnClickListener { nextClickListener(i) }
 
         return listItemView
     }

@@ -13,15 +13,10 @@ class Chronometer(val context: Context, val view: View) {
 
     private var base = 0L
 
-    private val service: TimerService
-        get() = context as TimerService
-
     internal var timeElapsed: Long = 0
         private set
 
-    private val compareAgainst
-        get() = service.currentSegmentPBTime
-
+    private var compareAgainst = 0L
     private val chronoHandler: Handler
 
     init {
@@ -35,11 +30,13 @@ class Chronometer(val context: Context, val view: View) {
     private fun init() {
         started = false
         timeElapsed = -1 * countdown
+        compareAgainst = 0L
         setChronoTextFromTime(timeElapsed)
         setColor(colorNeutral)
     }
 
-    internal fun start() {
+    internal fun start(nextSegmentSplitTime: Long) {
+        split(nextSegmentSplitTime)
         if (compareAgainst == 0L) {
             setColor(colorNeutral)
         }
@@ -47,6 +44,10 @@ class Chronometer(val context: Context, val view: View) {
         running = true
         base = SystemClock.elapsedRealtime() - timeElapsed
         updateRunning()
+    }
+
+    internal fun split(nextSegmentSplitTime: Long) {
+        compareAgainst = nextSegmentSplitTime
     }
 
     internal fun stop() {

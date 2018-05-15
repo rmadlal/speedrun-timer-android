@@ -9,6 +9,7 @@
     <string name="text_title">Title:</string>
     <string name="empty_games_list">No games</string>
     <string name="empty_category_list">No categories</string>
+    <string name="empty_split_list">No splits</string>
     <string name="empty_game_info">No data (pull to refresh)</string>
     <string name="empty_leaderboard">Leaderboard is empty</string>
     <string name="pb_text">PB:</string>
@@ -19,6 +20,7 @@
     <string name="mins_hint">Mins</string>
     <string name="secs_hint">Secs</string>
     <string name="millis_hint">Millis</string>
+    <string name="sob_text">Sum of best segments:</string>
     <string name="save_reset">Save &amp; reset</string>
     <string name="reset">Reset</string>
     <string name="create">Create</string>
@@ -87,6 +89,7 @@
     <string name="pref_save_time_data_summary_true">Save new best times and splits when resetting</string>
     <string name="pref_save_time_data_summary_false">
         New best times will not be saved, \"New PB\" dialog won\'t be shown</string>
+    <string name="pref_compare_against_title">Compare against</string>
 
     <string-array name="timer_sizes">
         <item>Small</item>
@@ -98,6 +101,16 @@
         <item>24</item>
         <item>32</item>
         <item>40</item>
+    </string-array>
+
+    <string-array name="compare_against">
+        <item>Personal best</item>
+        <item>Best segments</item>
+    </string-array>
+
+    <string-array name="compare_against_values">
+        <item>0</item>
+        <item>1</item>
     </string-array>
 
     <!-- Keys -->
@@ -117,5 +130,6 @@
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>
     <string name="key_pref_save_time_data">il.ronmad.speedruntimer.key.SAVE_DATA</string>
     <string name="key_auto_load_categories">il.ronmad.speedruntimer.key.AUTO_LOAD_CATEGORIES</string>
+    <string name="key_pref_compare_against">il.ronmad.speedruntimer.key.COMPARE_AGAINST</string>
 
 </resources>

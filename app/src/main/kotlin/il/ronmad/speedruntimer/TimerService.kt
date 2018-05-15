@@ -16,7 +16,6 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.*
 
 import io.realm.Realm
@@ -36,8 +35,9 @@ class TimerService : Service() {
     private var splitTimes = mutableListOf<Long>()
     private lateinit var currentSplit: Split
     private var currentSplitStartTime = 0L
-    var currentSegmentPBTime = 0L
+    private var currentSegmentSplitTime = 0L
     private var hasSplits = false
+    private var comparison: Comparison = Comparison.PERSONAL_BEST
 
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationBuilder: NotificationCompat.Builder
@@ -121,23 +121,29 @@ class TimerService : Service() {
                 getColorCpt(R.color.colorTimerBestSegmentDefault))
         Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
         Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
+        val compareAgainstVals = resources.getStringArray(R.array.compare_against_values)
+        comparison = when (prefs.getString(getString(R.string.key_pref_compare_against), compareAgainstVals[0])) {
+            compareAgainstVals[0] -> Comparison.PERSONAL_BEST
+            compareAgainstVals[1] -> Comparison.BEST_SEGMENTS
+            else -> Comparison.PERSONAL_BEST
+        }
     }
 
     private fun setupNotification(): Notification {
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationBuilder = NotificationCompat.Builder(this, getString(R.string.notification_channel_id))
                 .setSmallIcon(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                        R.drawable.ic_timer_black_48dp
-                    else
-                        R.drawable.ic_stat_timer)
+                    R.drawable.ic_timer_black_48dp
+                else
+                    R.drawable.ic_stat_timer)
                 .setContentTitle("${game.name} ${category.name}")
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         Intent(this, MainActivity::class.java),
                         PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                        R.drawable.ic_close_black_24dp
-                    else
-                        R.drawable.ic_stat_close,
+                    R.drawable.ic_close_black_24dp
+                else
+                    R.drawable.ic_stat_close,
                         getString(R.string.close_timer),
                         PendingIntent.getBroadcast(this, 0,
                                 Intent(getString(R.string.action_close_timer)),
@@ -210,7 +216,7 @@ class TimerService : Service() {
                                 val splitTime = chronometer.timeElapsed
                                 val segmentTime = splitTime - currentSplitStartTime
                                 splitTimes.add(segmentTime)
-                                if (category.bestTime > 0) {
+                                if (currentSegmentSplitTime > 0) {
                                     updateDelta(splitTime, segmentTime)
                                 }
 
@@ -275,37 +281,20 @@ class TimerService : Service() {
                         .setNeutralButton(android.R.string.cancel, null)
                         .create()
                 resetDialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    else
-                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                else
+                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
                 resetDialog.show()
             }
             true
-        }
-
-        mView.setOnKeyListener { v, keyCode, event ->
-            when (keyCode) {
-                KeyEvent.KEYCODE_VOLUME_DOWN ->  {
-                    if (event.action == KeyEvent.ACTION_DOWN) {
-                        Log.d("KeyListener", "Vol Down: ${event.action}")
-                        true
-                    } else false
-                }
-                KeyEvent.KEYCODE_VOLUME_UP -> {
-                    if (event.action == KeyEvent.ACTION_DOWN) {
-                        Log.d("KeyListener", "Vol Up")
-                        true
-                    } else false
-                }
-                else -> false
-            }
         }
     }
 
     private fun setupDisplayPrefs() {
         mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
                 getColorCpt(R.color.colorTimerBackgroundDefault)))
-        val size = prefs.getString(getString(R.string.key_pref_timer_size), "32").toFloat()
+        val timerSizesVals = resources.getStringArray(R.array.timer_sizes_values)
+        val size = prefs.getString(getString(R.string.key_pref_timer_size), timerSizesVals[1]).toFloat()
         mView.chronoRest.textSize = size
         mView.chronoMillis.textSize = size * 0.75f
         mView.delta.textSize = size * 0.375f
@@ -341,7 +330,7 @@ class TimerService : Service() {
 
     private fun timerReset(newPB: Long = 0L, updateData: Boolean = true) {
         chronometer.reset()
-        currentSegmentPBTime = 0L
+        currentSegmentSplitTime = 0L
         if (updateData) {
             if (newPB == 0L) {
                 category.incrementRunCount()
@@ -363,8 +352,12 @@ class TimerService : Service() {
 
     private fun timerSplit(splitTime: Long) {
         currentSplit = splitsIter.next()
-        currentSegmentPBTime += currentSplit.pbTime
+        currentSegmentSplitTime += when (comparison) {
+            Comparison.BEST_SEGMENTS -> currentSplit.bestTime
+            else -> currentSplit.pbTime
+        }
         currentSplitStartTime = splitTime
+        chronometer.split(currentSegmentSplitTime)
         mView.currentSplit.text = currentSplit.name
         mView.currentSplit.visibility = View.VISIBLE
     }
@@ -372,15 +365,15 @@ class TimerService : Service() {
     private fun timerStart() {
         if (hasSplits) {
             if (!splitsIter.hasNext()) return
-            timerSplit(0)
+            timerSplit(0L)
         } else {
-            currentSegmentPBTime = category.bestTime
+            currentSegmentSplitTime = category.bestTime
         }
-        chronometer.start()
+        chronometer.start(currentSegmentSplitTime)
     }
 
     private fun updateDelta(splitTime: Long, segmentTime: Long) {
-        val delta = splitTime - currentSegmentPBTime
+        val delta = splitTime - currentSegmentSplitTime
         mView.delta.text = delta.getFormattedTime(plusSign = true)
         mView.delta.setTextColor(when {
             segmentTime < currentSplit.bestTime -> Chronometer.colorBestSegment

@@ -57,6 +57,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'ru.gildor.coroutines:kotlin-coroutines-retrofit:0.10.0'
     implementation 'com.google.guava:guava:25.0-android'
+    implementation 'io.realm:android-adapters:2.1.1'
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"

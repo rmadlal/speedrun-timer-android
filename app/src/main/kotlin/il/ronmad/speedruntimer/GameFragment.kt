@@ -46,7 +46,6 @@ class GameFragment : BaseFragment() {
         item?.let {
             return when (it.itemId) {
                 android.R.id.home -> {
-                    activity.appBarLayout.removeView(tabLayout)
                     activity.onBackPressed()
                     true
                 }
@@ -55,6 +54,8 @@ class GameFragment : BaseFragment() {
         }
         return false
     }
+
+    override fun onFabAddPressed() {}
 
     private fun setupViewPager() {
         viewPagerAdapter = object : SmartFragmentStatePagerAdapter(childFragmentManager) {

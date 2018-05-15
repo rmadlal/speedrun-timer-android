@@ -31,7 +31,7 @@ class CategoryListFragment : BaseListFragment<Category>() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mListAdapter = CategoryAdapter(activity, game.categories)
+        mListAdapter = CategoryAdapter(activity, game.categories) { position -> onStartClick(position) }
         listAdapter = mListAdapter
     }
 
@@ -65,12 +65,28 @@ class CategoryListFragment : BaseListFragment<Category>() {
         }
     }
 
+    private fun onStartClick(position: Int) {
+        if (mActionMode == null) {
+            categoryPosition = position
+            checkPermissionAndStartTimer()
+        }
+    }
+
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
         super.onListItemClick(l, v, position, id)
 
         if (mActionMode == null) {
             categoryPosition = position
-            checkPermissionAndStartTimer()
+            // checkPermissionAndStartTimer()
+            val category = mListAdapter[categoryPosition]
+            activity.supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+                            R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.fragment_container,
+                            SplitsFragment.newInstance(game.name, category.name),
+                            TAG_SPLITS_LIST_FRAGMENT)
+                    .addToBackStack(null)
+                    .commit()
         }
     }
 

@@ -44,6 +44,8 @@ class GameInfoFragment : BaseFragment() {
         super.onDestroy()
     }
 
+    override fun onFabAddPressed() {}
+
     internal fun refreshData(forceFetch: Boolean = false) {
         pbs = mapOf()
         game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }

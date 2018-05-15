@@ -6,6 +6,13 @@
         android:title="@string/pref_timer_countdown_title"
         android:defaultValue="0" />
 
+    <ListPreference
+        android:key="@string/key_pref_compare_against"
+        android:title="@string/pref_compare_against_title"
+        android:entries="@array/compare_against"
+        android:entryValues="@array/compare_against_values"
+        android:defaultValue="0" />
+
     <CheckBoxPreference
         android:key="@string/key_pref_timer_show_millis"
         android:title="@string/pref_timer_show_millis_title"

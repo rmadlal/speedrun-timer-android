@@ -30,4 +30,6 @@ abstract class BaseFragment : Fragment() {
         super.onDestroy()
         realm.close()
     }
+
+    abstract fun onFabAddPressed()
 }

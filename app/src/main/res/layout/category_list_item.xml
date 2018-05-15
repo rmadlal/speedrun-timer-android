@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingStart="@dimen/activity_horizontal_margin"
-    android:paddingEnd="@dimen/activity_horizontal_margin"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:paddingEnd="@dimen/activity_horizontal_margin">
 
     <RelativeLayout
         android:id="@+id/textsLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:minHeight="?android:attr/listPreferredItemHeight"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/next_img"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/next_img">
 
         <TextView
             android:id="@+id/categoryName"
@@ -75,11 +76,12 @@
         android:id="@+id/next_img"
         android:layout_width="32dp"
         android:layout_height="32dp"
+        android:gravity="center_vertical"
         android:contentDescription="@string/img_play_desc"
         app:srcCompat="@drawable/ic_action_play"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toRightOf="@id/textsLayout"
         app:layout_constraintTop_toTopOf="@id/textsLayout"
-        app:layout_constraintBottom_toBottomOf="@id/textsLayout"/>
+        app:layout_constraintBottom_toBottomOf="@id/textsLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/textsLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

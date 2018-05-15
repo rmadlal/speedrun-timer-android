@@ -21,6 +21,7 @@ import android.widget.Toast
 
 import io.realm.Realm
 import io.realm.exceptions.RealmException
+import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -61,6 +62,15 @@ class MainActivity : AppCompatActivity() {
                     .replace(R.id.fragment_container, GamesListFragment.newInstance(), TAG_GAMES_LIST_FRAGMENT)
                     .commit()
         }
+
+        //debug
+        val altoAny = realm.where<Game>().equalTo("name", "Alto").findFirst()!!
+                .categories.where().equalTo("name", "Any%").findFirst()!!
+        altoAny.updateData(bestTime = 0L, runCount = 0)
+        altoAny.removeSplits(altoAny.splits)
+        altoAny.addSplit("First split")
+        altoAny.addSplit("Second split")
+        altoAny.addSplit("Third split")
     }
 
     override fun onResume() {

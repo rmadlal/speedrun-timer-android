@@ -27,12 +27,14 @@ class GamesListFragment : BaseListFragment<Game>() {
 
         if (mActionMode == null) {
             val game = mListAdapter[position]
-            fragmentManager?.beginTransaction()
-                    ?.setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+            activity.supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
                             R.anim.fade_in, R.anim.fade_out)
-                    ?.replace(R.id.fragment_container, GameFragment.newInstance(game.name), TAG_GAME_FRAGMENT)
-                    ?.addToBackStack(null)
-                    ?.commit()
+                    .replace(R.id.fragment_container,
+                            GameFragment.newInstance(game.name),
+                            TAG_GAME_FRAGMENT)
+                    .addToBackStack(null)
+                    .commit()
         }
     }
 

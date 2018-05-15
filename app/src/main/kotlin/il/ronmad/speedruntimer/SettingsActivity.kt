@@ -106,6 +106,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
 
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_compare_against)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -154,10 +155,10 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                 is CheckBoxPreference -> {
                     if (preference.key == preference.context.getString(R.string.key_pref_launch_games)) {
                         preference.summary = preference.context.getString(
-                            if (value as Boolean)
-                                R.string.pref_launch_games_summary_true
-                            else
-                                R.string.pref_launch_games_summary_false)
+                                if (value as Boolean)
+                                    R.string.pref_launch_games_summary_true
+                                else
+                                    R.string.pref_launch_games_summary_false)
                     } else if (preference.key == preference.context.getString(R.string.key_pref_save_time_data)) {
                         preference.summary = preference.context.getString(
                                 if (value as Boolean)
@@ -194,7 +195,9 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                 is ListPreference ->
                     sBindPreferenceSummaryToValueListener(preference,
                             prefs.getString(preference.key,
-                                    preference.entryValues[1].toString()))
+                                    if (preference.key == preference.context.getString(R.string.key_pref_timer_size))
+                                        preference.entryValues[1].toString()
+                                    else preference.entryValues[0].toString()))
                 is CheckBoxPreference ->
                     sBindPreferenceSummaryToValueListener(preference,
                             prefs.getBoolean(preference.key, true))
