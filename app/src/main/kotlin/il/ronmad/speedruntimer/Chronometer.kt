@@ -16,6 +16,13 @@ class Chronometer(val context: Context, val view: View) {
     internal var timeElapsed: Long = 0
         private set
 
+    private var timerColor = colorNeutral
+        set(value) {
+            if (field == value) return
+            view.chronoRest.setTextColor(value)
+            view.chronoMillis.setTextColor(value)
+            field = value
+        }
     private var compareAgainst = 0L
     private val chronoHandler: Handler
 
@@ -32,13 +39,13 @@ class Chronometer(val context: Context, val view: View) {
         timeElapsed = -1 * countdown
         compareAgainst = 0L
         setChronoTextFromTime(timeElapsed)
-        setColor(colorNeutral)
+        timerColor = colorNeutral
     }
 
     internal fun start(nextSegmentSplitTime: Long) {
         split(nextSegmentSplitTime)
         if (compareAgainst == 0L) {
-            setColor(colorNeutral)
+            timerColor = colorNeutral
         }
         started = true
         running = true
@@ -54,7 +61,7 @@ class Chronometer(val context: Context, val view: View) {
         running = false
         updateRunning()
         if (timeElapsed > 0 && (compareAgainst == 0L || timeElapsed < compareAgainst)) {
-            setColor(colorPB)
+            timerColor = colorPB
         }
     }
 
@@ -79,13 +86,10 @@ class Chronometer(val context: Context, val view: View) {
 
     private fun updateColor() {
         if (compareAgainst == 0L || timeElapsed < 0) {
+            timerColor = colorNeutral
             return
         }
-        if (timeElapsed < compareAgainst && view.chronoRest.currentTextColor != colorAhead) {
-            setColor(colorAhead)
-        } else if (timeElapsed >= compareAgainst && view.chronoRest.currentTextColor != colorBehind) {
-            setColor(colorBehind)
-        }
+        timerColor = if (timeElapsed < compareAgainst) colorAhead else colorBehind
     }
 
     private fun updateRunning() {
@@ -95,11 +99,6 @@ class Chronometer(val context: Context, val view: View) {
         } else {
             chronoHandler.removeMessages(TICK_WHAT)
         }
-    }
-
-    private fun setColor(color: Int) {
-        view.chronoRest.setTextColor(color)
-        view.chronoMillis.setTextColor(color)
     }
 
     private class ChronoHandler internal constructor(instance: Chronometer) : Handler() {

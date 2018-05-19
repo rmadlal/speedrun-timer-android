@@ -3,13 +3,87 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="@dimen/activity_horizontal_margin"
+    android:animateLayoutChanges="true">
+
+    <TextView
+        android:id="@+id/comparisonText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="@string/splits_comparison"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/comarisonSpinner"
+        app:layout_constraintBottom_toTopOf="@+id/nameHeaderText"
+        app:layout_constraintHorizontal_weight="0" />
+
+    <Spinner
+        android:id="@+id/comarisonSpinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:entries="@array/splits_comparison"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/comparisonText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBaseline_toBaselineOf="@id/comparisonText"
+        app:layout_constraintHorizontal_weight="1" />
+
+    <TextView
+        android:id="@+id/nameHeaderText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="start|center_vertical"
+        android:text="@string/splits_header_name"
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle"
+        app:layout_constraintTop_toBottomOf="@id/comparisonText"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/segmentDurationHeaderText"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintHorizontal_weight="2" />
+
+    <TextView
+        android:id="@+id/segmentDurationHeaderText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="@string/splits_header_segment_time"
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle"
+        app:layout_constraintTop_toBottomOf="@id/comparisonText"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
+        app:layout_constraintStart_toEndOf="@id/nameHeaderText"
+        app:layout_constraintEnd_toStartOf="@+id/splitTimeHeaderText"
+        app:layout_constraintHorizontal_weight="1" />
+
+    <TextView
+        android:id="@+id/splitTimeHeaderText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="@string/splits_header_split_time"
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle"
+        app:layout_constraintTop_toBottomOf="@id/comparisonText"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
+        app:layout_constraintStart_toEndOf="@id/segmentDurationHeaderText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nameHeaderText"
         app:layout_constraintBottom_toTopOf="@+id/sobTitleText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,17 +93,21 @@
         android:id="@+id/sobTitleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:layout_marginTop="16dp"
         android:text="@string/sob_text"
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle"
         app:layout_constraintTop_toBottomOf="@id/recyclerView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/sobValueText"
-        app:layout_constraintHorizontal_chainStyle="spread"/>
+        app:layout_constraintHorizontal_chainStyle="spread_inside"/>
 
     <TextView
         android:id="@+id/sobValueText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_marginTop="16dp"
         android:textAppearance="@style/TextAppearance.AppCompat"
         app:layout_constraintTop_toBottomOf="@id/recyclerView"
         app:layout_constraintStart_toEndOf="@id/sobTitleText"

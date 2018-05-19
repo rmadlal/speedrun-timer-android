@@ -46,7 +46,9 @@
             android:layout_alignBottom="@id/pbText"
             android:layout_toEndOf="@id/pbText"
             android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <TextView
             android:id="@+id/runsText"

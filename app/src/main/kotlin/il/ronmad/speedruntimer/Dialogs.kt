@@ -6,8 +6,12 @@ import android.content.Intent
 import android.os.Build
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
@@ -15,6 +19,7 @@ import kotlinx.android.synthetic.main.edit_category_dialog.view.*
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.android.synthetic.main.new_category_dialog.view.*
 import kotlinx.android.synthetic.main.new_game_dialog.view.*
+import kotlinx.android.synthetic.main.new_split_dialog.view.*
 
 object Dialogs {
 
@@ -58,6 +63,51 @@ object Dialogs {
                     categoryNameInput.requestFocus()
                 } else {
                     game.addCategory(categoryNameInput.text.toString())
+                    dialog.dismiss()
+                }
+            }
+        }
+        return dialog
+    }
+
+    fun newSplitDialog(context: Context, category: Category,
+                       callback: (String, Int) -> Unit): AlertDialog {
+        val dialogView = View.inflate(context, R.layout.new_split_dialog, null)
+        val splitNameInput = dialogView.newSplitInput
+        val splitPositionSpinner = dialogView.positionSpinner
+        val spinnerAdapter = object : ArrayAdapter<Int>(context,
+                android.R.layout.simple_spinner_item,
+                (1..category.splits.count() + 1).toList()) {
+
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+                val view = super.getView(position, convertView, parent)
+                (view as TextView).gravity = Gravity.CENTER
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup?): View {
+                val view = super.getDropDownView(position, convertView, parent)
+                (view as TextView).gravity = Gravity.CENTER
+                return view
+            }
+        }
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        splitPositionSpinner.adapter = spinnerAdapter
+        splitPositionSpinner.setSelection(splitPositionSpinner.count - 1)
+        val dialog = AlertDialog.Builder(context)
+                .setTitle("New split")
+                .setView(dialogView)
+                .setPositiveButton(R.string.create, null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create()
+        dialog.setOnShowListener {
+            val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            createButton.setOnClickListener {
+                if (!splitNameInput.isValidForSplit(category)) {
+                    splitNameInput.requestFocus()
+                } else {
+                    val position = splitPositionSpinner.selectedItem as Int - 1
+                    callback(splitNameInput.text.toString(), position)
                     dialog.dismiss()
                 }
             }

@@ -38,43 +38,44 @@ abstract class BaseListFragment<T> : ListFragment() {
     protected val fabAdd: FloatingActionButton
         get() = activity.fabAdd
 
-    private val actionModeCallback = object : ActionMode.Callback {
-        override fun onCreateActionMode(actionMode: ActionMode, menu: Menu): Boolean {
-            val inflater = actionMode.menuInflater
-            inflater.inflate(contextMenuResId, menu)
-            return true
-        }
-
-        override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
-            actionMode.title = selectedItems.size.toString()
-            menu.findItem(R.id.menu_edit).isVisible = selectedItems.size == 1
-            return true
-        }
-
-        override fun onActionItemClicked(actionMode: ActionMode, menuItem: MenuItem): Boolean {
-            return when (menuItem.itemId) {
-                R.id.menu_edit -> {
-                    onMenuEditPressed()
-                    true
-                }
-                R.id.menu_delete -> {
-                    onMenuDeletePressed()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        override fun onDestroyActionMode(actionMode: ActionMode) {
-            mListAdapter.clearSelections()
-            mActionMode = null
-        }
-    }
+    protected lateinit var actionModeCallback: ActionMode.Callback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         realm = Realm.getDefaultInstance()
         realm.addChangeListener(realmChangeListener)
+        actionModeCallback = object : ActionMode.Callback {
+            override fun onCreateActionMode(actionMode: ActionMode, menu: Menu): Boolean {
+                val inflater = actionMode.menuInflater
+                inflater.inflate(contextMenuResId, menu)
+                return true
+            }
+
+            override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
+                actionMode.title = selectedItems.size.toString()
+                menu.findItem(R.id.menu_edit).isVisible = selectedItems.size == 1
+                return true
+            }
+
+            override fun onActionItemClicked(actionMode: ActionMode, menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.menu_edit -> {
+                        onMenuEditPressed()
+                        true
+                    }
+                    R.id.menu_delete -> {
+                        onMenuDeletePressed()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            override fun onDestroyActionMode(actionMode: ActionMode) {
+                mListAdapter.clearSelections()
+                mActionMode = null
+            }
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =

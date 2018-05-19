@@ -19,6 +19,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/next_img"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
+        android:maxLines="1"
+        android:ellipsize="end"
         tools:text="Monument Valley"/>
 
     <ImageView

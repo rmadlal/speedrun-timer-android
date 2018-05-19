@@ -63,14 +63,17 @@ class MainActivity : AppCompatActivity() {
                     .commit()
         }
 
+        /*
         //debug
-        val altoAny = realm.where<Game>().equalTo("name", "Alto").findFirst()!!
-                .categories.where().equalTo("name", "Any%").findFirst()!!
+        val altoAny = realm.where<Category>()
+                .equalTo("game.name", "Alto")
+                .equalTo("name", "Any%").findFirst()!!
         altoAny.updateData(bestTime = 0L, runCount = 0)
         altoAny.removeSplits(altoAny.splits)
         altoAny.addSplit("First split")
         altoAny.addSplit("Second split")
         altoAny.addSplit("Third split")
+        */
     }
 
     override fun onResume() {

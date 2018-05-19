@@ -1,6 +1,7 @@
 package il.ronmad.speedruntimer
 
 import android.content.Context
+import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.widget.EditText
 import io.realm.Realm
@@ -33,6 +34,20 @@ fun EditText.isValidForCategory(game: Game): Boolean {
     }
 }
 
+fun EditText.isValidForSplit(category: Category): Boolean {
+    return when {
+        this.text.isNullOrBlank() -> {
+            this.error = "Split name must not be empty"
+            false
+        }
+        category.splitExists(this.text.toString()) -> {
+            this.error = "This split already exists"
+            false
+        }
+        else -> true
+    }
+}
+
 fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
     val time = Math.abs(this)
     val hours = time.toInt() / (1000 * 3600)
@@ -46,7 +61,9 @@ fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
 
 fun Long.getFormattedTime(withMillis: Boolean = true,
                           forceMinutes: Boolean = false,
-                          plusSign: Boolean = false): String {
+                          plusSign: Boolean = false,
+                          dashIfZero: Boolean = false): String {
+    if (dashIfZero && this == 0L) return "-"
     val (hours, minutes, seconds, millis) = getTimeUnits(true)
     var formattedTime = when {
         hours > 0 ->
@@ -93,3 +110,14 @@ inline operator fun <reified T> MyBaseListFragmentAdapter<T>.get(position: Int) 
         this.getItem(position)
 
 fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)
+
+fun Context.getComparison(): Comparison {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    return when (prefs.getString(getString(R.string.key_pref_compare_against), "0")) {
+        // Personal Best
+        "0" -> Comparison.PERSONAL_BEST
+        // Best Segments
+        "1" -> Comparison.BEST_SEGMENTS
+        else -> Comparison.PERSONAL_BEST
+    }
+}

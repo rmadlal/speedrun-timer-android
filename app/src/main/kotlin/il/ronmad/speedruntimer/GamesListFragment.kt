@@ -17,14 +17,14 @@ class GamesListFragment : BaseListFragment<Game>() {
         super.onActivityCreated(savedInstanceState)
         mActionBar?.title = activity.getString(R.string.app_name)
         mActionBar?.setDisplayHomeAsUpEnabled(false)
-        fabAdd.show()
+
         mListAdapter = GamesAdapter(activity, realm.where<Game>().findAll())
         listAdapter = mListAdapter
+
+        fabAdd.show()
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
-        super.onListItemClick(l, v, position, id)
-
         if (mActionMode == null) {
             val game = mListAdapter[position]
             activity.supportFragmentManager.beginTransaction()
@@ -36,6 +36,7 @@ class GamesListFragment : BaseListFragment<Game>() {
                     .addToBackStack(null)
                     .commit()
         }
+        super.onListItemClick(l, v, position, id)
     }
 
     override fun update() {

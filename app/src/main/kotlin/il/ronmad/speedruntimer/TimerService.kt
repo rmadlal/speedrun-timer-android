@@ -29,7 +29,6 @@ class TimerService : Service() {
     private lateinit var realmChangeListener: RealmChangeListener<Realm>
     private lateinit var prefs: SharedPreferences
     private lateinit var chronometer: Chronometer
-    private lateinit var game: Game
     private lateinit var category: Category
     private lateinit var splitsIter: MutableListIterator<Split>
     private var splitTimes = mutableListOf<Long>()
@@ -71,8 +70,9 @@ class TimerService : Service() {
             return START_NOT_STICKY
         }
 
-        game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
-        category = game.getCategory(categoryName)!!
+        category = realm.where<Category>()
+                .equalTo("game.name", gameName)
+                .equalTo("name", categoryName).findFirst()!!
         splitsIter = category.splits.listIterator()
         hasSplits = splitsIter.hasNext()
         val notification = setupNotification()
@@ -91,7 +91,7 @@ class TimerService : Service() {
     override fun onDestroy() {
         realm.removeChangeListener(realmChangeListener)
         if (startedProperly) {
-            game.getPosition().set(mWindowParams.x, mWindowParams.y)
+            category.getGame().getPosition().set(mWindowParams.x, mWindowParams.y)
             mWindowManager.removeView(mView)
         }
         realm.close()
@@ -121,12 +121,7 @@ class TimerService : Service() {
                 getColorCpt(R.color.colorTimerBestSegmentDefault))
         Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
         Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
-        val compareAgainstVals = resources.getStringArray(R.array.compare_against_values)
-        comparison = when (prefs.getString(getString(R.string.key_pref_compare_against), compareAgainstVals[0])) {
-            compareAgainstVals[0] -> Comparison.PERSONAL_BEST
-            compareAgainstVals[1] -> Comparison.BEST_SEGMENTS
-            else -> Comparison.PERSONAL_BEST
-        }
+        comparison = getComparison()
     }
 
     private fun setupNotification(): Notification {
@@ -136,7 +131,7 @@ class TimerService : Service() {
                     R.drawable.ic_timer_black_48dp
                 else
                     R.drawable.ic_stat_timer)
-                .setContentTitle("${game.name} ${category.name}")
+                .setContentTitle("${category.getGame().name} ${category.name}")
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         Intent(this, MainActivity::class.java),
                         PendingIntent.FLAG_UPDATE_CURRENT))
@@ -216,9 +211,8 @@ class TimerService : Service() {
                                 val splitTime = chronometer.timeElapsed
                                 val segmentTime = splitTime - currentSplitStartTime
                                 splitTimes.add(segmentTime)
-                                if (currentSegmentSplitTime > 0) {
+                                if (prefs.getBoolean(getString(R.string.key_pref_timer_show_delta), true))
                                     updateDelta(splitTime, segmentTime)
-                                }
 
                                 if (splitsIter.hasNext()) {
                                     timerSplit(splitTime)
@@ -239,7 +233,7 @@ class TimerService : Service() {
                         var targetY = initialY - (event.rawY - initialTouchY).toInt()
                         targetX = Math.max(0, Math.min(targetX, metrics.widthPixels - v.width))
                         targetY = Math.max(0, Math.min(targetY, metrics.heightPixels - v.height))
-                        if (moved || Math.pow((targetX - initialX).toDouble(), 2.0) + Math.pow((targetY - initialY).toDouble(), 2.0) >= 25 * 25) {
+                        if (moved || Math.pow((targetX - initialX).toDouble(), 2.0) + Math.pow((targetY - initialY).toDouble(), 2.0) >= 30 * 30) {
                             moved = true
                             mWindowParams.x = targetX
                             mWindowParams.y = targetY
@@ -261,6 +255,8 @@ class TimerService : Service() {
                 timerReset(updateData = false)
             } else if (Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time)) {
                 timerReset()
+            } else if (category.bestTime == 0L) {
+                timerReset(time)
             } else {
                 if (!prefs.getBoolean(getString(R.string.key_pref_save_time_data), true)) {
                     timerReset(updateData = false)
@@ -321,8 +317,8 @@ class TimerService : Service() {
                 PixelFormat.TRANSLUCENT)
         mWindowParams.gravity = Gravity.BOTTOM or Gravity.END
 
-        val x = game.getPosition().x
-        val y = game.getPosition().y
+        val x = category.getGame().getPosition().x
+        val y = category.getGame().getPosition().y
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width))
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height))
         mWindowManager.addView(mView, mWindowParams)
@@ -352,12 +348,9 @@ class TimerService : Service() {
 
     private fun timerSplit(splitTime: Long) {
         currentSplit = splitsIter.next()
-        currentSegmentSplitTime += when (comparison) {
-            Comparison.BEST_SEGMENTS -> currentSplit.bestTime
-            else -> currentSplit.pbTime
-        }
+        currentSegmentSplitTime = currentSplit.calculateSplitTime(comparison)
         currentSplitStartTime = splitTime
-        chronometer.split(currentSegmentSplitTime)
+        chronometer.split(if (!currentSplit.hasTime(comparison)) 0L else currentSegmentSplitTime)
         mView.currentSplit.text = currentSplit.name
         mView.currentSplit.visibility = View.VISIBLE
     }
@@ -380,7 +373,7 @@ class TimerService : Service() {
             delta < 0 -> Chronometer.colorAhead
             else -> Chronometer.colorBehind
         })
-        mView.delta.visibility = View.VISIBLE
+        mView.delta.visibility = if (!currentSplit.hasTime(comparison)) View.GONE else View.VISIBLE
     }
 
     companion object {

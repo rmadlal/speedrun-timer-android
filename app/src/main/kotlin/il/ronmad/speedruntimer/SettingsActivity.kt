@@ -107,6 +107,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_compare_against)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_delta)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {

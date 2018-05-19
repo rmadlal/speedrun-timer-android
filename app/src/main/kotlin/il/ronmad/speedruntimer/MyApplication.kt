@@ -21,8 +21,12 @@ class MyApplication : Application() {
 
     private fun initRealm() {
         Realm.init(this)
+        var gamePrimaryKey = 0L
+        var categoryPrimaryKey = 0L
+        var splitPrimaryKey = 0L
+        var pointPrimaryKey = 0L
         val realmConfig = RealmConfiguration.Builder()
-                .schemaVersion(2)
+                .schemaVersion(3)
                 .migration { realm, oldVersion, newVersion ->
                     Log.d("MigrateRealm", "old: $oldVersion, new: $newVersion")
                     var oldVer = oldVersion.toInt()
@@ -40,6 +44,22 @@ class MyApplication : Application() {
                         realm.schema.get("Game")?.addIndex("name")
                         realm.schema.get("Category")?.addIndex("name")
                         realm.schema.get("Split")?.addIndex("name")
+                        ++oldVer
+                    }
+                    if (oldVer == 2) {
+                        // added primary keys to all objects (id: Int)
+                        realm.schema.get("Game")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                ?.transform { it.setLong("id", ++gamePrimaryKey) }
+                                ?.addPrimaryKey("id")
+                        realm.schema.get("Category")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                ?.transform { it.setLong("id", ++categoryPrimaryKey) }
+                                ?.addPrimaryKey("id")
+                        realm.schema.get("Split")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                ?.transform { it.setLong("id", ++splitPrimaryKey) }
+                                ?.addPrimaryKey("id")
+                        realm.schema.get("Point")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                ?.transform { it.setLong("id", ++pointPrimaryKey) }
+                                ?.addPrimaryKey("id")
                         ++oldVer
                     }
                 }

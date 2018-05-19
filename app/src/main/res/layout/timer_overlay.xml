@@ -48,6 +48,9 @@
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/chronoRest"
         app:layout_constraintStart_toStartOf="@id/chronoRest"
+        android:maxLength="24"
+        android:maxLines="1"
+        android:ellipsize="end"
         tools:text="Wall Jump"
         tools:visibility="visible"/>
 
