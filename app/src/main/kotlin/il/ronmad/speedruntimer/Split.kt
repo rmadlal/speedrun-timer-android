@@ -18,7 +18,7 @@ open class Split : RealmObject() {
 
     fun update(segmentTime: Long, isNewPB: Boolean) {
         if (segmentTime == 0L) return
-        if (isNewPB && (pbTime == 0L || segmentTime < pbTime)) {
+        if (isNewPB) {
             updateData(pbTime = segmentTime)
         }
         if (bestTime == 0L || segmentTime < bestTime) {

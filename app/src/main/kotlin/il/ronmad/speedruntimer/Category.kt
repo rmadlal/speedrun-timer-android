@@ -18,8 +18,8 @@ open class Category : RealmObject() {
     @LinkingObjects("categories")
     val game: RealmResults<Game>? = null
 
-    fun updateSplits(splitTimes: List<Long>, isNewPB: Boolean) {
+    fun updateSplits(segmentTimes: List<Long>, isNewPB: Boolean) {
         splits.forEachIndexed { index, split ->
-            split.update(splitTimes.getOrElse(index) { 0L }, isNewPB) }
+            split.update(segmentTimes.getOrElse(index) { 0L }, isNewPB) }
     }
 }

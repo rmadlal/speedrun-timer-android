@@ -84,7 +84,6 @@ abstract class BaseListFragment<T> : ListFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setupListView()
-        fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
     override fun onResume() {

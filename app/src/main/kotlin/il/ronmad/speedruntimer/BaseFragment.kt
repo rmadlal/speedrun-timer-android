@@ -24,7 +24,6 @@ abstract class BaseFragment : Fragment() {
         super.onCreate(savedInstanceState)
         realm = Realm.getDefaultInstance()
         setHasOptionsMenu(true)
-        fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
     override fun onDestroy() {

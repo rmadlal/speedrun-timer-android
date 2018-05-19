@@ -36,6 +36,7 @@ class SplitRecyclerViewAdapter(data: OrderedRealmCollection<Split>,
             Comparison.BEST_SEGMENTS -> split.bestTime.getFormattedTime(dashIfZero = true)
         }
         holder.splitTimeText.text = split.calculateSplitTime(comparison).getFormattedTime(dashIfZero = true)
+
         setItemBackground(holder.splitView, position)
     }
 

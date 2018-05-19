@@ -18,7 +18,6 @@ class Chronometer(val context: Context, val view: View) {
 
     private var timerColor = colorNeutral
         set(value) {
-            if (field == value) return
             view.chronoRest.setTextColor(value)
             view.chronoMillis.setTextColor(value)
             field = value
@@ -85,11 +84,14 @@ class Chronometer(val context: Context, val view: View) {
     }
 
     private fun updateColor() {
-        if (compareAgainst == 0L || timeElapsed < 0) {
+        if ((compareAgainst == 0L || timeElapsed < 0) && timerColor != colorNeutral) {
             timerColor = colorNeutral
             return
         }
-        timerColor = if (timeElapsed < compareAgainst) colorAhead else colorBehind
+        if (timeElapsed < compareAgainst && timerColor != colorAhead)
+             timerColor = colorAhead
+        else if (timeElapsed >= compareAgainst && timerColor != colorBehind)
+            timerColor = colorBehind
     }
 
     private fun updateRunning() {

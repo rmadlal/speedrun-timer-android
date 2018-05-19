@@ -144,9 +144,7 @@ class CategoryListFragment : BaseListFragment<Category>() {
         actionDeleteCategories(selectedItems)
     }
 
-    override fun onFabAddPressed() {
-        Dialogs.newCategoryDialog(activity, game).show()
-    }
+    override fun onFabAddPressed() {}
 
     @SuppressLint("RestrictedApi")
     private fun checkPermissionAndStartTimer() {

@@ -35,6 +35,8 @@ class GameFragment : BaseFragment() {
         tabLayout = activity.tabLayout
         setupViewPager()
         tabLayout.visibility = View.VISIBLE
+
+        fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
     override fun onDestroyView() {

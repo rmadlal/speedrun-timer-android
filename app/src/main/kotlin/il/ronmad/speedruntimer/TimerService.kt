@@ -31,7 +31,7 @@ class TimerService : Service() {
     private lateinit var chronometer: Chronometer
     private lateinit var category: Category
     private lateinit var splitsIter: MutableListIterator<Split>
-    private var splitTimes = mutableListOf<Long>()
+    private var segmentTimes = mutableListOf<Long>()
     private lateinit var currentSplit: Split
     private var currentSplitStartTime = 0L
     private var currentSegmentSplitTime = 0L
@@ -210,7 +210,7 @@ class TimerService : Service() {
                                 // Split, or stop if on final split.
                                 val splitTime = chronometer.timeElapsed
                                 val segmentTime = splitTime - currentSplitStartTime
-                                splitTimes.add(segmentTime)
+                                segmentTimes.add(segmentTime)
                                 if (prefs.getBoolean(getString(R.string.key_pref_timer_show_delta), true))
                                     updateDelta(splitTime, segmentTime)
 
@@ -296,6 +296,8 @@ class TimerService : Service() {
         mView.delta.textSize = size * 0.375f
         mView.currentSplit.textSize = size * 0.5f
 
+        mView.currentSplit.setTextColor(Chronometer.colorNeutral)
+
         mView.chronoRest.typeface = Typeface.createFromAsset(
                 assets, "fonts/digital-7.ttf")
         mView.chronoMillis.typeface = Typeface.createFromAsset(
@@ -330,10 +332,10 @@ class TimerService : Service() {
         if (updateData) {
             if (newPB == 0L) {
                 category.incrementRunCount()
-                category.updateSplits(splitTimes, false)
+                category.updateSplits(segmentTimes, false)
             } else {
                 category.updateData(bestTime = newPB, runCount = category.runCount + 1)
-                category.updateSplits(splitTimes, true)
+                category.updateSplits(segmentTimes, true)
             }
         }
         resetSplits()
@@ -341,7 +343,7 @@ class TimerService : Service() {
 
     private fun resetSplits() {
         splitsIter = category.splits.listIterator()
-        splitTimes.clear()
+        segmentTimes.clear()
         mView.delta.visibility = View.GONE
         mView.currentSplit.visibility = View.GONE
     }

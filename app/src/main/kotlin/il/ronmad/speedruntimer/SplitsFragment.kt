@@ -44,9 +44,12 @@ class SplitsFragment : BaseFragment() {
         mActionBar?.title = category.getGame().name
         mActionBar?.subtitle = category.name
         mActionBar?.setDisplayHomeAsUpEnabled(true)
+
         setupRecyclerView()
         setupComparisonSpinner()
         calculateSob()
+
+        fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
     override fun onDestroyView() {
@@ -110,6 +113,7 @@ class SplitsFragment : BaseFragment() {
             layoutManager = LinearLayoutManager(activity)
             adapter = mRecyclerViewAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
+            isNestedScrollingEnabled = false
         }
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,

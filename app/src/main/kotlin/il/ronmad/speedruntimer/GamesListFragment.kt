@@ -21,6 +21,7 @@ class GamesListFragment : BaseListFragment<Game>() {
         mListAdapter = GamesAdapter(activity, realm.where<Game>().findAll())
         listAdapter = mListAdapter
 
+        fabAdd.setOnClickListener { onFabAddPressed() }
         fabAdd.show()
     }
 
