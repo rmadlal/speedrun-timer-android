@@ -55,6 +55,10 @@
     <string name="splits_header_name">Segment Name</string>
     <string name="splits_header_segment_time">Segment Time</string>
     <string name="splits_header_split_time">Split Time</string>
+    <string name="split_name_text">Name:</string>
+    <string name="split_name_hint">Split Name</string>
+    <string name="pb_seg_text">PB Seg.:</string>
+    <string name="best_seg_text">Best Seg.:</string>
 
     <string-array name="category_autocomplete">
         <item>Any%</item>
@@ -97,6 +101,7 @@
     <string name="pref_timer_countdown_title">Set timer countdown</string>
     <string name="pref_timer_show_millis_title">Show milliseconds</string>
     <string name="pref_timer_show_delta_title">Show delta</string>
+    <string name="pref_timer_show_current_split_title">Show current split</string>
     <string name="pref_launch_games_title">Launch games</string>
     <string name="pref_launch_games_summary_true">Launch the chosen game along with the timer</string>
     <string name="pref_launch_games_summary_false">Start the timer only</string>
@@ -143,6 +148,7 @@
     <string name="key_pref_timer_countdown">countdown_preference</string>
     <string name="key_pref_timer_show_millis">il.ronmad.speedruntimer.key.SHOW_MILLIS</string>
     <string name="key_pref_timer_show_delta">il.ronmad.speedruntimer.key.SHOW_DELTA</string>
+    <string name="key_pref_timer_show_current_split">il.ronmad.speedruntimer.key.SHOW_CURRENT_SPLIT</string>
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>
     <string name="key_pref_save_time_data">il.ronmad.speedruntimer.key.SAVE_DATA</string>
     <string name="key_auto_load_categories">il.ronmad.speedruntimer.key.AUTO_LOAD_CATEGORIES</string>

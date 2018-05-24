@@ -56,4 +56,6 @@ abstract class MyBaseListFragmentAdapter<T>(val context: Context,
             listItemView.setBackgroundResource(android.R.color.transparent)
         }
     }
+
+    operator fun get(position: Int) = this.getItem(position)
 }

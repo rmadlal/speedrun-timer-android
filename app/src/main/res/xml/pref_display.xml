@@ -17,4 +17,15 @@
         android:entryValues="@array/timer_sizes_values"
         android:defaultValue="32" />
 
+
+    <CheckBoxPreference
+        android:key="@string/key_pref_timer_show_delta"
+        android:title="@string/pref_timer_show_delta_title"
+        android:defaultValue="true" />
+
+    <CheckBoxPreference
+        android:key="@string/key_pref_timer_show_current_split"
+        android:title="@string/pref_timer_show_current_split_title"
+        android:defaultValue="true" />
+
 </PreferenceScreen>

@@ -47,8 +47,9 @@ class GamesListFragment : BaseListFragment<Game>() {
 
     override fun onMenuEditPressed() {
         if (selectedItems.isEmpty()) return
-        val selectedItem = selectedItems[0]
-        Dialogs.editGameDialog(activity, realm, selectedItem).show()
+        val selectedGame = selectedItems[0]
+        Dialogs.editGameDialog(activity, realm, selectedGame) { selectedGame.setGameName(it) }
+                .show()
     }
 
     override fun onMenuDeletePressed() {
@@ -57,11 +58,13 @@ class GamesListFragment : BaseListFragment<Game>() {
     }
 
     override fun onFabAddPressed() {
-        Dialogs.newGameDialog(activity, realm).show()
+        Dialogs.newGameDialog(activity, realm) { realm.addGame(it) }.show()
     }
 
     private fun actionDeleteGames(toRemove: List<Game>) {
-        Dialogs.deleteGamesDialog(activity, realm, toRemove).show()
+        Dialogs.deleteGamesDialog(activity) {
+            realm.removeGames(toRemove)
+        }.show()
     }
 
     companion object {

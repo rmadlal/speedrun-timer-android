@@ -136,7 +136,9 @@ class CategoryListFragment : BaseListFragment<Category>() {
     override fun onMenuEditPressed() {
         if (selectedItems.isEmpty()) return
         val selectedCategory = selectedItems[0]
-        Dialogs.editCategoryDialog(this, game, selectedCategory).show()
+        Dialogs.editCategoryDialog(activity, selectedCategory) { name, pbTime, runCount ->
+            editCategory(selectedCategory, name, pbTime, runCount)
+        }.show()
     }
 
     override fun onMenuDeletePressed() {
@@ -230,12 +232,16 @@ class CategoryListFragment : BaseListFragment<Category>() {
         if (toRemove.size == 1) {
             val category = toRemove[0]
             if (category.bestTime > 0) {
-                Dialogs.deleteCategoryDialog(activity, game, toRemove).show()
+                Dialogs.deleteCategoryDialog(activity, category) {
+                    game.removeCategories(toRemove)
+                }.show()
             } else {
                 game.removeCategories(toRemove)
             }
         } else {
-            Dialogs.deleteCategoriesDialog(activity, game, toRemove).show()
+            Dialogs.deleteCategoriesDialog(activity) {
+                game.removeCategories(toRemove)
+            }.show()
         }
 
     }

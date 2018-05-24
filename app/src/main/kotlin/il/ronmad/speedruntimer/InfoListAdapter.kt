@@ -12,7 +12,7 @@ import android.widget.BaseAdapter
 import io.realm.Case
 import kotlinx.android.synthetic.main.game_info_list_item.view.*
 
-class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter() {
+class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), TimeExtensions {
 
     var data: List<SrcLeaderboard> = listOf()
         set(value) {

@@ -23,7 +23,7 @@ import io.realm.RealmChangeListener
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.timer_overlay.view.*
 
-class TimerService : Service() {
+class TimerService : Service(), TimeExtensions {
 
     private lateinit var realm: Realm
     private lateinit var realmChangeListener: RealmChangeListener<Realm>
@@ -75,6 +75,7 @@ class TimerService : Service() {
                 .equalTo("name", categoryName).findFirst()!!
         splitsIter = category.splits.listIterator()
         hasSplits = splitsIter.hasNext()
+
         val notification = setupNotification()
         startForeground(R.integer.notification_id, notification)
 
@@ -91,7 +92,6 @@ class TimerService : Service() {
     override fun onDestroy() {
         realm.removeChangeListener(realmChangeListener)
         if (startedProperly) {
-            category.getGame().getPosition().set(mWindowParams.x, mWindowParams.y)
             mWindowManager.removeView(mView)
         }
         realm.close()
@@ -203,6 +203,8 @@ class TimerService : Service() {
                         moved = false
                     }
                     MotionEvent.ACTION_UP -> {
+                        if (moved)
+                            category.getGame().getPosition().set(mWindowParams.x, mWindowParams.y)
                         if (moved || System.currentTimeMillis() - touchTime >= 250) return false
                         if (Chronometer.running) {
                             if (chronometer.timeElapsed < 0) return false
@@ -319,11 +321,17 @@ class TimerService : Service() {
                 PixelFormat.TRANSLUCENT)
         mWindowParams.gravity = Gravity.BOTTOM or Gravity.END
 
-        val x = category.getGame().getPosition().x
-        val y = category.getGame().getPosition().y
+        mWindowManager.addView(mView, mWindowParams)
+        resetTimerPosition()
+    }
+
+    private fun resetTimerPosition() {
+        val (x, y) = category.getGame().getPosition()
+        val metrics = DisplayMetrics()
+        mWindowManager.defaultDisplay.getMetrics(metrics)
         mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width))
         mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height))
-        mWindowManager.addView(mView, mWindowParams)
+        mWindowManager.updateViewLayout(mView, mWindowParams)
     }
 
     private fun timerReset(newPB: Long = 0L, updateData: Boolean = true) {
@@ -339,6 +347,7 @@ class TimerService : Service() {
             }
         }
         resetSplits()
+        resetTimerPosition()
     }
 
     private fun resetSplits() {
@@ -354,13 +363,16 @@ class TimerService : Service() {
         currentSplitStartTime = splitTime
         chronometer.split(if (!currentSplit.hasTime(comparison)) 0L else currentSegmentSplitTime)
         mView.currentSplit.text = currentSplit.name
-        mView.currentSplit.visibility = View.VISIBLE
     }
 
     private fun timerStart() {
         if (hasSplits) {
             if (!splitsIter.hasNext()) return
             timerSplit(0L)
+            mView.currentSplit.visibility =
+                    if (prefs.getBoolean(getString(R.string.key_pref_timer_show_current_split), true))
+                        View.VISIBLE
+                    else View.GONE
         } else {
             currentSegmentSplitTime = category.bestTime
         }

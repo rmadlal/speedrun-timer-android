@@ -18,9 +18,4 @@
         android:entryValues="@array/compare_against_values"
         android:defaultValue="0" />
 
-    <CheckBoxPreference
-        android:key="@string/key_pref_timer_show_delta"
-        android:title="@string/pref_timer_show_delta_title"
-        android:defaultValue="true" />
-
 </PreferenceScreen>

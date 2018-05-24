@@ -9,9 +9,8 @@ import android.os.Bundle
 import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
-import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
-class CountdownPreference : DialogPreference {
+class CountdownPreference : DialogPreference, TimeExtensions {
 
     @TargetApi(21)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
@@ -26,10 +25,10 @@ class CountdownPreference : DialogPreference {
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
         super.onPrepareDialogBuilder(builder)
         view = View.inflate(context, R.layout.edit_time_layout, null)
-        countdown.setEditTextsFromTime(view.hours, view.minutes, view.seconds, view.milliseconds)
+        countdown.setEditTextsFromTime(view)
         builder.setView(view)
                 .setPositiveButton(R.string.save) { _, _ ->
-                    countdown = Util.getTimeFromEditTexts(view.hours, view.minutes, view.seconds, view.milliseconds)
+                    countdown = view.getTimeFromEditTexts()
                     persistLong(countdown)
                     summary = "Timer starts at ${(-1 * countdown).getFormattedTime()}"
                 }
@@ -40,12 +39,7 @@ class CountdownPreference : DialogPreference {
     override fun showDialog(state: Bundle?) {
         super.showDialog(state)
         (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
-                .setOnClickListener {
-                    view.hours.setText("")
-                    view.minutes.setText("")
-                    view.seconds.setText("")
-                    view.milliseconds.setText("")
-                }
+                .setOnClickListener { 0L.setEditTextsFromTime(view) }
     }
 
     override fun onGetDefaultValue(a: TypedArray?, index: Int) = a?.getInt(index, 0)?.toLong()

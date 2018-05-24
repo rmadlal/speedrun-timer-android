@@ -8,7 +8,8 @@ import kotlinx.android.synthetic.main.category_list_item.view.*
 
 class CategoryAdapter(context: Context,
                       categories: List<Category>)
-    : MyBaseListFragmentAdapter<Category>(context, categories, R.layout.category_list_item) {
+    : MyBaseListFragmentAdapter<Category>(context, categories, R.layout.category_list_item),
+        TimeExtensions {
 
     override fun getView(i: Int, view: View?, viewGroup: ViewGroup): View {
         val listItemView = super.getView(i, view, viewGroup)

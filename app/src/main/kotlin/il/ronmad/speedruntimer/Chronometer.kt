@@ -9,7 +9,7 @@ import kotlinx.android.synthetic.main.timer_overlay.view.*
 
 import java.lang.ref.WeakReference
 
-class Chronometer(val context: Context, val view: View) {
+class Chronometer(val context: Context, val view: View) : TimeExtensions {
 
     private var base = 0L
 

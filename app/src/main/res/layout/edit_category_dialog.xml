@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="4dp"
-            android:inputType="text"
+            android:inputType="textNoSuggestions"
             android:hint="@string/hint_game_category" />
 
     </LinearLayout>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/activity_horizontal_margin"
+    android:paddingEnd="@dimen/activity_vertical_margin">
+
+    <TextView
+        android:id="@+id/nameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="@string/split_name_text"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/nameInput"
+        app:layout_constraintBottom_toTopOf="@+id/pbSegmentTimeText"
+        app:layout_constraintHorizontal_weight="0" />
+
+    <EditText
+        android:id="@+id/nameInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:hint="@string/split_name_hint"
+        android:inputType="textNoSuggestions"
+        android:maxLength="24"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/nameText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintBaseline_toBaselineOf="@id/nameText" />
+
+    <TextView
+        android:id="@+id/pbSegmentTimeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingStart="8dp"
+        android:paddingBottom="8dp"
+        android:paddingEnd="4dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/pb_seg_text"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toBottomOf="@id/nameText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editTimePB"
+        app:layout_constraintBottom_toTopOf="@+id/bestSegmentTimeText" />
+
+    <include layout="@layout/edit_time_layout"
+        android:id="@+id/editTimePB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/pbSegmentTimeText"
+        app:layout_constraintTop_toTopOf="@id/pbSegmentTimeText"
+        app:layout_constraintBottom_toBottomOf="@id/pbSegmentTimeText"
+        app:layout_constraintVertical_bias="0.6" />
+
+    <TextView
+        android:id="@+id/bestSegmentTimeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingStart="8dp"
+        android:paddingBottom="8dp"
+        android:paddingEnd="4dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/best_seg_text"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toBottomOf="@id/pbSegmentTimeText"
+        app:layout_constraintBottom_toTopOf="@+id/positionText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editTimeBest" />
+
+    <include layout="@layout/edit_time_layout"
+        android:id="@+id/editTimeBest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/bestSegmentTimeText"
+        app:layout_constraintTop_toTopOf="@id/bestSegmentTimeText"
+        app:layout_constraintBottom_toBottomOf="@id/bestSegmentTimeText"
+        app:layout_constraintVertical_bias="0.6" />
+
+    <TextView
+        android:id="@+id/editPositionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingStart="8dp"
+        android:paddingBottom="8dp"
+        android:paddingEnd="4dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/split_position"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toBottomOf="@id/bestSegmentTimeText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editPositionSpinner" />
+
+    <Spinner
+        android:id="@+id/editPositionSpinner"
+        android:layout_width="96dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="@id/editPositionText"
+        app:layout_constraintStart_toEndOf="@id/editPositionText"
+        app:layout_constraintBottom_toBottomOf="@id/editPositionText" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -38,6 +38,10 @@ fun Game.getPosition(): Point =
                 this.timerPosition = realm.createObject(realm.getNextId<Point>()) }
             this.timerPosition!! }
 
+operator fun Point.component1() = this.x
+
+operator fun Point.component2() = this.y
+
 fun Category.getGame() = this.game!!.first()!!
 
 fun Category.incrementRunCount() = realm.executeTransaction { this.runCount++ }
@@ -70,14 +74,11 @@ fun Category.clearSplits(clearPBTimes: Boolean = true, clearBestTimes: Boolean =
             }
         }
 
-fun Category.removeSplits(toRemove: List<Split>) {
-    val ids = toRemove.map { it.id as? Long }.toTypedArray()
-    realm.executeTransaction {
-        this.splits.where()
-                .oneOf("id", ids)
-                .findAll()
-                .deleteAllFromRealm()
-    }
+fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction {
+    this.splits.where()
+            .oneOf("id", toRemove.toTypedArray())
+            .findAll()
+            .deleteAllFromRealm()
 }
 
 fun Category.setPBFromSplits() = updateData(bestTime = splits.map { it.pbTime }.sum())
@@ -114,7 +115,7 @@ fun Split.moveToPosition(newPosition: Int) = realm.executeTransaction {
     splits.move(splits.indexOf(this), newPosition)
 }
 
-fun Split.remove() = getCategory().removeSplits(listOf(this))
+fun Split.getPosition() = getCategory().splits.indexOf(this)
 
 fun Point.set(x: Int, y: Int) = realm.executeTransaction {
     this.x = x

@@ -1,7 +1,5 @@
 package il.ronmad.speedruntimer
 
-import android.widget.EditText
-
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -23,20 +21,5 @@ object Util {
             gameObject.add("categories", categoriesArray)
         }
         return gamesArray.toString()
-    }
-
-    internal fun getTimeFromEditTexts(hoursInput: EditText,
-                                      minutesInput: EditText,
-                                      secondsInput: EditText,
-                                      millisInput: EditText): Long {
-        val hoursStr = hoursInput.text.toString()
-        val minutesStr = minutesInput.text.toString()
-        val secondsStr = secondsInput.text.toString()
-        val millisStr = millisInput.text.toString()
-        val hours = if (hoursStr.isEmpty()) 0 else Integer.parseInt(hoursStr)
-        val minutes = if (minutesStr.isEmpty()) 0 else Integer.parseInt(minutesStr)
-        val seconds = if (secondsStr.isEmpty()) 0 else Integer.parseInt(secondsStr)
-        val millis = if (millisStr.isEmpty()) 0 else Integer.parseInt(millisStr)
-        return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
     }
 }

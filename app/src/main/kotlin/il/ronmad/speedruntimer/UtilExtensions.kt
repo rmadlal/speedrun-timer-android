@@ -3,8 +3,10 @@ package il.ronmad.speedruntimer
 import android.content.Context
 import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
+import android.view.View
 import android.widget.EditText
 import io.realm.Realm
+import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -48,51 +50,63 @@ fun EditText.isValidForSplit(category: Category): Boolean {
     }
 }
 
-fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
-    val time = Math.abs(this)
-    val hours = time.toInt() / (1000 * 3600)
-    var remaining = (time % (3600 * 1000)).toInt()
-    val minutes = remaining / (60 * 1000)
-    remaining %= (60 * 1000)
-    val seconds = remaining / 1000
-    val millis = if (twoDecimalPlaces) ((remaining % 1000) / 10) else (remaining % 1000)
-    return intArrayOf(hours, minutes, seconds, millis)
-}
+interface TimeExtensions {
 
-fun Long.getFormattedTime(withMillis: Boolean = true,
-                          forceMinutes: Boolean = false,
-                          plusSign: Boolean = false,
-                          dashIfZero: Boolean = false): String {
-    if (dashIfZero && this == 0L) return "-"
-    val (hours, minutes, seconds, millis) = getTimeUnits(true)
-    var formattedTime = when {
-        hours > 0 ->
-            if (withMillis) "%d:%02d:%02d.%02d".format(hours, minutes, seconds, millis)
-            else "%d:%02d:%02d".format(hours, minutes, seconds)
-        minutes > 0 || forceMinutes ->
-            if (withMillis) "%d:%02d.%02d".format(minutes, seconds, millis)
-            else "%d:%02d".format(minutes, seconds)
-        else ->
-            if (withMillis) "%d.%02d".format(seconds, millis)
-            else "%d".format(seconds)
+    fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
+        val time = Math.abs(this)
+        val hours = time.toInt() / (1000 * 3600)
+        var remaining = (time % (3600 * 1000)).toInt()
+        val minutes = remaining / (60 * 1000)
+        remaining %= (60 * 1000)
+        val seconds = remaining / 1000
+        val millis = if (twoDecimalPlaces) ((remaining % 1000) / 10) else (remaining % 1000)
+        return intArrayOf(hours, minutes, seconds, millis)
     }
-    if (this < 0) {
-        formattedTime = "-$formattedTime"
-    } else if (plusSign) {
-        formattedTime = "+$formattedTime"
-    }
-    return formattedTime
-}
 
-fun Long.setEditTextsFromTime(hoursInput: EditText,
-                              minutesInput: EditText,
-                              secondsInput: EditText,
-                              millisInput: EditText) {
-    val (hours, minutes, seconds, millis) = getTimeUnits()
-    hoursInput.setText(if (hours > 0) "$hours" else "")
-    minutesInput.setText(if (minutes > 0) "$minutes" else "")
-    secondsInput.setText(if (seconds > 0) "$seconds" else "")
-    millisInput.setText(if (millis > 0) "$millis" else "")
+    fun Long.getFormattedTime(withMillis: Boolean = true,
+                              forceMinutes: Boolean = false,
+                              plusSign: Boolean = false,
+                              dashIfZero: Boolean = false): String {
+        if (dashIfZero && this == 0L) return "-"
+        val (hours, minutes, seconds, millis) = getTimeUnits(true)
+        var formattedTime = when {
+            hours > 0 ->
+                if (withMillis) "%d:%02d:%02d.%02d".format(hours, minutes, seconds, millis)
+                else "%d:%02d:%02d".format(hours, minutes, seconds)
+            minutes > 0 || forceMinutes ->
+                if (withMillis) "%d:%02d.%02d".format(minutes, seconds, millis)
+                else "%d:%02d".format(minutes, seconds)
+            else ->
+                if (withMillis) "%d.%02d".format(seconds, millis)
+                else "%d".format(seconds)
+        }
+        if (this < 0) {
+            formattedTime = "-$formattedTime"
+        } else if (plusSign) {
+            formattedTime = "+$formattedTime"
+        }
+        return formattedTime
+    }
+
+    fun Long.setEditTextsFromTime(containingView: View) {
+        val (hours, minutes, seconds, millis) = getTimeUnits()
+        containingView.hours.setText(if (hours > 0) "$hours" else "")
+        containingView.minutes.setText(if (minutes > 0) "$minutes" else "")
+        containingView.seconds.setText(if (seconds > 0) "$seconds" else "")
+        containingView.milliseconds.setText(if (millis > 0) "$millis" else "")
+    }
+
+    fun View.getTimeFromEditTexts(): Long {
+        val hoursStr = this.hours.text.toString()
+        val minutesStr = this.minutes.text.toString()
+        val secondsStr = this.seconds.text.toString()
+        val millisStr = this.milliseconds.text.toString()
+        val hours = if (hoursStr.isEmpty()) 0 else Integer.parseInt(hoursStr)
+        val minutes = if (minutesStr.isEmpty()) 0 else Integer.parseInt(minutesStr)
+        val seconds = if (secondsStr.isEmpty()) 0 else Integer.parseInt(secondsStr)
+        val millis = if (millisStr.isEmpty()) 0 else Integer.parseInt(millisStr)
+        return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
+    }
 }
 
 fun Int.toOrdinal(): String {
@@ -106,17 +120,18 @@ fun Int.toOrdinal(): String {
     return "$this$suffix"
 }
 
-inline operator fun <reified T> MyBaseListFragmentAdapter<T>.get(position: Int) =
-        this.getItem(position)
-
 fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)
 
-fun Context.getComparison(): Comparison {
-    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-    return when (prefs.getString(getString(R.string.key_pref_compare_against), "0")) {
-        // Personal Best
+fun MainActivity.getComparison() = getComparison(this)
+
+fun TimerService.getComparison() = getComparison(this)
+
+private fun getComparison(context: Context): Comparison {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    return when (prefs.getString(context.getString(R.string.key_pref_compare_against), "0")) {
+    // Personal Best
         "0" -> Comparison.PERSONAL_BEST
-        // Best Segments
+    // Best Segments
         "1" -> Comparison.BEST_SEGMENTS
         else -> Comparison.PERSONAL_BEST
     }

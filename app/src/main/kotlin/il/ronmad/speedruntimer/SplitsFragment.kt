@@ -4,28 +4,51 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.*
 import android.widget.AdapterView
-import io.realm.Realm
-import io.realm.RealmChangeListener
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.fragment_splits.*
 
-class SplitsFragment : BaseFragment() {
+class SplitsFragment : BaseFragment(), TimeExtensions {
 
     lateinit var category: Category
     lateinit var mRecyclerViewAdapter: SplitRecyclerViewAdapter
-    private val realmChangeListener = RealmChangeListener<Realm> {
-        mRecyclerViewAdapter.notifyDataSetChanged()
+    private var mActionMode: ActionMode? = null
+    private val mActionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
+        override fun onCreateActionMode(actionMode: ActionMode, menu: Menu): Boolean {
+            actionMode.menuInflater.inflate(R.menu.splits_fragment_context_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
+            actionMode.title = mRecyclerViewAdapter.selectedItems.size.toString()
+            menu.findItem(R.id.menu_edit).isVisible = mRecyclerViewAdapter.selectedItems.size == 1
+            return true
+        }
+
+        override fun onActionItemClicked(actionMode: ActionMode, menuItem: MenuItem): Boolean {
+            return when (menuItem.itemId) {
+                R.id.menu_edit -> {
+                    onMenuEditPressed()
+                    true
+                }
+                R.id.menu_delete -> {
+                    onMenuDeletePressed()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(actionMode: ActionMode) {
+            mRecyclerViewAdapter.clearSelections()
+            mActionMode = null
+        }
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        realm.addChangeListener(realmChangeListener)
-
         arguments?.let {
             val gameName = it.getString(ARG_GAME_NAME)
             val categoryName = it.getString(ARG_CATEGORY_NAME)
@@ -57,11 +80,6 @@ class SplitsFragment : BaseFragment() {
         mActionBar?.subtitle = null
     }
 
-    override fun onDestroy() {
-        realm.removeChangeListener(realmChangeListener)
-        super.onDestroy()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         inflater?.inflate(R.menu.splits_actions, menu)
     }
@@ -86,7 +104,42 @@ class SplitsFragment : BaseFragment() {
     override fun onFabAddPressed() {
         Dialogs.newSplitDialog(activity, category) { name, position ->
             category.addSplit(name, position)
+            mRecyclerViewAdapter.onItemAdded(position)
+            mActionMode?.finish()
         }.show()
+    }
+
+    fun onMenuEditPressed() {
+        category.splits.where()
+                .equalTo("id", mRecyclerViewAdapter.selectedItems.first())
+                .findFirst()?.let {
+                    Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
+                        it.updateData(name, newPBTime, newBestTime)
+                        mRecyclerViewAdapter.onItemEdited(category.splits.indexOf(it))
+                        if (newPosition != it.getPosition()) {
+                            it.moveToPosition(newPosition)
+                            mRecyclerViewAdapter.onItemMoved(it.getPosition(), newPosition)
+                        }
+                        category.setPBFromSplits()
+                        calculateSob()
+                        mActionMode?.finish()
+                    }.show()
+                }
+    }
+
+    fun onMenuDeletePressed() {
+        AlertDialog.Builder(activity)
+                .setTitle("Remove splits")
+                .setMessage("Are you sure?")
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    category.removeSplits(mRecyclerViewAdapter.selectedItems)
+                    mRecyclerViewAdapter.onItemsRemoved()
+                    category.setPBFromSplits()
+                    calculateSob()
+                    mActionMode?.finish()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
     }
 
     private fun calculateSob() {
@@ -97,9 +150,10 @@ class SplitsFragment : BaseFragment() {
     private fun onClearSplitsPressed() {
         AlertDialog.Builder(activity)
                 .setTitle("Clear splits")
-                .setMessage("Are you sure?")
+                .setMessage("PB and Best Segments will be lost. Are you sure?")
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     category.clearSplits()
+                    mRecyclerViewAdapter.onItemsEdited()
                     category.setPBFromSplits()
                     calculateSob()
                 }
@@ -108,32 +162,27 @@ class SplitsFragment : BaseFragment() {
     }
 
     private fun setupRecyclerView() {
-        mRecyclerViewAdapter = SplitRecyclerViewAdapter(category.splits, activity.getComparison())
+        mRecyclerViewAdapter = SplitRecyclerViewAdapter(category.splits, activity.getComparison(),
+                { holder, position ->   // onItemClickListener
+                    mActionMode ?: return@SplitRecyclerViewAdapter
+                    mRecyclerViewAdapter.toggleItemSelected(position)
+                    if (mRecyclerViewAdapter.selectedItems.isEmpty()) {
+                        mActionMode?.finish()
+                    } else {
+                        mActionMode?.invalidate()
+                    }
+                }) { holder, position ->    // onItemLongClickListener
+            if (mActionMode != null) return@SplitRecyclerViewAdapter false
+            mRecyclerViewAdapter.toggleItemSelected(position)
+            mActionMode = activity.startActionMode(mActionModeCallback)
+            true
+        }
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = mRecyclerViewAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
             isNestedScrollingEnabled = false
         }
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-                ItemTouchHelper.START or ItemTouchHelper.END) {
-
-            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
-                val sourceHolder = viewHolder as? SplitRecyclerViewAdapter.SplitViewHolder ?: return false
-                val targetHolder = target as? SplitRecyclerViewAdapter.SplitViewHolder ?: return false
-                mRecyclerViewAdapter.onItemMoved(sourceHolder.adapterPosition, targetHolder.adapterPosition)
-                return true
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                (viewHolder as? SplitRecyclerViewAdapter.SplitViewHolder)?.let {
-                    mRecyclerViewAdapter.onItemSwiped(it.adapterPosition)
-                    category.setPBFromSplits()
-                    calculateSob()
-                }
-            }
-        }).attachToRecyclerView(recyclerView)
     }
 
     private fun setupComparisonSpinner() {
@@ -141,15 +190,15 @@ class SplitsFragment : BaseFragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                mRecyclerViewAdapter.onComparisonChanged(when (position) {
-                    // Current Comparison
+                mRecyclerViewAdapter.comparison = when (position) {
+                // Current Comparison
                     0 ->  activity.getComparison()
-                    // Personal Best
+                // Personal Best
                     1 -> Comparison.PERSONAL_BEST
-                    // Best Segments
+                // Best Segments
                     2 -> Comparison.BEST_SEGMENTS
                     else -> Comparison.PERSONAL_BEST
-                })
+                }
             }
         }
     }
@@ -165,3 +214,4 @@ class SplitsFragment : BaseFragment() {
         }
     }
 }
+

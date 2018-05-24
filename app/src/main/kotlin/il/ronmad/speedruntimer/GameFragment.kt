@@ -58,7 +58,7 @@ class GameFragment : BaseFragment() {
     }
 
     override fun onFabAddPressed() {
-        Dialogs.newCategoryDialog(activity, game).show()
+        Dialogs.newCategoryDialog(activity, game) { game.addCategory(it) }.show()
     }
 
     private fun setupViewPager() {

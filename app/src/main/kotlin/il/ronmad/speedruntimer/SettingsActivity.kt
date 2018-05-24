@@ -84,6 +84,8 @@ class SettingsActivity : AppCompatPreferenceActivity() {
 
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_background)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_size)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_delta)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_current_split)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -107,7 +109,6 @@ class SettingsActivity : AppCompatPreferenceActivity() {
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_compare_against)))
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_delta)))
         }
 
         override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -141,7 +142,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
         }
     }
 
-    companion object {
+    companion object : TimeExtensions {
 
         private val sBindPreferenceSummaryToValueListener: (Preference, Any) -> Boolean = { preference, value ->
             val stringValue = value.toString()

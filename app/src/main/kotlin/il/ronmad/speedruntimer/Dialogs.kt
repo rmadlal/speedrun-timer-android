@@ -6,24 +6,21 @@ import android.content.Intent
 import android.os.Build
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
-import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.ArrayAdapter
-import android.widget.TextView
 import android.widget.Toast
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.edit_category_dialog.view.*
-import kotlinx.android.synthetic.main.edit_time_layout.view.*
+import kotlinx.android.synthetic.main.edit_split_dialog.view.*
 import kotlinx.android.synthetic.main.new_category_dialog.view.*
 import kotlinx.android.synthetic.main.new_game_dialog.view.*
 import kotlinx.android.synthetic.main.new_split_dialog.view.*
 
-object Dialogs {
+object Dialogs : TimeExtensions {
 
-    internal fun newGameDialog(context: Context, realm: Realm): AlertDialog {
+    internal fun newGameDialog(context: Context, realm: Realm,
+                               callback: (String) -> Unit): AlertDialog {
         val dialogView = View.inflate(context, R.layout.new_game_dialog, null)
         val gameNameInput = dialogView.newGameNameInput
         val dialog = AlertDialog.Builder(context)
@@ -38,7 +35,7 @@ object Dialogs {
                 if (!gameNameInput.isValidForGame(realm)) {
                     gameNameInput.requestFocus()
                 } else {
-                    realm.addGame(gameNameInput.text.toString())
+                    callback(gameNameInput.text.toString())
                     dialog.dismiss()
                 }
             }
@@ -46,7 +43,8 @@ object Dialogs {
         return dialog
     }
 
-    internal fun newCategoryDialog(context: Context, game: Game): AlertDialog {
+    internal fun newCategoryDialog(context: Context, game: Game,
+                                   callback: (String) -> Unit): AlertDialog {
         val dialogView = View.inflate(context, R.layout.new_category_dialog, null)
         val categoryNameInput = dialogView.newCategoryInput
         categoryNameInput.setCategories(game.name)
@@ -62,7 +60,7 @@ object Dialogs {
                 if (!categoryNameInput.isValidForCategory(game)) {
                     categoryNameInput.requestFocus()
                 } else {
-                    game.addCategory(categoryNameInput.text.toString())
+                    callback(categoryNameInput.text.toString())
                     dialog.dismiss()
                 }
             }
@@ -75,24 +73,8 @@ object Dialogs {
         val dialogView = View.inflate(context, R.layout.new_split_dialog, null)
         val splitNameInput = dialogView.newSplitInput
         val splitPositionSpinner = dialogView.positionSpinner
-        val spinnerAdapter = object : ArrayAdapter<Int>(context,
-                android.R.layout.simple_spinner_item,
-                (1..category.splits.count() + 1).toList()) {
-
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val view = super.getView(position, convertView, parent)
-                (view as TextView).gravity = Gravity.CENTER
-                return view
-            }
-
-            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val view = super.getDropDownView(position, convertView, parent)
-                (view as TextView).gravity = Gravity.CENTER
-                return view
-            }
-        }
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        splitPositionSpinner.adapter = spinnerAdapter
+        splitPositionSpinner.adapter = SplitPositionSpinnerAdapter(context,
+                category.splits.count() + 1)
         splitPositionSpinner.setSelection(splitPositionSpinner.count - 1)
         val dialog = AlertDialog.Builder(context)
                 .setTitle("New split")
@@ -115,7 +97,8 @@ object Dialogs {
         return dialog
     }
 
-    internal fun editGameDialog(context: Context, realm: Realm, game: Game): AlertDialog {
+    internal fun editGameDialog(context: Context, realm: Realm, game: Game,
+                                callback: (String) -> Unit): AlertDialog {
         val dialogView = View.inflate(context, R.layout.new_game_dialog, null)
         val gameNameInput = dialogView.newGameNameInput
         gameNameInput.setText(game.name)
@@ -137,7 +120,7 @@ object Dialogs {
                 if (!gameNameInput.isValidForGame(realm)) {
                     gameNameInput.requestFocus()
                 } else {
-                    game.setGameName(newName)
+                    callback(newName)
                     dialog.dismiss()
                 }
             }
@@ -145,19 +128,16 @@ object Dialogs {
         return dialog
     }
 
-    internal fun editCategoryDialog(categoryListFragment: CategoryListFragment, game: Game, category: Category): AlertDialog {
-        val dialogView = View.inflate(categoryListFragment.context, R.layout.edit_category_dialog, null)
+    internal fun editCategoryDialog(context: Context, category: Category,
+                                    callback: (String, Long, Int) -> Unit): AlertDialog {
+        val dialogView = View.inflate(context, R.layout.edit_category_dialog, null)
         dialogView.categoryName.setText(category.name)
         dialogView.categoryName.setSelection(dialogView.categoryName.text.length)
         if (category.bestTime > 0) {
-            category.bestTime.setEditTextsFromTime(
-                    dialogView.hours,
-                    dialogView.minutes,
-                    dialogView.seconds,
-                    dialogView.milliseconds)
+            category.bestTime.setEditTextsFromTime(dialogView)
         }
         dialogView.runCount.setText(category.runCount.toString())
-        val dialog = AlertDialog.Builder(categoryListFragment.context!!)
+        val dialog = AlertDialog.Builder(context)
                 .setTitle("Edit category")
                 .setView(dialogView)
                 .setPositiveButton(R.string.save, null)
@@ -168,25 +148,68 @@ object Dialogs {
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
             val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
-                dialogView.hours.setText("")
-                dialogView.minutes.setText("")
-                dialogView.seconds.setText("")
-                dialogView.milliseconds.setText("")
+                0L.setEditTextsFromTime(dialogView)
                 dialogView.runCount.setText("0")
             }
             saveButton.setOnClickListener {
                 val newName = dialogView.categoryName.text.toString()
-                if (newName != category.name && !dialogView.categoryName.isValidForCategory(game)) {
+                if (newName != category.name
+                        && !dialogView.categoryName.isValidForCategory(category.getGame())) {
                     dialogView.categoryName.requestFocus()
                     return@setOnClickListener
                 }
-                val newTime = Util.getTimeFromEditTexts(dialogView.hours,
-                        dialogView.minutes,
-                        dialogView.seconds,
-                        dialogView.milliseconds)
+                val newTime = dialogView.getTimeFromEditTexts()
                 val newRunCountStr = dialogView.runCount.text.toString()
                 val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
-                categoryListFragment.editCategory(category, newName, newTime, newRunCount)
+                callback(newName, newTime, newRunCount)
+                dialog.dismiss()
+            }
+        }
+        return dialog
+    }
+
+    internal fun editSplitDialog(context: Context,
+                                 split: Split,
+                                 callback: (String, Long, Long, Int) -> Unit): AlertDialog {
+        val dialogView = View.inflate(context, R.layout.edit_split_dialog, null)
+        val splitNameInput = dialogView.nameInput
+        val pbSegmentTimeInput = dialogView.editTimePB
+        val bestSegmentTimeInput = dialogView.editTimeBest
+        val splitPositionSpinner = dialogView.editPositionSpinner
+        splitPositionSpinner.adapter = SplitPositionSpinnerAdapter(context,
+                split.getCategory().splits.count())
+        splitPositionSpinner.setSelection(split.getPosition())
+        splitNameInput.setText(split.name)
+        if (split.pbTime > 0) {
+            split.pbTime.setEditTextsFromTime(pbSegmentTimeInput)
+        }
+        if (split.bestTime > 0) {
+            split.bestTime.setEditTextsFromTime(bestSegmentTimeInput)
+        }
+        val dialog = AlertDialog.Builder(context)
+                .setTitle("Edit split")
+                .setView(dialogView)
+                .setPositiveButton(R.string.save, null)
+                .setNegativeButton(R.string.pb_clear, null)
+                .setNeutralButton(android.R.string.cancel, null)
+                .create()
+        dialog.setOnShowListener {
+            val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
+            val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            clearButton.setOnClickListener {
+                0L.setEditTextsFromTime(pbSegmentTimeInput)
+                0L.setEditTextsFromTime(bestSegmentTimeInput)
+            }
+            saveButton.setOnClickListener {
+                val newName = splitNameInput.text.toString()
+                if (newName != split.name && !splitNameInput.isValidForSplit(split.getCategory())) {
+                    splitNameInput.requestFocus()
+                    return@setOnClickListener
+                }
+                val newPBSegmentTime = pbSegmentTimeInput.getTimeFromEditTexts()
+                val newBestSegmentTime = bestSegmentTimeInput.getTimeFromEditTexts()
+                val position = splitPositionSpinner.selectedItem as Int - 1
+                callback(newName, newPBSegmentTime, newBestSegmentTime, position)
                 dialog.dismiss()
             }
         }
@@ -223,21 +246,21 @@ object Dialogs {
                 .create()
     }
 
-    internal fun deleteCategoryDialog(context: Context, game: Game, toRemove: List<Category>): AlertDialog {
-        val category = toRemove[0]
+    internal fun deleteCategoryDialog(context: Context, category: Category,
+                                      callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
-                .setTitle("Delete ${game.name} ${category.name}?")
+                .setTitle("Delete ${category.getGame().name} ${category.name}?")
                 .setMessage("Your PB of ${category.bestTime.getFormattedTime()} will be lost.")
-                .setPositiveButton(R.string.delete) { _, _ -> game.removeCategories(toRemove) }
+                .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
     }
 
-    internal fun deleteCategoriesDialog(context: Context, game: Game, toRemove: List<Category>): AlertDialog {
+    internal fun deleteCategoriesDialog(context: Context, callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setTitle("Delete selected categories?")
                 .setMessage("Your PBs will be lost.")
-                .setPositiveButton(R.string.delete) { _, _ -> game.removeCategories(toRemove) }
+                .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
     }
@@ -260,11 +283,11 @@ object Dialogs {
                 .create()
     }
 
-    internal fun deleteGamesDialog(context: Context, realm: Realm, toRemove: List<Game>): AlertDialog {
+    internal fun deleteGamesDialog(context: Context, callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setTitle("Delete selected games?")
                 .setMessage("All categories and PBs associated with the games will be lost.")
-                .setPositiveButton(R.string.delete) { _, _ -> realm.removeGames(toRemove) }
+                .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
     }

@@ -13,5 +13,5 @@
         android:icon="@drawable/ic_delete_black_24dp"
         android:title="@string/menu_delete_game"
         android:orderInCategory="2"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>
