@@ -51,6 +51,9 @@
     <string name="img_play_desc">Open timer</string>
     <string name="img_show_more_desc">Show more</string>
     <string name="img_link_desc">External link</string>
+    <string name="img_edit_category">Edit category</string>
+    <string name="img_view_splits">View splits</string>
+    <string name="img_launch_timer">Launch timer</string>
     <string name="splits_comparison">Comparison:</string>
     <string name="splits_header_name">Segment Name</string>
     <string name="splits_header_segment_time">Segment Time</string>
@@ -59,6 +62,8 @@
     <string name="split_name_hint">Split Name</string>
     <string name="pb_seg_text">PB Seg.:</string>
     <string name="best_seg_text">Best Seg.:</string>
+    <string name="bottom_sheet_view_splits">View splits</string>
+    <string name="bottom_sheet_view_launch">Launch timer</string>
 
     <string-array name="category_autocomplete">
         <item>Any%</item>

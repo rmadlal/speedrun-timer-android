@@ -250,7 +250,7 @@ object Dialogs : TimeExtensions {
                                       callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setTitle("Delete ${category.getGame().name} ${category.name}?")
-                .setMessage("Your PB of ${category.bestTime.getFormattedTime()} will be lost.")
+                .setMessage("Your PB of ${category.bestTime.getFormattedTime()} and splits will be lost.")
                 .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
@@ -259,7 +259,7 @@ object Dialogs : TimeExtensions {
     internal fun deleteCategoriesDialog(context: Context, callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setTitle("Delete selected categories?")
-                .setMessage("Your PBs will be lost.")
+                .setMessage("Your PBs and splits will be lost.")
                 .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
@@ -286,7 +286,7 @@ object Dialogs : TimeExtensions {
     internal fun deleteGamesDialog(context: Context, callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setTitle("Delete selected games?")
-                .setMessage("All categories and PBs associated with the games will be lost.")
+                .setMessage("All categories, PBs and splits associated with the games will be lost.")
                 .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()

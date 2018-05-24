@@ -40,7 +40,6 @@ class CategoryListFragment : BaseListFragment<Category>() {
             override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
                 actionMode.title = selectedItems.size.toString()
                 menu.findItem(R.id.menu_edit).isVisible = selectedItems.size == 1
-                menu.findItem(R.id.menu_view_splits).isVisible = selectedItems.size == 1
                 return true
             }
 
@@ -52,10 +51,6 @@ class CategoryListFragment : BaseListFragment<Category>() {
                     }
                     R.id.menu_delete -> {
                         onMenuDeletePressed()
-                        true
-                    }
-                    R.id.menu_view_splits -> {
-                        onViewSplits()
                         true
                     }
                     else -> false
@@ -105,25 +100,10 @@ class CategoryListFragment : BaseListFragment<Category>() {
         }
     }
 
-    private fun onViewSplits() {
-        if (selectedItems.isEmpty()) return
-        selectedCategory = selectedItems[0]
-        activity.supportFragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
-                        R.anim.fade_in, R.anim.fade_out)
-                .replace(R.id.fragment_container,
-                        SplitsFragment.newInstance(game.name, selectedCategory!!.name),
-                        TAG_SPLITS_LIST_FRAGMENT)
-                .addToBackStack(null)
-                .commit()
-        finishActionMode()
-
-    }
-
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
         if (mActionMode == null) {
             selectedCategory = mListAdapter[position]
-            checkPermissionAndStartTimer()
+            showBottomSheetDialog()
         }
         super.onListItemClick(l, v, position, id)
     }
@@ -210,6 +190,27 @@ class CategoryListFragment : BaseListFragment<Category>() {
             activity.startService(serviceIntent)
         }
         TimerService.IS_ACTIVE = true
+    }
+
+    private fun viewSplits() {
+        activity.supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+                        R.anim.fade_in, R.anim.fade_out)
+                .replace(R.id.fragment_container,
+                        SplitsFragment.newInstance(game.name, selectedCategory!!.name),
+                        TAG_SPLITS_LIST_FRAGMENT)
+                .addToBackStack(null)
+                .commit()
+        finishActionMode()
+
+    }
+
+    private fun showBottomSheetDialog() {
+        val bottomSheetDialog = CategoryBottomSheetFragment.newInstance()
+        bottomSheetDialog.show(activity.supportFragmentManager,
+                TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
+        bottomSheetDialog.onViewSplitsClickListener = { viewSplits() }
+        bottomSheetDialog.onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
     }
 
     private fun tryLaunchGame(): Boolean {
