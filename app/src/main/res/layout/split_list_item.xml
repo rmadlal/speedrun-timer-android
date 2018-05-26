@@ -16,6 +16,8 @@
         android:padding="8dp"
         android:gravity="start"
         android:textAppearance="@style/TextAppearance.AppCompat"
+        android:maxLines="1"
+        android:ellipsize="end"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

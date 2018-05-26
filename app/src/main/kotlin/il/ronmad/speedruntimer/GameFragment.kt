@@ -5,34 +5,31 @@ import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
 import android.view.*
-import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_game.*
 
-class GameFragment : BaseFragment() {
+class GameFragment : BaseFragment(R.layout.fragment_game) {
 
     private lateinit var game: Game
     private lateinit var viewPagerAdapter: SmartFragmentStatePagerAdapter
-    private lateinit var tabLayout: TabLayout
+
+    private val tabLayout: TabLayout
+        get() = activity.tabLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
             val gameName = it.getString(ARG_GAME_NAME)
-            game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
+            game = realm.getGameByName(gameName)!!
         }
     }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.fragment_game, container, false)
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mActionBar?.title = game.name
         mActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        tabLayout = activity.tabLayout
         setupViewPager()
         tabLayout.visibility = View.VISIBLE
 
@@ -41,7 +38,7 @@ class GameFragment : BaseFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        activity.tabLayout.visibility = View.GONE
+        tabLayout.visibility = View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -57,9 +54,7 @@ class GameFragment : BaseFragment() {
         return false
     }
 
-    override fun onFabAddPressed() {
-        Dialogs.newCategoryDialog(activity, game) { game.addCategory(it) }.show()
-    }
+    override fun onFabAddPressed() { /* Handled in CategoryListFragment */ }
 
     private fun setupViewPager() {
         viewPagerAdapter = object : SmartFragmentStatePagerAdapter(childFragmentManager) {
@@ -102,7 +97,7 @@ class GameFragment : BaseFragment() {
                                     }
                                 }
                         (viewPagerAdapter.getRegisteredFragment(TAB_CATEGORIES) as? CategoryListFragment)
-                                ?.finishActionMode()
+                                ?.mActionMode?.finish()
                     }
                 }
             }

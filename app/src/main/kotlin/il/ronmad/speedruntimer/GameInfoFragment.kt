@@ -1,19 +1,15 @@
 package il.ronmad.speedruntimer
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import io.realm.Realm
 import io.realm.RealmChangeListener
-import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.fragment_game.*
 import kotlinx.android.synthetic.main.fragment_game_info.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
-class GameInfoFragment : BaseFragment() {
+class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     private val realmChangeListener = RealmChangeListener<Realm> { adapter.notifyDataSetChanged() }
     private lateinit var game: Game
@@ -26,12 +22,9 @@ class GameInfoFragment : BaseFragment() {
         realm.addChangeListener(realmChangeListener)
         arguments?.let {
             val gameName = it.getString(ARG_GAME_NAME)
-            game = realm.where<Game>().equalTo("name", gameName).findFirst()!!
+            game = realm.getGameByName(gameName)!!
         }
     }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.fragment_game_info, container, false)
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -66,7 +59,7 @@ class GameInfoFragment : BaseFragment() {
 
     private fun setupListView() {
         adapter = InfoListAdapter(context, game)
-        listView.adapter = adapter
+        expandableListView.setAdapter(adapter)
     }
 
     private fun displayData(data: List<SrcLeaderboard>) {

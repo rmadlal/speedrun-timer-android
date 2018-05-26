@@ -22,6 +22,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
             view.chronoMillis.setTextColor(value)
             field = value
         }
+
     private var compareAgainst = 0L
     private val chronoHandler: Handler
 

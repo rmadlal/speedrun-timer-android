@@ -70,9 +70,7 @@ class TimerService : Service(), TimeExtensions {
             return START_NOT_STICKY
         }
 
-        category = realm.where<Category>()
-                .equalTo("game.name", gameName)
-                .equalTo("name", categoryName).findFirst()!!
+        category = realm.getCategoryByName(gameName, categoryName)!!
         splitsIter = category.splits.listIterator()
         hasSplits = splitsIter.hasNext()
 

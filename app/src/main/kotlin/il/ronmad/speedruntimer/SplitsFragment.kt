@@ -6,60 +6,22 @@ import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.*
 import android.widget.AdapterView
-import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.fragment_splits.*
 
-class SplitsFragment : BaseFragment(), TimeExtensions {
+class SplitsFragment : BaseFragment(R.layout.fragment_splits), TimeExtensions {
 
     lateinit var category: Category
-    lateinit var mRecyclerViewAdapter: SplitRecyclerViewAdapter
+    lateinit var mAdapter: SplitAdapter
     private var mActionMode: ActionMode? = null
-    private val mActionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
-        override fun onCreateActionMode(actionMode: ActionMode, menu: Menu): Boolean {
-            actionMode.menuInflater.inflate(R.menu.splits_fragment_context_menu, menu)
-            return true
-        }
-
-        override fun onPrepareActionMode(actionMode: ActionMode, menu: Menu): Boolean {
-            actionMode.title = mRecyclerViewAdapter.selectedItems.size.toString()
-            menu.findItem(R.id.menu_edit).isVisible = mRecyclerViewAdapter.selectedItems.size == 1
-            return true
-        }
-
-        override fun onActionItemClicked(actionMode: ActionMode, menuItem: MenuItem): Boolean {
-            return when (menuItem.itemId) {
-                R.id.menu_edit -> {
-                    onMenuEditPressed()
-                    true
-                }
-                R.id.menu_delete -> {
-                    onMenuDeletePressed()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        override fun onDestroyActionMode(actionMode: ActionMode) {
-            mRecyclerViewAdapter.clearSelections()
-            mActionMode = null
-        }
-    }
-
+    private lateinit var mActionModeCallback: MyActionModeCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             val gameName = it.getString(ARG_GAME_NAME)
             val categoryName = it.getString(ARG_CATEGORY_NAME)
-            category = realm.where<Category>()
-                    .equalTo("game.name", gameName)
-                    .equalTo("name", categoryName).findFirst()!!
+            category = realm.getCategoryByName(gameName, categoryName)!!
         }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_splits, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -69,6 +31,7 @@ class SplitsFragment : BaseFragment(), TimeExtensions {
         mActionBar?.setDisplayHomeAsUpEnabled(true)
 
         setupRecyclerView()
+        setupActionMode()
         setupComparisonSpinner()
         calculateSob()
 
@@ -103,43 +66,47 @@ class SplitsFragment : BaseFragment(), TimeExtensions {
 
     override fun onFabAddPressed() {
         Dialogs.newSplitDialog(activity, category) { name, position ->
-            category.addSplit(name, position)
-            mRecyclerViewAdapter.onItemAdded(position)
-            mActionMode?.finish()
+            addSplit(name, position)
         }.show()
     }
 
-    fun onMenuEditPressed() {
-        category.splits.where()
-                .equalTo("id", mRecyclerViewAdapter.selectedItems.first())
-                .findFirst()?.let {
-                    Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
-                        it.updateData(name, newPBTime, newBestTime)
-                        mRecyclerViewAdapter.onItemEdited(category.splits.indexOf(it))
-                        if (newPosition != it.getPosition()) {
-                            it.moveToPosition(newPosition)
-                            mRecyclerViewAdapter.onItemMoved(it.getPosition(), newPosition)
-                        }
-                        category.setPBFromSplits()
-                        calculateSob()
-                        mActionMode?.finish()
-                    }.show()
-                }
+    private fun addSplit(name: String, position: Int) {
+        category.addSplit(name, position)
+        mAdapter.onItemAdded(position)
+        mActionMode?.finish()
     }
 
-    fun onMenuDeletePressed() {
-        AlertDialog.Builder(activity)
-                .setTitle("Remove splits")
-                .setMessage("Are you sure?")
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    category.removeSplits(mRecyclerViewAdapter.selectedItems)
-                    mRecyclerViewAdapter.onItemsRemoved()
-                    category.setPBFromSplits()
-                    calculateSob()
-                    mActionMode?.finish()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
+
+    private fun editSplit(split: Split,
+                          newName: String,
+                          newPBTime: Long,
+                          newBestTime: Long,
+                          newPosition: Int) {
+        split.updateData(newName, newPBTime, newBestTime)
+        val position = split.getPosition()
+        mAdapter.onItemEdited(position)
+        if (newPosition != position) {
+            split.moveToPosition(newPosition)
+            mAdapter.onItemMoved(position, newPosition)
+        }
+        category.setPBFromSplits()
+        calculateSob()
+        mActionMode?.finish()
+    }
+
+    private fun removeSplits(toRemove: Collection<Long>) {
+        category.removeSplits(toRemove)
+        mAdapter.onItemsRemoved()
+        category.setPBFromSplits()
+        calculateSob()
+        mActionMode?.finish()
+    }
+
+    private fun clearSplits() {
+        category.clearSplits()
+        mAdapter.onItemsEdited()
+        category.setPBFromSplits()
+        calculateSob()
     }
 
     private fun calculateSob() {
@@ -152,34 +119,53 @@ class SplitsFragment : BaseFragment(), TimeExtensions {
                 .setTitle("Clear splits")
                 .setMessage("PB and Best Segments will be lost. Are you sure?")
                 .setPositiveButton(android.R.string.ok) { _, _ ->
-                    category.clearSplits()
-                    mRecyclerViewAdapter.onItemsEdited()
-                    category.setPBFromSplits()
-                    calculateSob()
+                    clearSplits()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
     }
 
-    private fun setupRecyclerView() {
-        mRecyclerViewAdapter = SplitRecyclerViewAdapter(category.splits, activity.getComparison(),
-                { holder, position ->   // onItemClickListener
-                    mActionMode ?: return@SplitRecyclerViewAdapter
-                    mRecyclerViewAdapter.toggleItemSelected(position)
-                    if (mRecyclerViewAdapter.selectedItems.isEmpty()) {
-                        mActionMode?.finish()
-                    } else {
-                        mActionMode?.invalidate()
+    private fun setupActionMode() {
+        mActionModeCallback = MyActionModeCallback(mAdapter)
+        mActionModeCallback.onEditPressed = {
+            category.getSplitById(mAdapter.selectedItems.first())?.let {
+                        Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
+                            editSplit(it, name, newPBTime, newBestTime, newPosition)
+                        }.show()
                     }
-                }) { holder, position ->    // onItemLongClickListener
-            if (mActionMode != null) return@SplitRecyclerViewAdapter false
-            mRecyclerViewAdapter.toggleItemSelected(position)
-            mActionMode = activity.startActionMode(mActionModeCallback)
-            true
+        }
+        mActionModeCallback.onDeletePressed = {
+            AlertDialog.Builder(activity)
+                    .setTitle("Remove splits")
+                    .setMessage("Are you sure?")
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        removeSplits(mAdapter.selectedItems)
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+        }
+        mActionModeCallback.onDestroy = { mActionMode = null }
+    }
+
+    private fun setupRecyclerView() {
+        mAdapter = SplitAdapter(category.splits, activity.getComparison())
+        mAdapter.onItemClickListener = { holder, position ->
+            mActionMode?.let {
+                mAdapter.toggleItemSelected(position)
+                it.invalidate()
+            }
+        }
+        mAdapter.onItemLongClickListener = { holder, position ->
+            if (mActionMode == null) {
+                mAdapter.toggleItemSelected(position)
+                mActionMode = activity.startActionMode(mActionModeCallback)
+                true
+            } else false
+
         }
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
-            adapter = mRecyclerViewAdapter
+            adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
             isNestedScrollingEnabled = false
         }
@@ -190,7 +176,7 @@ class SplitsFragment : BaseFragment(), TimeExtensions {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                mRecyclerViewAdapter.comparison = when (position) {
+                mAdapter.comparison = when (position) {
                 // Current Comparison
                     0 ->  activity.getComparison()
                 // Personal Best

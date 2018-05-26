@@ -48,16 +48,20 @@ class MyApplication : Application() {
                     }
                     if (oldVer == 2) {
                         // added primary keys to all objects (id: Int)
-                        realm.schema.get("Game")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                        realm.schema.get("Game")
+                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++gamePrimaryKey) }
                                 ?.addPrimaryKey("id")
-                        realm.schema.get("Category")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                        realm.schema.get("Category")
+                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++categoryPrimaryKey) }
                                 ?.addPrimaryKey("id")
-                        realm.schema.get("Split")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                        realm.schema.get("Split")
+                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++splitPrimaryKey) }
                                 ?.addPrimaryKey("id")
-                        realm.schema.get("Point")?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                        realm.schema.get("Point")
+                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++pointPrimaryKey) }
                                 ?.addPrimaryKey("id")
                         ++oldVer

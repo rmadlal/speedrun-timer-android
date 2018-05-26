@@ -6,10 +6,14 @@ import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.PrimaryKey
 
-open class Split : RealmObject() {
+open class Split : RealmObject(), HasPrimaryId {
 
-    @PrimaryKey var id: Long = 0
-    @Index var name: String = ""
+    @PrimaryKey
+    override var id: Long = 0L
+
+    @Index
+    var name: String = ""
+
     var pbTime: Long = 0
     var bestTime: Long = 0
 

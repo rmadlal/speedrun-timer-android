@@ -7,10 +7,14 @@ import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.PrimaryKey
 
-open class Category : RealmObject() {
+open class Category : RealmObject(), HasPrimaryId {
 
-    @PrimaryKey var id: Long = 0
-    @Index var name: String = ""
+    @PrimaryKey
+    override var id: Long = 0L
+
+    @Index
+    var name: String = ""
+
     var bestTime: Long = 0
     var runCount: Int = 0
     var splits: RealmList<Split> = RealmList()

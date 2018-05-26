@@ -8,11 +8,11 @@ import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import io.realm.Case
-import kotlinx.android.synthetic.main.game_info_list_item.view.*
+import android.widget.BaseExpandableListAdapter
+import kotlinx.android.synthetic.main.game_info_item.view.*
+import kotlinx.android.synthetic.main.game_info_item_header.view.*
 
-class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), TimeExtensions {
+class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableListAdapter(), TimeExtensions {
 
     var data: List<SrcLeaderboard> = listOf()
         set(value) {
@@ -20,18 +20,35 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), Ti
             notifyDataSetChanged()
         }
 
-    override fun getView(position: Int, convertView: View?, container: ViewGroup?): View {
-        val listItem = convertView ?:
-        LayoutInflater.from(context).inflate(R.layout.game_info_list_item, container, false)
+    override fun getGroup(groupPosition: Int) = data[groupPosition]
 
-        val leaderboard = getItem(position)
+    override fun isChildSelectable(groupPosition: Int, childPosition: Int) = false
 
-        listItem.infoLayout.visibility = View.GONE
-        listItem.showMoreButton.scaleY = Math.abs(listItem.showMoreButton.scaleY)
-        listItem.title.text = if (leaderboard.subcategories.isEmpty()) {
+    override fun hasStableIds() = false
+
+    override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
+        val itemHeader = convertView ?:
+        LayoutInflater.from(context).inflate(R.layout.game_info_item_header, parent, false)
+
+        val leaderboard = getGroup(groupPosition)
+        itemHeader.title.text = if (leaderboard.subcategories.isEmpty()) {
             leaderboard.categoryName
         } else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
 
+        return itemHeader
+    }
+
+    override fun getChildrenCount(groupPosition: Int) = 1
+
+    override fun getChild(groupPosition: Int, childPosition: Int) = getGroup(groupPosition)
+
+    override fun getGroupId(groupPosition: Int) = groupPosition.toLong()
+
+    override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
+        val listItem = convertView ?:
+        LayoutInflater.from(context).inflate(R.layout.game_info_item, parent, false)
+
+        val leaderboard = getGroup(groupPosition)
         if (leaderboard.runs.isEmpty()) {
             listItem.numOfRunsText.text = context?.getString(R.string.empty_leaderboard)
             context?.let {
@@ -44,8 +61,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), Ti
             listItem.buttonWRLink.visibility = View.GONE
         } else {
             context?.let {
-                listItem.numOfRunsText.setTextColor(ContextCompat.getColor(it,
-                        android.R.color.primary_text_light))
+                listItem.numOfRunsText.setTextColor(it.getColorCpt(android.R.color.primary_text_light))
             }
             listItem.numOfRunsText.setTypeface(listItem.numOfRunsText.typeface, Typeface.NORMAL)
             listItem.wrText.visibility = View.VISIBLE
@@ -58,15 +74,13 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), Ti
                     " by ${leaderboard.wrRunners} on ${leaderboard.wrPlatform}"
 
             listItem.placeText.visibility = View.GONE
-            val categories = if(leaderboard.subcategories.isEmpty()) {
-                game.categories
-                        .where().equalTo("name", leaderboard.categoryName, Case.INSENSITIVE).findFirst()
+            val category = if(leaderboard.subcategories.isEmpty()) {
+                game.getCategoryByName(leaderboard.categoryName)
             } else {
                 val extendedCategoryName = "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
-                game.categories
-                        .where().equalTo("name", extendedCategoryName, Case.INSENSITIVE).findFirst()
+                game.getCategoryByName(extendedCategoryName)
             }
-            categories?.let {
+            category?.let {
                 val pb = it.bestTime
                 if (pb > 0) {
                     val bopped = leaderboard.runs.find { it.time >= pb }
@@ -91,25 +105,14 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseAdapter(), Ti
             context?.startActivity(lbIntent)
         }
 
-        val toggleExpandInfo = {
-            listItem.infoLayout.visibility = if (listItem.infoLayout.visibility == View.GONE)
-                View.VISIBLE else View.GONE
-            listItem.showMoreButton.scaleY *= -1
-        }
-
-        listItem.titleLayout.setOnClickListener { toggleExpandInfo() }
-        listItem.showMoreButton.setOnClickListener { toggleExpandInfo() }
-
         return listItem
     }
 
-    override fun getItem(position: Int) = data[position]
+    override fun getChildId(groupPosition: Int, childPosition: Int) = getGroupId(groupPosition)
 
-    override fun getItemId(position: Int) = position.toLong()
+    override fun getGroupCount() = data.count()
 
-    override fun getCount() = data.size
-
-    internal fun clear() {
+    fun clear() {
         data = listOf()
     }
 }

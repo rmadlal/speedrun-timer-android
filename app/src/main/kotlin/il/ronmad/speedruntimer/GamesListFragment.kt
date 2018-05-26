@@ -1,70 +1,110 @@
 package il.ronmad.speedruntimer
 
 import android.os.Bundle
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.view.ActionMode
 import android.view.View
-import android.widget.ListView
 import io.realm.kotlin.where
+import kotlinx.android.synthetic.main.fragment_games_list.*
 
-class GamesListFragment : BaseListFragment<Game>() {
+class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        layoutResId = R.layout.fragment_games_list
-        contextMenuResId = R.menu.games_list_fragment_context_menu
-    }
+    lateinit var mAdapter: GameAdapter
+    private var mActionMode: ActionMode? = null
+    private lateinit var mActionModeCallback: MyActionModeCallback
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mActionBar?.title = activity.getString(R.string.app_name)
         mActionBar?.setDisplayHomeAsUpEnabled(false)
 
-        mListAdapter = GamesAdapter(activity, realm.where<Game>().findAll())
-        listAdapter = mListAdapter
+        setupRecyclerView()
+        setupActionMode()
+        checkEmptyList()
 
         fabAdd.setOnClickListener { onFabAddPressed() }
         fabAdd.show()
     }
 
-    override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
-        if (mActionMode == null) {
-            val game = mListAdapter[position]
-            activity.supportFragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
-                            R.anim.fade_in, R.anim.fade_out)
-                    .replace(R.id.fragment_container,
-                            GameFragment.newInstance(game.name),
-                            TAG_GAME_FRAGMENT)
-                    .addToBackStack(null)
-                    .commit()
-        }
-        super.onListItemClick(l, v, position, id)
-    }
-
-    override fun update() {
-        finishActionMode()
-        mListAdapter.data = realm.where<Game>().findAll()
-    }
-
-    override fun onMenuEditPressed() {
-        if (selectedItems.isEmpty()) return
-        val selectedGame = selectedItems[0]
-        Dialogs.editGameDialog(activity, realm, selectedGame) { selectedGame.setGameName(it) }
-                .show()
-    }
-
-    override fun onMenuDeletePressed() {
-        if (selectedItems.isEmpty()) return
-        actionDeleteGames(selectedItems)
-    }
-
     override fun onFabAddPressed() {
-        Dialogs.newGameDialog(activity, realm) { realm.addGame(it) }.show()
+        Dialogs.newGameDialog(activity, realm) {
+            addGame(it)
+        }.show()
     }
 
-    private fun actionDeleteGames(toRemove: List<Game>) {
-        Dialogs.deleteGamesDialog(activity) {
-            realm.removeGames(toRemove)
-        }.show()
+    private fun checkEmptyList() {
+        emptyList.visibility = if (realm.where<Game>().count() == 0L) View.VISIBLE else View.GONE
+    }
+
+    private fun addGame(name: String) {
+        realm.addGame(name)
+        mAdapter.onItemAdded()
+        checkEmptyList()
+        mActionMode?.finish()
+    }
+
+    private fun editGameName(game: Game, newName: String) {
+        game.setGameName(newName)
+        mAdapter.onItemsEdited()
+        mActionMode?.finish()
+    }
+
+    private fun removeGames(toRemove: Collection<Long>) {
+        realm.removeGames(toRemove)
+        mAdapter.onItemsRemoved()
+        checkEmptyList()
+        mActionMode?.finish()
+    }
+
+    private fun setupActionMode() {
+        mActionModeCallback = MyActionModeCallback(mAdapter)
+        mActionModeCallback.onEditPressed = {
+            realm.getGameById(mAdapter.selectedItems.first())?.let { game ->
+                Dialogs.editGameDialog(activity, realm, game) {
+                    editGameName(game, it)
+                }.show()
+            }
+        }
+        mActionModeCallback.onDeletePressed = {
+            Dialogs.deleteGamesDialog(activity) {
+                removeGames(mAdapter.selectedItems)
+            }.show()
+        }
+        mActionModeCallback.onDestroy = { mActionMode = null }
+    }
+
+    private fun setupRecyclerView() {
+        mAdapter = GameAdapter(realm.where<Game>().findAll())
+        mAdapter.onItemClickListener = { holder, position ->
+            if (mActionMode == null) {
+                val game = holder.item
+                activity.supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+                                R.anim.fade_in, R.anim.fade_out)
+                        .replace(R.id.fragment_container,
+                                GameFragment.newInstance(game.name),
+                                TAG_GAME_FRAGMENT)
+                        .addToBackStack(null)
+                        .commit()
+            } else {
+                mAdapter.toggleItemSelected(position)
+                mActionMode?.invalidate()
+            }
+        }
+        mAdapter.onItemLongClickListener = { holder, position ->
+            if (mActionMode == null) {
+                mAdapter.toggleItemSelected(position)
+                mActionMode = activity.startActionMode(mActionModeCallback)
+                true
+            } else false
+        }
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(activity)
+            adapter = mAdapter
+            addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
+            isNestedScrollingEnabled = false
+        }
     }
 
     companion object {

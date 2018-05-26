@@ -5,10 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ListView
-        android:id="@+id/listView"
+    <ExpandableListView
+        android:id="@+id/expandableListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/game_info_list_item" />
+        android:indicatorLeft="?android:attr/expandableListPreferredItemIndicatorLeft"
+        android:divider="@android:color/darker_gray"
+        android:childDivider="@android:color/darker_gray"
+        android:dividerHeight="0.5dp"
+        tools:listitem="@layout/game_info_item_header" />
 
 </android.support.v4.widget.SwipeRefreshLayout>

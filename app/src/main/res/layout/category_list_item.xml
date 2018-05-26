@@ -4,86 +4,111 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="?android:attr/listPreferredItemHeight"
-    android:paddingStart="@dimen/activity_horizontal_margin"
-    android:paddingEnd="@dimen/activity_horizontal_margin">
+    android:focusable="true"
+    android:clickable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:minHeight="?android:attr/listPreferredItemHeight">
 
-    <RelativeLayout
-        android:id="@+id/textsLayout"
+    <TextView
+        android:id="@+id/categoryName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:maxLines="1"
+        android:ellipsize="end"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/pbText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/next_img"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintHorizontal_weight="1"
+        tools:text="Any%" />
+
+    <TextView
+        android:id="@+id/pbText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp"
+        android:text="@string/pb_text"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toBottomOf="@id/categoryName"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/next_img">
+        app:layout_constraintEnd_toStartOf="@+id/pbTime"
+        app:layout_constraintHorizontal_weight="0" />
 
-        <TextView
-            android:id="@+id/categoryName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            tools:text="Any%" />
+    <TextView
+        android:id="@+id/pbTime"
+        android:text="@string/pb_placeholder"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="@id/pbText"
+        app:layout_constraintBottom_toBottomOf="@id/pbText"
+        app:layout_constraintStart_toEndOf="@id/pbText"
+        app:layout_constraintEnd_toStartOf="@+id/pbRunsSpace"
+        app:layout_constraintHorizontal_weight="2" />
 
-        <TextView
-            android:id="@+id/pbText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignStart="@id/categoryName"
-            android:layout_below="@id/categoryName"
-            android:gravity="center_vertical"
-            android:text="@string/pb_text"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+    <Space
+        android:id="@+id/pbRunsSpace"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/pbText"
+        app:layout_constraintBottom_toBottomOf="@id/pbText"
+        app:layout_constraintStart_toEndOf="@id/pbTime"
+        app:layout_constraintEnd_toStartOf="@+id/runsText"
+        app:layout_constraintHorizontal_weight="1" />
 
-        <TextView
-            android:id="@+id/pbTime"
-            android:text="@string/pb_placeholder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_alignBottom="@id/pbText"
-            android:layout_toEndOf="@id/pbText"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat"
-            android:maxLines="1"
-            android:ellipsize="end" />
+    <TextView
+        android:id="@+id/runsText"
+        android:text="@string/runs_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="@id/pbText"
+        app:layout_constraintBottom_toBottomOf="@id/pbText"
+        app:layout_constraintStart_toEndOf="@id/pbRunsSpace"
+        app:layout_constraintEnd_toStartOf="@+id/runsNum"
+        app:layout_constraintHorizontal_weight="0" />
 
-        <TextView
-            android:id="@+id/runsText"
-            android:text="@string/runs_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/categoryName"
-            android:layout_centerHorizontal="true"
-            android:gravity="center_vertical"
-            android:paddingEnd="4dp"
-            android:paddingStart="4dp"
-            android:layout_marginStart="16dp"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
+    <TextView
+        android:id="@+id/runsNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="@id/pbText"
+        app:layout_constraintBottom_toBottomOf="@id/pbText"
+        app:layout_constraintStart_toEndOf="@id/runsText"
+        app:layout_constraintEnd_toStartOf="@+id/runsImgSpace"
+        app:layout_constraintHorizontal_weight="0"
+        tools:text="15" />
 
-        <TextView
-            android:id="@+id/runsNum"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/runsText"
-            android:layout_toEndOf="@id/runsText"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat" />
-
-    </RelativeLayout>
+    <Space
+        android:id="@+id/runsImgSpace"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/pbText"
+        app:layout_constraintBottom_toBottomOf="@id/pbText"
+        app:layout_constraintStart_toEndOf="@id/runsNum"
+        app:layout_constraintEnd_toEndOf="@id/categoryName"
+        app:layout_constraintHorizontal_weight="2" />
 
     <ImageView
         android:id="@+id/next_img"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:gravity="center_vertical"
+        android:layout_margin="16dp"
         android:contentDescription="@string/img_play_desc"
         app:srcCompat="@drawable/ic_action_play"
-        app:layout_constraintTop_toTopOf="@id/textsLayout"
-        app:layout_constraintBottom_toBottomOf="@id/textsLayout"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/textsLayout" />
+        app:layout_constraintStart_toEndOf="@id/categoryName"
+        app:layout_constraintHorizontal_weight="1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

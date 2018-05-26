@@ -4,10 +4,13 @@ import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.support.v7.app.ActionBar
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 
-abstract class BaseFragment : Fragment() {
+abstract class BaseFragment(val layoutResId: Int) : Fragment() {
 
     protected lateinit var realm: Realm
 
@@ -24,6 +27,10 @@ abstract class BaseFragment : Fragment() {
         super.onCreate(savedInstanceState)
         realm = Realm.getDefaultInstance()
         setHasOptionsMenu(true)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(layoutResId, container, false)
     }
 
     override fun onDestroy() {

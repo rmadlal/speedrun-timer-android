@@ -7,10 +7,34 @@ import io.realm.kotlin.createObject
 import io.realm.kotlin.oneOf
 import io.realm.kotlin.where
 
-fun Game.setGameName(newName: String) = realm.executeTransaction { this.name = newName }
+fun Realm.addGame(gameName: String) = this.executeTransaction {
+    val game = this.createObject<Game>(getNextId<Game>())
+    game.name = gameName
+    game.timerPosition = this.createObject(getNextId<Point>())
+}
 
-fun Game.getCategory(name: String) =
-        this.categories.where().equalTo("name", name).findFirst()
+fun Realm.getGameById(id: Long) =
+        this.where<Game>().equalTo("id", id).findFirst()
+
+fun Realm.getGameByName(name: String) =
+        this.where<Game>().equalTo("name", name, Case.INSENSITIVE).findFirst()
+
+fun Realm.getGames(ids: Collection<Long>) =
+        this.where<Game>().oneOf("id", ids.toTypedArray()).findAll()
+
+fun Realm.gameExists(name: String) =
+        this.where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0
+
+fun Realm.removeGames(toRemove: Collection<Long>) = executeTransaction {
+    this.getGames(toRemove).deleteAllFromRealm()
+}
+
+fun Realm.getCategoryByName(gameName: String, categoryName: String) =
+        this.where<Category>()
+                .equalTo("game.name", gameName, Case.INSENSITIVE)
+                .equalTo("name", categoryName, Case.INSENSITIVE).findFirst()
+
+fun Game.setGameName(newName: String) = realm.executeTransaction { this.name = newName }
 
 fun Game.addCategory(name: String) = realm.executeTransaction {
     val category = realm.createObject<Category>(realm.getNextId<Category>())
@@ -18,17 +42,20 @@ fun Game.addCategory(name: String) = realm.executeTransaction {
     this.categories.add(category)
 }
 
+fun Game.getCategoryById(id: Long) =
+        this.categories.where().equalTo("id", id).findFirst()
+
+fun Game.getCategoryByName(name: String) =
+        this.categories.where().equalTo("name", name, Case.INSENSITIVE).findFirst()
+
+fun Game.getCategories(ids: Collection<Long>) =
+        this.categories.where().oneOf("id", ids.toTypedArray()).findAll()
+
 fun Game.categoryExists(name: String) =
         this.categories.where().equalTo("name", name, Case.INSENSITIVE).count() > 0
 
-fun Game.removeCategories(toRemove: List<Category>) {
-    val ids = toRemove.map { it.id as? Long }.toTypedArray()
-    realm.executeTransaction {
-        this.categories.where()
-                .oneOf("id", ids)
-                .findAll()
-                .deleteAllFromRealm()
-    }
+fun Game.removeCategories(toRemove: Collection<Long>) = realm.executeTransaction {
+    this.getCategories(toRemove).deleteAllFromRealm()
 }
 
 fun Game.getPosition(): Point =
@@ -37,10 +64,6 @@ fun Game.getPosition(): Point =
             realm.executeTransaction {
                 this.timerPosition = realm.createObject(realm.getNextId<Point>()) }
             this.timerPosition!! }
-
-operator fun Point.component1() = this.x
-
-operator fun Point.component2() = this.y
 
 fun Category.getGame() = this.game!!.first()!!
 
@@ -54,8 +77,11 @@ fun Category.updateData(name: String = this.name,
     this.runCount = runCount
 }
 
-fun Category.getSplit(splitName: String) =
-        this.splits.where().equalTo("name", splitName).findFirst()
+fun Category.getSplitById(id: Long) =
+        this.splits.where().equalTo("id", id).findFirst()
+
+fun Category.getSplits(ids: Collection<Long>) =
+        this.splits.where().oneOf("id", ids.toTypedArray()).findAll()
 
 fun Category.addSplit(name: String, position: Int = this.splits.count()) = realm.executeTransaction {
     val split = realm.createObject<Split>(realm.getNextId<Split>())
@@ -75,10 +101,7 @@ fun Category.clearSplits(clearPBTimes: Boolean = true, clearBestTimes: Boolean =
         }
 
 fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction {
-    this.splits.where()
-            .oneOf("id", toRemove.toTypedArray())
-            .findAll()
-            .deleteAllFromRealm()
+    this.getSplits(toRemove).deleteAllFromRealm()
 }
 
 fun Category.setPBFromSplits() = updateData(bestTime = splits.map { it.pbTime }.sum())
@@ -120,25 +143,6 @@ fun Split.getPosition() = getCategory().splits.indexOf(this)
 fun Point.set(x: Int, y: Int) = realm.executeTransaction {
     this.x = x
     this.y = y
-}
-
-fun Realm.addGame(gameName: String) = this.executeTransaction {
-    val game = this.createObject<Game>(getNextId<Game>())
-    game.name = gameName
-    game.timerPosition = this.createObject(getNextId<Point>())
-}
-
-fun Realm.gameExists(name: String) =
-        this.where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0
-
-fun Realm.removeGames(toRemove: List<Game>) {
-    val ids = toRemove.map { it.id as? Long }.toTypedArray()
-    this.executeTransaction {
-        this.where<Game>()
-                .oneOf("id", ids)
-                .findAll()
-                .deleteAllFromRealm()
-    }
 }
 
 inline fun <reified T : RealmObject> Realm.getNextId() =
