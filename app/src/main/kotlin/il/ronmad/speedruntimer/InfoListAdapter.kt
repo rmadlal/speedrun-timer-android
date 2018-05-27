@@ -35,6 +35,10 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
             leaderboard.categoryName
         } else "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
 
+        itemHeader.expandImg.setImageResource(
+                if (isExpanded) R.drawable.ic_expand_less_black_24dp
+                else R.drawable.ic_expand_more_black_24dp)
+
         return itemHeader
     }
 

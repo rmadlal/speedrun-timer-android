@@ -45,8 +45,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         // Set toolbar elevation to 4dp
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val scale = resources.displayMetrics.density
-            appBarLayout.elevation = (4 * scale + 0.5f).toInt().toFloat()
+            appBarLayout.elevation = pixelToDp(4f).toFloat()
         }
 
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)

@@ -122,6 +122,11 @@ fun Int.toOrdinal(): String {
 
 fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)
 
+fun Context.pixelToDp(pixels: Float): Int {
+    val scale = resources.displayMetrics.density
+    return (pixels * scale + 0.5f).toInt()
+}
+
 fun MainActivity.getComparison() = getComparison(this)
 
 fun TimerService.getComparison() = getComparison(this)

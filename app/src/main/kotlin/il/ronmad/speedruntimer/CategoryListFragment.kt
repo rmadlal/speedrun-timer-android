@@ -43,6 +43,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     override fun onResume() {
         super.onResume()
+        mAdapter.onItemsEdited()
         if (backFromPermissionCheck) {
             backFromPermissionCheck = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {

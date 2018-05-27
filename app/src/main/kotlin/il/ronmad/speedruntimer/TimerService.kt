@@ -20,7 +20,6 @@ import android.view.*
 
 import io.realm.Realm
 import io.realm.RealmChangeListener
-import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.timer_overlay.view.*
 
 class TimerService : Service(), TimeExtensions {
@@ -71,8 +70,7 @@ class TimerService : Service(), TimeExtensions {
         }
 
         category = realm.getCategoryByName(gameName, categoryName)!!
-        splitsIter = category.splits.listIterator()
-        hasSplits = splitsIter.hasNext()
+        hasSplits = category.splits.isNotEmpty()
 
         val notification = setupNotification()
         startForeground(R.integer.notification_id, notification)
@@ -365,7 +363,7 @@ class TimerService : Service(), TimeExtensions {
 
     private fun timerStart() {
         if (hasSplits) {
-            if (!splitsIter.hasNext()) return
+            splitsIter = category.splits.listIterator()
             timerSplit(0L)
             mView.currentSplit.visibility =
                     if (prefs.getBoolean(getString(R.string.key_pref_timer_show_current_split), true))
