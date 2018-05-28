@@ -29,11 +29,9 @@ class TimerService : Service(), TimeExtensions {
     private lateinit var prefs: SharedPreferences
     private lateinit var chronometer: Chronometer
     private lateinit var category: Category
-    private lateinit var splitsIter: MutableListIterator<Split>
+    private var splitsIter: MutableListIterator<Split>? = null
     private var segmentTimes = mutableListOf<Long>()
-    private lateinit var currentSplit: Split
     private var currentSplitStartTime = 0L
-    private var currentSegmentSplitTime = 0L
     private var hasSplits = false
     private var comparison: Comparison = Comparison.PERSONAL_BEST
 
@@ -202,29 +200,30 @@ class TimerService : Service(), TimeExtensions {
                         if (moved)
                             category.getGame().getPosition().set(mWindowParams.x, mWindowParams.y)
                         if (moved || System.currentTimeMillis() - touchTime >= 250) return false
+                        val splitTime = chronometer.timeElapsed
                         if (Chronometer.running) {
-                            if (chronometer.timeElapsed < 0) return false
+                            if (splitTime < 0) return false
                             if (hasSplits) {
                                 // Split, or stop if on final split.
-                                val splitTime = chronometer.timeElapsed
                                 val segmentTime = splitTime - currentSplitStartTime
                                 segmentTimes.add(segmentTime)
                                 if (prefs.getBoolean(getString(R.string.key_pref_timer_show_delta), true))
-                                    updateDelta(splitTime, segmentTime)
+                                    getCurrentSplit()?.let { updateDelta(it, splitTime) }
 
-                                if (splitsIter.hasNext()) {
-                                    timerSplit(splitTime)
+                                if (splitsIter?.hasNext() == true) {
+                                    timerSplit()
                                 } else {
-                                    chronometer.stop()
-                                    mView.currentSplit.visibility = View.GONE
+                                    timerStop()
                                 }
                             } else {
                                 // No splits, so just stop.
-                                chronometer.stop()
+                                timerStop()
                             }
                         } else {
-                            timerStart()
+                            if (splitsIter == null)
+                                timerStart()
                         }
+                        currentSplitStartTime = splitTime
                     }
                     MotionEvent.ACTION_MOVE -> {
                         var targetX = initialX - (event.rawX - initialTouchX).toInt()
@@ -332,7 +331,6 @@ class TimerService : Service(), TimeExtensions {
 
     private fun timerReset(newPB: Long = 0L, updateData: Boolean = true) {
         chronometer.reset()
-        currentSegmentSplitTime = 0L
         if (updateData) {
             if (newPB == 0L) {
                 category.incrementRunCount()
@@ -347,36 +345,48 @@ class TimerService : Service(), TimeExtensions {
     }
 
     private fun resetSplits() {
-        splitsIter = category.splits.listIterator()
         segmentTimes.clear()
+        splitsIter = null
         mView.delta.visibility = View.GONE
         mView.currentSplit.visibility = View.GONE
     }
 
-    private fun timerSplit(splitTime: Long) {
-        currentSplit = splitsIter.next()
-        currentSegmentSplitTime = currentSplit.calculateSplitTime(comparison)
-        currentSplitStartTime = splitTime
-        chronometer.split(if (!currentSplit.hasTime(comparison)) 0L else currentSegmentSplitTime)
-        mView.currentSplit.text = currentSplit.name
+    private fun timerSplit() {
+        splitsIter?.next()?.let {
+            chronometer.compareAgainst = if (it.hasTime(comparison)) it.calculateSplitTime(comparison)
+            else 0L
+            mView.currentSplit.text = it.name
+        }
     }
 
     private fun timerStart() {
         if (hasSplits) {
             splitsIter = category.splits.listIterator()
-            timerSplit(0L)
+            timerSplit()
             mView.currentSplit.visibility =
                     if (prefs.getBoolean(getString(R.string.key_pref_timer_show_current_split), true))
                         View.VISIBLE
                     else View.GONE
         } else {
-            currentSegmentSplitTime = category.bestTime
+            chronometer.compareAgainst = category.bestTime
         }
-        chronometer.start(currentSegmentSplitTime)
+        chronometer.start()
     }
 
-    private fun updateDelta(splitTime: Long, segmentTime: Long) {
-        val delta = splitTime - currentSegmentSplitTime
+    private fun timerStop() {
+        chronometer.stop()
+        mView.currentSplit.visibility = View.GONE
+    }
+
+    private fun getCurrentSplit(): Split? {
+        val currentSplit = splitsIter?.previous()
+        splitsIter?.next()
+        return currentSplit
+    }
+
+    private fun updateDelta(currentSplit: Split, splitTime: Long) {
+        val segmentTime = splitTime - currentSplitStartTime
+        val delta = splitTime - currentSplit.calculateSplitTime(comparison)
         mView.delta.text = delta.getFormattedTime(plusSign = true)
         mView.delta.setTextColor(when {
             segmentTime < currentSplit.bestTime -> Chronometer.colorBestSegment

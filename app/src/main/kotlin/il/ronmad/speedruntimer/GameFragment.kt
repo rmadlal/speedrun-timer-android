@@ -27,6 +27,8 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        view?.requestFocus()
+
         mActionBar?.title = game.name
         mActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -87,7 +89,10 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
 
             override fun onPageSelected(position: Int) {
                 when (position) {
-                    TAB_CATEGORIES -> activity.fabAdd.show()
+                    TAB_CATEGORIES -> {
+                        activity.fabAdd.show()
+                        view?.setOnKeyListener(null)
+                    }
                     TAB_INFO -> {
                         activity.fabAdd.hide()
                         (viewPagerAdapter.getRegisteredFragment(TAB_INFO) as? GameInfoFragment)
@@ -98,6 +103,15 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
                                 }
                         (viewPagerAdapter.getRegisteredFragment(TAB_CATEGORIES) as? CategoryListFragment)
                                 ?.mActionMode?.finish()
+                        view?.setOnKeyListener { _, keyCode, _ ->
+                            when (keyCode) {
+                                KeyEvent.KEYCODE_BACK -> {
+                                    viewPager.currentItem = TAB_CATEGORIES
+                                    true
+                                }
+                                else -> false
+                            }
+                        }
                     }
                 }
             }

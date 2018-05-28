@@ -9,8 +9,6 @@ import kotlinx.android.synthetic.main.fragment_game_info.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import android.support.v4.view.ViewCompat
-import android.view.KeyEvent
-
 
 class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
@@ -31,16 +29,6 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        view?.requestFocus()
-        view?.setOnKeyListener { _, keyCode, _ ->
-            when (keyCode) {
-                KeyEvent.KEYCODE_BACK -> {
-                    (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
-                    true
-                }
-                else -> false
-            }
-        }
         setupListView()
         swipeRefreshLayout.setOnRefreshListener { refreshData(true) }
     }

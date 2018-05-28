@@ -24,7 +24,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
             field = value
         }
 
-    private var compareAgainst = 0L
+    internal var compareAgainst = 0L
     private val chronoHandler: Handler
 
     init {
@@ -43,8 +43,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         timerColor = colorNeutral
     }
 
-    internal fun start(nextSegmentSplitTime: Long) {
-        split(nextSegmentSplitTime)
+    internal fun start() {
         if (compareAgainst == 0L) {
             timerColor = colorNeutral
         }
@@ -52,10 +51,6 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         running = true
         base = SystemClock.elapsedRealtime() - timeElapsed
         updateRunning()
-    }
-
-    internal fun split(nextSegmentSplitTime: Long) {
-        compareAgainst = nextSegmentSplitTime
     }
 
     internal fun stop() {
@@ -99,7 +94,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
     private fun updateRunning() {
         if (running) {
             update()
-            chronoHandler.sendMessageDelayed(Message.obtain(chronoHandler, TICK_WHAT), 15)
+            chronoHandler.sendMessageDelayed(Message.obtain(chronoHandler, TICK_WHAT), 10)
         } else {
             chronoHandler.removeMessages(TICK_WHAT)
         }
@@ -114,7 +109,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
             mChronometer?.let {
                 if (running) {
                     it.update()
-                    sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15)
+                    sendMessageDelayed(Message.obtain(this, TICK_WHAT), 10)
                 }
             }
         }
