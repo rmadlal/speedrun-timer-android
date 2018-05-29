@@ -16,7 +16,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
     internal var timeElapsed: Long = 0
         private set
 
-    private var timerColor = 0
+    private var timerColor = colorNeutral
         set(value) {
             if (value == field) return
             view.chronoRest.setTextColor(value)
@@ -31,22 +31,21 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         if (!showMillis) {
             view.chronoMillis.visibility = View.GONE
         }
+        view.chronoRest.setTextColor(colorNeutral)
+        view.chronoMillis.setTextColor(colorNeutral)
         chronoHandler = ChronoHandler(this)
         init()
     }
 
     private fun init() {
         started = false
-        timeElapsed = -1 * countdown
+        timeElapsed = -countdown
         compareAgainst = 0L
         setChronoTextFromTime(timeElapsed)
         timerColor = colorNeutral
     }
 
     internal fun start() {
-        if (compareAgainst == 0L) {
-            timerColor = colorNeutral
-        }
         started = true
         running = true
         base = SystemClock.elapsedRealtime() - timeElapsed
@@ -85,16 +84,13 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
             timerColor = colorNeutral
             return
         }
-        if (timeElapsed < compareAgainst)
-             timerColor = colorAhead
-        else if (timeElapsed >= compareAgainst)
-            timerColor = colorBehind
+        timerColor = if (timeElapsed < compareAgainst) colorAhead else colorBehind
     }
 
     private fun updateRunning() {
         if (running) {
             update()
-            chronoHandler.sendMessageDelayed(Message.obtain(chronoHandler, TICK_WHAT), 10)
+            chronoHandler.sendMessageDelayed(Message.obtain(chronoHandler, TICK_WHAT), 15)
         } else {
             chronoHandler.removeMessages(TICK_WHAT)
         }
@@ -109,7 +105,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
             mChronometer?.let {
                 if (running) {
                     it.update()
-                    sendMessageDelayed(Message.obtain(this, TICK_WHAT), 10)
+                    sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15)
                 }
             }
         }

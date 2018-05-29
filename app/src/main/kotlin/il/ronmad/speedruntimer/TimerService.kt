@@ -379,9 +379,8 @@ class TimerService : Service(), TimeExtensions {
     }
 
     private fun getCurrentSplit(): Split? {
-        val currentSplit = splitsIter?.previous()
-        splitsIter?.next()
-        return currentSplit
+        splitsIter?.previous()
+        return splitsIter?.next()
     }
 
     private fun updateDelta(currentSplit: Split, splitTime: Long) {

@@ -30,7 +30,7 @@ class CountdownPreference : DialogPreference, TimeExtensions {
                 .setPositiveButton(R.string.save) { _, _ ->
                     countdown = view.getTimeFromEditTexts()
                     persistLong(countdown)
-                    summary = "Timer starts at ${(-1 * countdown).getFormattedTime()}"
+                    summary = "Timer starts at ${(-countdown).getFormattedTime()}"
                 }
                 .setNegativeButton(R.string.pb_clear, this)
                 .setNeutralButton(android.R.string.cancel, this)

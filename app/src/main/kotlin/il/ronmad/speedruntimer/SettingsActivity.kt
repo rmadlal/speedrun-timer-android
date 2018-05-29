@@ -171,7 +171,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                 }
                 is ColorPreference -> {}
                 is CountdownPreference ->
-                    preference.summary = "Timer starts at ${(-1 * value as Long).getFormattedTime()}"
+                    preference.summary = "Timer starts at ${(-(value as Long)).getFormattedTime()}"
                 else -> preference.summary = stringValue
             }
             true
