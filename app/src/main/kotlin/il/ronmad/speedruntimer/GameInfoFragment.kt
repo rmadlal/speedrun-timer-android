@@ -9,6 +9,7 @@ import kotlinx.android.synthetic.main.fragment_game_info.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import android.support.v4.view.ViewCompat
+import kotlinx.coroutines.experimental.Job
 
 class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
@@ -17,6 +18,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     private var pbs: Map<String, Long> = mapOf()
     private lateinit var adapter: InfoListAdapter
     internal var isDataShowing = false
+    private var refreshJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +35,11 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
         swipeRefreshLayout.setOnRefreshListener { refreshData(true) }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        refreshJob?.cancel()
+    }
+
     override fun onDestroy() {
         realm.removeChangeListener(realmChangeListener)
         super.onDestroy()
@@ -43,7 +50,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     internal fun refreshData(forceFetch: Boolean = false) {
         pbs = mapOf()
         game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }
-        launch(UI) {
+        refreshJob = launch(UI) {
             swipeRefreshLayout.isRefreshing = true
             val application = getContext()?.applicationContext as? MyApplication
             val leaderboards = if (!forceFetch) {
@@ -52,9 +59,10 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
                 } ?: Src.fetchLeaderboardsForGame(getContext(), game.name)
             }
             else Src.fetchLeaderboardsForGame(getContext(), game.name)
-            displayData(leaderboards)
-            if (getContext() == null) return@launch
-            swipeRefreshLayout.isRefreshing = false
+            if (isActive) {
+                displayData(leaderboards)
+                swipeRefreshLayout.isRefreshing = false
+            }
         }
     }
 
@@ -65,7 +73,6 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     }
 
     private fun displayData(data: List<SrcLeaderboard>) {
-        if (context == null) return
         adapter.clear()
         if (data.isEmpty()) {
             Toast.makeText(context, "No data available", Toast.LENGTH_SHORT).show()

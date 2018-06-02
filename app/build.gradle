@@ -11,8 +11,8 @@ android {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 36
-        versionName '4.6'
+        versionCode 37
+        versionName '4.7'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
