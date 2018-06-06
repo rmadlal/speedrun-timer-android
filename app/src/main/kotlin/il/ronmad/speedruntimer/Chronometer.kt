@@ -19,8 +19,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
     private var timerColor = colorNeutral
         set(value) {
             if (value == field) return
-            view.chronoRest.setTextColor(value)
-            view.chronoMillis.setTextColor(value)
+            setColors(value)
             field = value
         }
 
@@ -29,10 +28,11 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
 
     init {
         if (!showMillis) {
-            view.chronoMillis.visibility = View.GONE
+            view.chronoMilli1.visibility = View.GONE
+            view.chronoMilli2.visibility = View.GONE
+            view.dot.visibility = View.GONE
         }
-        view.chronoRest.setTextColor(colorNeutral)
-        view.chronoMillis.setTextColor(colorNeutral)
+        setColors(colorNeutral)
         chronoHandler = ChronoHandler(this)
         init()
     }
@@ -41,7 +41,8 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         started = false
         timeElapsed = -countdown
         compareAgainst = 0L
-        setChronoTextFromTime(timeElapsed)
+        updateTime()
+        updateVisibility()
         timerColor = colorNeutral
     }
 
@@ -67,16 +68,50 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
 
     private fun update() {
         timeElapsed = SystemClock.elapsedRealtime() - base
-        setChronoTextFromTime(timeElapsed)
+        updateTime()
+        updateVisibility()
         updateColor()
     }
 
-    private fun setChronoTextFromTime(time: Long) {
-        val units = time.getTimeUnits(true)
-        val (_, _, _, millis) = units
+    private fun updateTime() {
+        val (hours, minutes, seconds, millis) = timeElapsed.getTimeUnits(true)
+        view.chronoHr2.text = (hours / 10).toString()
+        view.chronoHr1.text = (hours % 10).toString()
+        view.chronoMin2.text = (minutes / 10).toString()
+        view.chronoMin1.text = (minutes % 10).toString()
+        view.chronoSec2.text = (seconds / 10).toString()
+        view.chronoSec1.text = (seconds % 10).toString()
+        view.chronoMilli2.text = (millis / 10).toString()
+        view.chronoMilli1.text = (millis % 10).toString()
+    }
 
-        view.chronoRest.text = time.getFormattedTime(withMillis = false, forceMinutes = true)
-        view.chronoMillis.text = ".%02d".format(millis)
+    private fun updateVisibility() {
+        val (hours, minutes, seconds, _) = timeElapsed.getTimeUnits(true)
+        if (hours > 0) {
+            view.chronoHr2.visibility = if (hours / 10 > 0) View.VISIBLE else View.GONE
+            view.chronoHr1.visibility = View.VISIBLE
+            view.hrMinColon.visibility = View.VISIBLE
+            view.chronoMin2.visibility = View.VISIBLE
+            view.chronoMin1.visibility = View.VISIBLE
+            view.minSecColon.visibility = View.VISIBLE
+            view.chronoSec2.visibility = View.VISIBLE
+        } else if (minutes > 0) {
+            view.chronoHr2.visibility = View.GONE
+            view.chronoHr1.visibility = View.GONE
+            view.hrMinColon.visibility = View.GONE
+            view.chronoMin2.visibility = if (minutes / 10 > 0) View.VISIBLE else View.GONE
+            view.chronoMin1.visibility = View.VISIBLE
+            view.minSecColon.visibility = View.VISIBLE
+            view.chronoSec2.visibility = View.VISIBLE
+        } else {
+            view.chronoHr2.visibility = View.GONE
+            view.chronoHr1.visibility = View.GONE
+            view.hrMinColon.visibility = View.GONE
+            view.chronoMin2.visibility = View.GONE
+            view.chronoMin1.visibility = View.GONE
+            view.minSecColon.visibility = View.GONE
+            view.chronoSec2.visibility = if (seconds / 10 > 0) View.VISIBLE else View.GONE
+        }
     }
 
     private fun updateColor() {
@@ -94,6 +129,20 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         } else {
             chronoHandler.removeMessages(TICK_WHAT)
         }
+    }
+
+    private fun setColors(color: Int) {
+        view.chronoHr2.setTextColor(color)
+        view.chronoHr1.setTextColor(color)
+        view.hrMinColon.setTextColor(color)
+        view.chronoMin2.setTextColor(color)
+        view.chronoMin1.setTextColor(color)
+        view.minSecColon.setTextColor(color)
+        view.chronoSec2.setTextColor(color)
+        view.chronoSec1.setTextColor(color)
+        view.dot.setTextColor(color)
+        view.chronoMilli2.setTextColor(color)
+        view.chronoMilli1.setTextColor(color)
     }
 
     private class ChronoHandler internal constructor(instance: Chronometer) : Handler() {

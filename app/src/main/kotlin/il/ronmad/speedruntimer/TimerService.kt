@@ -288,17 +288,26 @@ class TimerService : Service(), TimeExtensions {
                 getColorCpt(R.color.colorTimerBackgroundDefault)))
         val timerSizesVals = resources.getStringArray(R.array.timer_sizes_values)
         val size = prefs.getString(getString(R.string.key_pref_timer_size), timerSizesVals[1]).toFloat()
-        mView.chronoRest.textSize = size
-        mView.chronoMillis.textSize = size * 0.75f
+        mView.chronoHr2.textSize = size
+        mView.chronoHr1.textSize = size
+        mView.hrMinColon.textSize = size
+        mView.chronoMin2.textSize = size
+        mView.chronoMin1.textSize = size
+        mView.minSecColon.textSize = size
+        mView.chronoSec2.textSize = size
+        mView.chronoSec1.textSize = size
+        mView.dot.textSize = size * 0.75f
+        mView.chronoMilli2.textSize = size * 0.75f
+        mView.chronoMilli1.textSize = size * 0.75f
         mView.delta.textSize = size * 0.375f
         mView.currentSplit.textSize = size * 0.5f
 
         mView.currentSplit.setTextColor(Chronometer.colorNeutral)
 
-        mView.chronoRest.typeface = Typeface.createFromAsset(
+        /*mView.chronoRest.typeface = Typeface.createFromAsset(
                 assets, "fonts/digital-7.ttf")
         mView.chronoMillis.typeface = Typeface.createFromAsset(
-                assets, "fonts/digital-7.ttf")
+                assets, "fonts/digital-7.ttf")*/
     }
 
     private fun setupView() {
