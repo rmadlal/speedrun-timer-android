@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/pref_header_timing">
+
+        <il.ronmad.speedruntimer.CountdownPreference
+            android:key="@string/key_pref_timer_countdown"
+            android:title="@string/pref_timer_countdown_title"
+            android:defaultValue="0" />
+
+        <ListPreference
+            android:key="@string/key_pref_compare_against"
+            android:title="@string/pref_compare_against_title"
+            android:entries="@array/compare_against"
+            android:entryValues="@array/compare_against_values"
+            android:defaultValue="0" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/pref_header_display">
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_background"
+            android:title="@string/pref_color_background_title"
+            android:defaultValue="@color/colorTimerBackgroundDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <ListPreference
+            android:key="@string/key_pref_timer_size"
+            android:title="@string/pref_timer_size_title"
+            android:entries="@array/timer_sizes"
+            android:entryValues="@array/timer_sizes_values"
+            android:defaultValue="32" />
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_timer_show_millis"
+            android:title="@string/pref_timer_show_millis_title"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_timer_always_minutes"
+            android:title="@string/pref_timer_always_show_minutes_title"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_timer_show_delta"
+            android:title="@string/pref_timer_show_delta_title"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_timer_show_current_split"
+            android:title="@string/pref_timer_show_current_split_title"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/pref_header_timer_colors">
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_neutral"
+            android:title="@string/pref_color_neutral_title"
+            android:defaultValue="@color/colorTimerNeutralDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_ahead"
+            android:title="@string/pref_color_ahead_title"
+            android:defaultValue="@color/colorTimerAheadDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_behind"
+            android:title="@string/pref_color_behind_title"
+            android:defaultValue="@color/colorTimerBehindDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_pb"
+            android:title="@string/pref_color_pb_title"
+            android:defaultValue="@color/colorTimerPBDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+        <com.jaredrummler.android.colorpicker.ColorPreference
+            android:key="@string/key_pref_color_best_segment"
+            android:title="@string/pref_color_best_segment_title"
+            android:defaultValue="@color/colorTimerBestSegmentDefault"
+            app:cpv_showAlphaSlider="true"
+            app:cpv_allowPresets="false"
+            app:cpv_dialogType="custom" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/pref_header_app_behavior">
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_launch_games"
+            android:title="@string/pref_launch_games_title"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="@string/key_pref_save_time_data"
+            android:title="@string/pref_save_time_data_title"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

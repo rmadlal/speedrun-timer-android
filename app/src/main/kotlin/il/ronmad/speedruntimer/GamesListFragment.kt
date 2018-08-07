@@ -10,7 +10,7 @@ import kotlinx.android.synthetic.main.fragment_games_list.*
 
 class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
-    lateinit var mAdapter: GameAdapter
+    private lateinit var mAdapter: GameAdapter
     private var mActionMode: ActionMode? = null
     private lateinit var mActionModeCallback: MyActionModeCallback
 

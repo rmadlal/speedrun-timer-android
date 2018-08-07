@@ -87,30 +87,35 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
 
     private fun updateVisibility() {
         val (hours, minutes, seconds, _) = timeElapsed.getTimeUnits(true)
-        if (hours > 0) {
-            view.chronoHr2.visibility = if (hours / 10 > 0) View.VISIBLE else View.GONE
-            view.chronoHr1.visibility = View.VISIBLE
-            view.hrMinColon.visibility = View.VISIBLE
-            view.chronoMin2.visibility = View.VISIBLE
-            view.chronoMin1.visibility = View.VISIBLE
-            view.minSecColon.visibility = View.VISIBLE
-            view.chronoSec2.visibility = View.VISIBLE
-        } else if (minutes > 0) {
-            view.chronoHr2.visibility = View.GONE
-            view.chronoHr1.visibility = View.GONE
-            view.hrMinColon.visibility = View.GONE
-            view.chronoMin2.visibility = if (minutes / 10 > 0) View.VISIBLE else View.GONE
-            view.chronoMin1.visibility = View.VISIBLE
-            view.minSecColon.visibility = View.VISIBLE
-            view.chronoSec2.visibility = View.VISIBLE
-        } else {
-            view.chronoHr2.visibility = View.GONE
-            view.chronoHr1.visibility = View.GONE
-            view.hrMinColon.visibility = View.GONE
-            view.chronoMin2.visibility = View.GONE
-            view.chronoMin1.visibility = View.GONE
-            view.minSecColon.visibility = View.GONE
-            view.chronoSec2.visibility = if (seconds / 10 > 0) View.VISIBLE else View.GONE
+        view.chronoMinus.visibility = if (timeElapsed < 0) View.VISIBLE else View.GONE
+        when {
+            hours > 0 -> {
+                view.chronoHr2.visibility = if (hours / 10 > 0) View.VISIBLE else View.GONE
+                view.chronoHr1.visibility = View.VISIBLE
+                view.hrMinColon.visibility = View.VISIBLE
+                view.chronoMin2.visibility = View.VISIBLE
+                view.chronoMin1.visibility = View.VISIBLE
+                view.minSecColon.visibility = View.VISIBLE
+                view.chronoSec2.visibility = View.VISIBLE
+            }
+            minutes > 0 -> {
+                view.chronoHr2.visibility = View.GONE
+                view.chronoHr1.visibility = View.GONE
+                view.hrMinColon.visibility = View.GONE
+                view.chronoMin2.visibility = if (minutes / 10 > 0) View.VISIBLE else View.GONE
+                view.chronoMin1.visibility = View.VISIBLE
+                view.minSecColon.visibility = View.VISIBLE
+                view.chronoSec2.visibility = View.VISIBLE
+            }
+            else -> {
+                view.chronoHr2.visibility = View.GONE
+                view.chronoHr1.visibility = View.GONE
+                view.hrMinColon.visibility = View.GONE
+                view.chronoMin2.visibility = View.GONE
+                view.chronoMin1.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
+                view.minSecColon.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
+                view.chronoSec2.visibility = if (alwaysMinutes || seconds / 10 > 0) View.VISIBLE else View.GONE
+            }
         }
     }
 
@@ -169,6 +174,7 @@ class Chronometer(val context: Context, val view: View) : TimeExtensions {
         var colorBestSegment = 0
         var countdown = 0L
         var showMillis = false
+        var alwaysMinutes = false
         var started = false
         var running = false
         const val TICK_WHAT = 2

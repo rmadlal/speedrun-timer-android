@@ -1,9 +1,5 @@
 package il.ronmad.speedruntimer
 
-import android.annotation.TargetApi
-import android.content.Context
-import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.view.MenuItem
@@ -15,11 +11,10 @@ class SettingsActivity : AppCompatPreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupActionBar()
-    }
-
-    private fun setupActionBar() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        fragmentManager.beginTransaction()
+                .replace(android.R.id.content, MyPreferenceFragment())
+                .commit()
     }
 
     override fun onMenuItemSelected(featureId: Int, item: MenuItem): Boolean {
@@ -33,101 +28,32 @@ class SettingsActivity : AppCompatPreferenceActivity() {
         return super.onMenuItemSelected(featureId, item)
     }
 
-    override fun onIsMultiPane(): Boolean {
-        return isXLargeTablet(this)
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    override fun onBuildHeaders(target: List<PreferenceActivity.Header>) {
-        loadHeadersFromResource(R.xml.pref_headers, target)
-    }
-
-    override fun isValidFragment(fragmentName: String): Boolean {
-        return (PreferenceFragment::class.java.name == fragmentName
-                || TimerColorsPreferenceFragment::class.java.name == fragmentName
-                || TimingPreferenceFragment::class.java.name == fragmentName
-                || DisplayPreferenceFragment::class.java.name == fragmentName
-                || AppBehaviorPreferenceFragment::class.java.name == fragmentName)
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    class TimerColorsPreferenceFragment : PreferenceFragment() {
+    class MyPreferenceFragment : PreferenceFragment() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            addPreferencesFromResource(R.xml.pref_timer_colors)
+            addPreferencesFromResource(R.xml.settings_preferences)
             setHasOptionsMenu(true)
 
+            // Timer colors
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_neutral)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_ahead)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_behind)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_pb)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_best_segment)))
-        }
 
-        override fun onOptionsItemSelected(item: MenuItem): Boolean {
-            val id = item.itemId
-            if (id == android.R.id.home) {
-                activity.onBackPressed()
-                return true
-            }
-            return super.onOptionsItemSelected(item)
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    class DisplayPreferenceFragment : PreferenceFragment() {
-
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            addPreferencesFromResource(R.xml.pref_display)
-            setHasOptionsMenu(true)
-
+            // Display
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_color_background)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_size)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)))
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_always_minutes)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_delta)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_current_split)))
-        }
 
-        override fun onOptionsItemSelected(item: MenuItem): Boolean {
-            val id = item.itemId
-            if (id == android.R.id.home) {
-                activity.onBackPressed()
-                return true
-            }
-            return super.onOptionsItemSelected(item)
-        }
-
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    class TimingPreferenceFragment : PreferenceFragment() {
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            addPreferencesFromResource(R.xml.pref_timing)
-            setHasOptionsMenu(true)
-
+            // Timing
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_countdown)))
-            bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_timer_show_millis)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_compare_against)))
-        }
 
-        override fun onOptionsItemSelected(item: MenuItem): Boolean {
-            val id = item.itemId
-            if (id == android.R.id.home) {
-                activity.onBackPressed()
-                return true
-            }
-            return super.onOptionsItemSelected(item)
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    class AppBehaviorPreferenceFragment : PreferenceFragment() {
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            addPreferencesFromResource(R.xml.pref_app_behavior)
-            setHasOptionsMenu(true)
-
+            // App behavior
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_launch_games)))
             bindPreferenceSummaryToValue(findPreference(getString(R.string.key_pref_save_time_data)))
         }
@@ -155,18 +81,29 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                             else null
                 }
                 is CheckBoxPreference -> {
-                    if (preference.key == preference.context.getString(R.string.key_pref_launch_games)) {
-                        preference.summary = preference.context.getString(
-                                if (value as Boolean)
-                                    R.string.pref_launch_games_summary_true
-                                else
-                                    R.string.pref_launch_games_summary_false)
-                    } else if (preference.key == preference.context.getString(R.string.key_pref_save_time_data)) {
-                        preference.summary = preference.context.getString(
-                                if (value as Boolean)
-                                    R.string.pref_save_time_data_summary_true
-                                else
-                                    R.string.pref_save_time_data_summary_false)
+                    preference.summary = when (preference.key) {
+                        preference.context.getString(R.string.key_pref_launch_games) -> {
+                            preference.context.getString(
+                                    if (value as Boolean)
+                                        R.string.pref_launch_games_summary_true
+                                    else
+                                        R.string.pref_launch_games_summary_false)
+                        }
+                        preference.context.getString(R.string.key_pref_save_time_data) -> {
+                            preference.context.getString(
+                                    if (value as Boolean)
+                                        R.string.pref_save_time_data_summary_true
+                                    else
+                                        R.string.pref_save_time_data_summary_false)
+                        }
+                        preference.context.getString(R.string.key_pref_timer_always_minutes) -> {
+                            preference.context.getString(
+                                    if (value as Boolean)
+                                        R.string.pref_always_show_minutes_summary_true
+                                    else
+                                        R.string.pref_always_show_minutes_summary_false)
+                        }
+                        else -> ""
                     }
                 }
                 is ColorPreference -> {}
@@ -175,11 +112,6 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                 else -> preference.summary = stringValue
             }
             true
-        }
-
-        private fun isXLargeTablet(context: Context): Boolean {
-            return context.resources.configuration.screenLayout and
-                    Configuration.SCREENLAYOUT_SIZE_MASK >= Configuration.SCREENLAYOUT_SIZE_XLARGE
         }
 
         private fun bindPreferenceSummaryToValue(preference: Preference) {

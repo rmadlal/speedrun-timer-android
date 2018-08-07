@@ -26,7 +26,7 @@ class TimerService : Service(), TimeExtensions {
 
     private lateinit var realm: Realm
     private lateinit var realmChangeListener: RealmChangeListener<Realm>
-    private lateinit var prefs: SharedPreferences
+    lateinit var prefs: SharedPreferences
     private lateinit var chronometer: Chronometer
     private lateinit var category: Category
     private var splitsIter: MutableListIterator<Split>? = null
@@ -115,6 +115,7 @@ class TimerService : Service(), TimeExtensions {
                 getColorCpt(R.color.colorTimerBestSegmentDefault))
         Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
         Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
+        Chronometer.alwaysMinutes = prefs.getBoolean(getString(R.string.key_pref_timer_always_minutes), true)
         comparison = getComparison()
     }
 
@@ -177,8 +178,8 @@ class TimerService : Service(), TimeExtensions {
             private var initialTouchX: Float = 0.toFloat()
             private var initialTouchY: Float = 0.toFloat()
 
-            internal var touchTime: Long = 0
-            internal var startTime = System.currentTimeMillis()
+            var touchTime: Long = 0
+            var startTime = System.currentTimeMillis()
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 if (System.currentTimeMillis() - startTime <= 300) {
@@ -223,7 +224,7 @@ class TimerService : Service(), TimeExtensions {
                             if (splitsIter == null)
                                 timerStart()
                         }
-                        currentSplitStartTime = splitTime
+                        currentSplitStartTime = splitTime.coerceAtLeast(0L)
                     }
                     MotionEvent.ACTION_MOVE -> {
                         var targetX = initialX - (event.rawX - initialTouchX).toInt()
@@ -286,8 +287,20 @@ class TimerService : Service(), TimeExtensions {
     private fun setupDisplayPrefs() {
         mView.setBackgroundColor(prefs.getInt(getString(R.string.key_pref_color_background),
                 getColorCpt(R.color.colorTimerBackgroundDefault)))
+
+        setupSize()
+        setupFont()
+
+        mView.currentSplit.setTextColor(Chronometer.colorNeutral)
+    }
+
+    private fun setupSize() {
         val timerSizesVals = resources.getStringArray(R.array.timer_sizes_values)
         val size = prefs.getString(getString(R.string.key_pref_timer_size), timerSizesVals[1]).toFloat()
+        val millisSize = size * 0.75f
+        val deltaSize = size * 0.375f
+        val splitSize = size * 0.5f
+        mView.chronoMinus.textSize = size
         mView.chronoHr2.textSize = size
         mView.chronoHr1.textSize = size
         mView.hrMinColon.textSize = size
@@ -296,18 +309,27 @@ class TimerService : Service(), TimeExtensions {
         mView.minSecColon.textSize = size
         mView.chronoSec2.textSize = size
         mView.chronoSec1.textSize = size
-        mView.dot.textSize = size * 0.75f
-        mView.chronoMilli2.textSize = size * 0.75f
-        mView.chronoMilli1.textSize = size * 0.75f
-        mView.delta.textSize = size * 0.375f
-        mView.currentSplit.textSize = size * 0.5f
+        mView.dot.textSize = millisSize
+        mView.chronoMilli2.textSize = millisSize
+        mView.chronoMilli1.textSize = millisSize
+        mView.delta.textSize = deltaSize
+        mView.currentSplit.textSize = splitSize
+    }
 
-        mView.currentSplit.setTextColor(Chronometer.colorNeutral)
-
-        /*mView.chronoRest.typeface = Typeface.createFromAsset(
-                assets, "fonts/digital-7.ttf")
-        mView.chronoMillis.typeface = Typeface.createFromAsset(
-                assets, "fonts/digital-7.ttf")*/
+    private fun setupFont() {
+        val digital7Font = Typeface.createFromAsset(assets, "fonts/digital-7.ttf")
+        mView.chronoMinus.typeface = digital7Font
+        mView.chronoHr2.typeface = digital7Font
+        mView.chronoHr1.typeface = digital7Font
+        mView.hrMinColon.typeface = digital7Font
+        mView.chronoMin2.typeface = digital7Font
+        mView.chronoMin1.typeface = digital7Font
+        mView.minSecColon.typeface =digital7Font
+        mView.chronoSec2.typeface = digital7Font
+        mView.chronoSec1.typeface = digital7Font
+        mView.dot.typeface = digital7Font
+        mView.chronoMilli2.typeface = digital7Font
+        mView.chronoMilli1.typeface = digital7Font
     }
 
     private fun setupView() {

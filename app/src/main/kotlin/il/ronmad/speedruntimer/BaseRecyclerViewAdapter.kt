@@ -35,8 +35,8 @@ abstract class BaseRecyclerViewAdapter<T: HasPrimaryId>(val data: List<T>)
         setItemBackground(holder.mView, position)
 
         holder.mView.setOnClickListener { onItemClickListener?.invoke(holder, position) }
-        holder.mView.setOnLongClickListener { onItemLongClickListener?.invoke(holder, position)
-                ?: false
+        holder.mView.setOnLongClickListener {
+            onItemLongClickListener?.invoke(holder, position) ?: false
         }
     }
 

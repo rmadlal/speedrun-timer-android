@@ -105,6 +105,9 @@
     <string name="pref_timer_size_title">Timer size</string>
     <string name="pref_timer_countdown_title">Set timer countdown</string>
     <string name="pref_timer_show_millis_title">Show milliseconds</string>
+    <string name="pref_timer_always_show_minutes_title">Always show minutes</string>
+    <string name="pref_always_show_minutes_summary_true">0:00.00</string>
+    <string name="pref_always_show_minutes_summary_false">0.00</string>
     <string name="pref_timer_show_delta_title">Show delta</string>
     <string name="pref_timer_show_current_split_title">Show current split</string>
     <string name="pref_launch_games_title">Launch games</string>
@@ -152,6 +155,7 @@
     <string name="key_pref_timer_size">timer_size</string>
     <string name="key_pref_timer_countdown">countdown_preference</string>
     <string name="key_pref_timer_show_millis">il.ronmad.speedruntimer.key.SHOW_MILLIS</string>
+    <string name="key_pref_timer_always_minutes">il.ronmad.speedruntimer.key.ALWAYS_MINUTES</string>
     <string name="key_pref_timer_show_delta">il.ronmad.speedruntimer.key.SHOW_DELTA</string>
     <string name="key_pref_timer_show_current_split">il.ronmad.speedruntimer.key.SHOW_CURRENT_SPLIT</string>
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>

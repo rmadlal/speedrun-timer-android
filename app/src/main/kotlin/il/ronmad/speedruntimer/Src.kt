@@ -231,7 +231,7 @@ object Src {
                     }
                 }
             }
-        } ?: emptyList()
+        }.orEmpty()
         app.srcLeaderboardCache += gameName to leaderboards
         return leaderboards
     }

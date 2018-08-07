@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 
-abstract class BaseFragment(val layoutResId: Int) : Fragment() {
+abstract class BaseFragment(private val layoutResId: Int) : Fragment() {
 
     protected lateinit var realm: Realm
 
