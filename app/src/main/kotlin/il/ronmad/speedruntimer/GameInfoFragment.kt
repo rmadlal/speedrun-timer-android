@@ -32,7 +32,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         setupListView()
-        swipeRefreshLayout.setOnRefreshListener { refreshData(true) }
+        swipeRefreshLayout.setOnRefreshListener { refreshData() }
     }
 
     override fun onDestroyView() {
@@ -47,18 +47,12 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     override fun onFabAddPressed() {}
 
-    internal fun refreshData(forceFetch: Boolean = false) {
+    internal fun refreshData() {
         pbs = mapOf()
         game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }
         refreshJob = launch(UI) {
             swipeRefreshLayout.isRefreshing = true
-            val application = getContext()?.applicationContext as? MyApplication
-            val leaderboards = if (!forceFetch) {
-                application?.srcLeaderboardCache?.getOrElse(game.name) {
-                    Src.fetchLeaderboardsForGame(getContext(), game.name)
-                } ?: Src.fetchLeaderboardsForGame(getContext(), game.name)
-            }
-            else Src.fetchLeaderboardsForGame(getContext(), game.name)
+            val leaderboards = Src.fetchLeaderboardsForGame(getContext(), game.name)
             if (isActive) {
                 displayData(leaderboards)
                 swipeRefreshLayout.isRefreshing = false

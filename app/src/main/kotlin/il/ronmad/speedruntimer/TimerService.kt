@@ -17,6 +17,7 @@ import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
 import android.view.*
+import android.widget.TextView
 
 import io.realm.Realm
 import io.realm.RealmChangeListener
@@ -38,7 +39,8 @@ class TimerService : Service(), TimeExtensions {
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationBuilder: NotificationCompat.Builder
 
-    private lateinit var mView: View
+    lateinit var mView: View
+    var chronoViews: Set<TextView> = emptySet()
     private lateinit var mWindowManager: WindowManager
     private lateinit var mWindowParams: WindowManager.LayoutParams
     private var moved = false
@@ -165,10 +167,23 @@ class TimerService : Service(), TimeExtensions {
     private fun setupLayoutComponents() {
         setTheme(R.style.AppTheme)
         mView = View.inflate(this, R.layout.timer_overlay, null)
+        chronoViews = setOf(
+                mView.chronoMinus,
+                mView.chronoHr2,
+                mView.chronoHr1,
+                mView.hrMinColon,
+                mView.chronoMin2,
+                mView.chronoMin1,
+                mView.minSecColon,
+                mView.chronoSec2,
+                mView.chronoSec1,
+                mView.dot,
+                mView.chronoMilli2,
+                mView.chronoMilli1)
 
         setupDisplayPrefs()
 
-        chronometer = Chronometer(this, mView)
+        chronometer = Chronometer(this, mView, chronoViews)
 
         mView.isLongClickable = true
         mView.setOnTouchListener(object : View.OnTouchListener {
@@ -318,18 +333,7 @@ class TimerService : Service(), TimeExtensions {
 
     private fun setupFont() {
         val digital7Font = Typeface.createFromAsset(assets, "fonts/digital-7.ttf")
-        mView.chronoMinus.typeface = digital7Font
-        mView.chronoHr2.typeface = digital7Font
-        mView.chronoHr1.typeface = digital7Font
-        mView.hrMinColon.typeface = digital7Font
-        mView.chronoMin2.typeface = digital7Font
-        mView.chronoMin1.typeface = digital7Font
-        mView.minSecColon.typeface =digital7Font
-        mView.chronoSec2.typeface = digital7Font
-        mView.chronoSec1.typeface = digital7Font
-        mView.dot.typeface = digital7Font
-        mView.chronoMilli2.typeface = digital7Font
-        mView.chronoMilli1.typeface = digital7Font
+        chronoViews.forEach { it.typeface = digital7Font }
     }
 
     private fun setupView() {

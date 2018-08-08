@@ -33,8 +33,14 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
         }.show()
     }
 
+    fun refreshList() {
+        mAdapter.notifyDataSetChanged()
+        checkEmptyList()
+        mActionMode?.finish()
+    }
+
     private fun checkEmptyList() {
-        emptyList.visibility = if (realm.where<Game>().count() == 0L) View.VISIBLE else View.GONE
+        emptyList?.visibility = if (realm.where<Game>().count() == 0L) View.VISIBLE else View.GONE
     }
 
     private fun addGame(name: String) {

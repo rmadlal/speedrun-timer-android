@@ -21,22 +21,28 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     internal fun setCategories(gameName: String) {
         launch(UI) {
             val game = Src.fetchGameData(getContext(), gameName)
-            val categoryNames = game?.categories?.flatMap { category ->
-                if (category.subCategories.isEmpty())
-                    listOf(category.name)
-                else {
-                    val subcategories = category.subCategories.map {
-                        it.values.map { it.label }
-                    }
-                    try {
-                        Lists.cartesianProduct(subcategories).map {
-                            "${category.name} - ${it.joinToString(" ")}"
-                        }
-                    } catch (e: IllegalArgumentException) {
+            val categoryNames = if (game == SrcGame.EMPTY_GAME) {
+                listOf("Any%", "100%", "Low%")
+            } else try {
+                game.categories.flatMap { category ->
+                    if (category.subCategories.isEmpty())
                         listOf(category.name)
+                    else {
+                        val subcategories = category.subCategories.map { srcVariable ->
+                            srcVariable.values.map { it.label }
+                        }
+                        try {
+                            Lists.cartesianProduct(subcategories).map {
+                                "${category.name} - ${it.joinToString(" ")}"
+                            }
+                        } catch (e: IllegalArgumentException) {
+                            listOf(category.name)
+                        }
                     }
                 }
-            } ?: listOf("Any%", "100%", "Low%")
+            } catch (e: OutOfMemoryError) {
+                listOf("Any%", "100%", "Low%")
+            }
             setAdapter(ArrayAdapter(getContext(),
                     R.layout.autocomplete_dropdown_item, categoryNames))
             postDelayed({ if (isShown) showDropDown() }, 200)

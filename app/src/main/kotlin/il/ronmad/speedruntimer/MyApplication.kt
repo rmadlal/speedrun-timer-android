@@ -10,8 +10,7 @@ import io.realm.RealmConfiguration
 class MyApplication : Application() {
 
     lateinit var srcApi: SrcAPI
-    var srcGameCache: Map<String, SrcGame?> = mapOf()
-    var srcLeaderboardCache: Map<String, List<SrcLeaderboard>> = mapOf()
+    var srcGameCache: Map<String, SrcGame> = emptyMap()
 
     override fun onCreate() {
         super.onCreate()

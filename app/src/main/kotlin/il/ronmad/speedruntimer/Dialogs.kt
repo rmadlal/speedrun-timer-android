@@ -29,7 +29,7 @@ object Dialogs : TimeExtensions {
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
                 if (!gameNameInput.isValidForGame(realm)) {
@@ -54,7 +54,7 @@ object Dialogs : TimeExtensions {
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
                 if (!categoryNameInput.isValidForCategory(game)) {
@@ -82,7 +82,7 @@ object Dialogs : TimeExtensions {
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
                 if (!splitNameInput.isValidForSplit(category)) {
@@ -109,7 +109,7 @@ object Dialogs : TimeExtensions {
                 .setPositiveButton(R.string.save, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             createButton.setOnClickListener {
                 val newName = gameNameInput.text.toString()
@@ -144,7 +144,7 @@ object Dialogs : TimeExtensions {
                 .setNegativeButton(R.string.pb_clear, null)
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
             val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
@@ -193,7 +193,7 @@ object Dialogs : TimeExtensions {
                 .setNegativeButton(R.string.pb_clear, null)
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener {
+        dialog.setOnShowListener { _ ->
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
             val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
@@ -265,16 +265,15 @@ object Dialogs : TimeExtensions {
                 .create()
     }
 
-    internal fun addInstalledGamesDialog(context: Context, realm: Realm, gameNames: List<String>): AlertDialog {
+    internal fun addInstalledGamesDialog(context: Context, realm: Realm, gameNames: List<String>,
+                                         callback: () -> Unit): AlertDialog {
         val checked = BooleanArray(gameNames.size)
         return AlertDialog.Builder(context)
                 .setTitle("Select games")
                 .setPositiveButton(R.string.add) { _, _ ->
                     gameNames.filterIndexed { index, _ -> checked[index] }
                              .forEach { realm.addGame(it) }
-                    if (checked.any { it }) {
-                        Snackbar.make((context as MainActivity).fabAdd, "Games added", Toast.LENGTH_SHORT).show()
-                    }
+                    if (checked.any { it }) callback()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .setMultiChoiceItems(gameNames.toTypedArray(), checked) {

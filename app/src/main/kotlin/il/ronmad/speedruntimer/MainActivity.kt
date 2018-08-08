@@ -218,7 +218,11 @@ class MainActivity : AppCompatActivity() {
         if (gameNames.isEmpty()) {
             Toast.makeText(this, getString(R.string.no_games_to_add), Toast.LENGTH_SHORT).show()
         } else {
-            Dialogs.addInstalledGamesDialog(this, realm, gameNames).show()
+            Dialogs.addInstalledGamesDialog(this, realm, gameNames) {
+                (supportFragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT) as? GamesListFragment)
+                        ?.refreshList()
+                Snackbar.make(this.fabAdd, "Games added", Toast.LENGTH_SHORT).show()
+            }.show()
         }
     }
 
