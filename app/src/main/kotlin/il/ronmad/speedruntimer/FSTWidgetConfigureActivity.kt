@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -34,7 +35,12 @@ class FSTWidgetConfigureActivity : Activity() {
         add_button.setOnClickListener {
             val context = this@FSTWidgetConfigureActivity
 
-            // When the button is clicked, store the string locally
+            if (appwidget_spinner_game.selectedItem == null
+                    || appwidget_spinner_category.selectedItem == null) {
+                Snackbar.make(add_button, "You must choose a game and category.", Snackbar.LENGTH_SHORT)
+                        .show()
+                return@setOnClickListener
+            }
             val gameName = appwidget_spinner_game.selectedItem.toString()
             val categoryName = appwidget_spinner_category.selectedItem.toString()
             saveWidgetPref(context, mAppWidgetId, gameName to categoryName)
