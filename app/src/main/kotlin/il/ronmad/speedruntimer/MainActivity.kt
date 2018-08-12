@@ -1,13 +1,8 @@
 package il.ronmad.speedruntimer
 
 import android.content.ActivityNotFoundException
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -25,15 +20,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var receiver: BroadcastReceiver
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var realm: Realm
 
     private var rateSnackbarShown: Boolean = false
     private var addGamesSnackbarShown: Boolean = false
-
-    internal var installedApps: List<ApplicationInfo> = listOf()
-    private var installedGames: List<String> = listOf()
 
 
     // defintetly new and improved, not at all ripped off. and withoutt typos
@@ -51,9 +42,7 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
-        setupInstalledAppsLists()
         setupSnackbars()
-        setupReceiver()
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -65,7 +54,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (TimerService.IS_ACTIVE) {
-            Dialogs.closeTimerOnResumeDialog(this).show()
+            Dialogs.closeTimerOnResumeDialog(this) {
+                sendBroadcast(Intent(getString(R.string.action_close_timer)))
+            }.show()
         }
     }
 
@@ -80,8 +71,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopService(Intent(this, TimerService::class.java))
-        unregisterReceiver(receiver)
         realm.close()
     }
 
@@ -151,36 +140,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupReceiver() {
-        receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                val action = intent.action ?: return
-                if (action == getString(R.string.action_close_timer)) {
-                    if (Chronometer.started) {
-                        sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-                        Dialogs.timerActiveDialog(context).show()
-                    } else {
-                        stopService(Intent(context, TimerService::class.java))
-                    }
-                }
-            }
-        }
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(getString(R.string.action_close_timer))
-        registerReceiver(receiver, intentFilter)
-    }
-
-    private fun setupInstalledAppsLists() {
-        val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-        installedApps = allInstalledApps.filter {
-            it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            installedGames = installedApps.filter { it.category == ApplicationInfo.CATEGORY_GAME }
-                    .map { packageManager.getApplicationLabel(it).toString() }
-        }
-    }
-
     private fun showRateSnackbar() {
         val snackbar = Snackbar.make(fabAdd, getString(R.string.rate_snackbar),
                 Snackbar.LENGTH_LONG)
@@ -210,7 +169,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getAvailableInstalledGames(): List<String> {
-        return installedGames.filter { !realm.gameExists(it) }
+        return (application as MyApplication).installedGames.filter { !realm.gameExists(it) }
     }
 
     private fun addInstalledGames() {

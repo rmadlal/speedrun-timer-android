@@ -6,9 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
@@ -23,7 +21,7 @@ import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.timer_overlay.view.*
 
-class TimerService : Service(), TimeExtensions {
+class TimerService : Service() {
 
     private lateinit var realm: Realm
     private lateinit var realmChangeListener: RealmChangeListener<Realm>
@@ -38,6 +36,7 @@ class TimerService : Service(), TimeExtensions {
 
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationBuilder: NotificationCompat.Builder
+    private lateinit var receiver: BroadcastReceiver
 
     lateinit var mView: View
     var chronoViews: Set<TextView> = emptySet()
@@ -72,6 +71,7 @@ class TimerService : Service(), TimeExtensions {
         category = realm.getCategoryByName(gameName, categoryName)!!
         hasSplits = category.splits.isNotEmpty()
 
+        setupReceiver()
         val notification = setupNotification()
         startForeground(R.integer.notification_id, notification)
 
@@ -82,6 +82,7 @@ class TimerService : Service(), TimeExtensions {
         setupView()
 
         startedProperly = true
+        IS_ACTIVE = true
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -90,6 +91,7 @@ class TimerService : Service(), TimeExtensions {
         if (startedProperly) {
             mWindowManager.removeView(mView)
         }
+        unregisterReceiver(receiver)
         realm.close()
         IS_ACTIVE = false
         super.onDestroy()
@@ -119,6 +121,24 @@ class TimerService : Service(), TimeExtensions {
         Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
         Chronometer.alwaysMinutes = prefs.getBoolean(getString(R.string.key_pref_timer_always_minutes), true)
         comparison = getComparison()
+    }
+
+    private fun setupReceiver() {
+        receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    getString(R.string.action_close_timer) -> if (Chronometer.started) {
+                        sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
+                        Dialogs.timerActiveDialog(context) { stopSelf() }.show()
+                    } else {
+                        stopSelf()
+                    }
+                }
+            }
+        }
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(getString(R.string.action_close_timer))
+        registerReceiver(receiver, intentFilter)
     }
 
     private fun setupNotification(): Notification {
@@ -435,5 +455,25 @@ class TimerService : Service(), TimeExtensions {
         var IS_ACTIVE = false
         var gameName = ""
         var categoryName = ""
+
+        fun launchTimer(context: Context?,
+                        gameAndCategoryNames: Pair<String, String>,
+                        minimizeIfNoGameLaunch: Boolean = true) {
+            context ?: return
+            if (TimerService.IS_ACTIVE) return
+            val (gameName, categoryName) = gameAndCategoryNames
+            if (!(context.applicationContext as MyApplication).tryLaunchGame(gameName)) {
+                if (minimizeIfNoGameLaunch)
+                    context.minimizeApp()
+            }
+            val serviceIntent = Intent(context, TimerService::class.java)
+            serviceIntent.putExtra(context.getString(R.string.extra_game), gameName)
+            serviceIntent.putExtra(context.getString(R.string.extra_category), categoryName)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+        }
     }
 }

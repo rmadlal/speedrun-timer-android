@@ -68,7 +68,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
         }
     }
 
-    companion object : TimeExtensions {
+    companion object {
 
         private val sBindPreferenceSummaryToValueListener: (Preference, Any) -> Boolean = { preference, value ->
             val stringValue = value.toString()

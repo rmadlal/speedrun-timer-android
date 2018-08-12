@@ -84,6 +84,7 @@
 
     <!-- Intent actions and extras -->
     <string name="action_close_timer">il.ronmad.speedruntimer.action.CLOSE_TIMER</string>
+    <string name="action_start_timer">il.ronmad.speedruntimer.action.START_TIMER</string>
     <string name="extra_game">il.ronmad.speedruntimer.extra.GAME</string>
     <string name="extra_category">il.ronmad.speedruntimer.extra.CATEGORY_NAME</string>
 
@@ -162,5 +163,8 @@
     <string name="key_pref_save_time_data">il.ronmad.speedruntimer.key.SAVE_DATA</string>
     <string name="key_auto_load_categories">il.ronmad.speedruntimer.key.AUTO_LOAD_CATEGORIES</string>
     <string name="key_pref_compare_against">il.ronmad.speedruntimer.key.COMPARE_AGAINST</string>
+    <string name="appwidget_text">FST</string>
+    <string name="configure">Choose game and category</string>
+    <string name="add_widget">Add widget</string>
 
 </resources>

@@ -8,7 +8,7 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.category_list_item.view.*
 
 class CategoryAdapter(val context: Context, categories: List<Category>)
-    : BaseRecyclerViewAdapter<Category>(categories), TimeExtensions {
+    : BaseRecyclerViewAdapter<Category>(categories) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             CategoryViewHolder(LayoutInflater.from(parent.context)

@@ -8,7 +8,7 @@ import android.view.*
 import android.widget.AdapterView
 import kotlinx.android.synthetic.main.fragment_splits.*
 
-class SplitsFragment : BaseFragment(R.layout.fragment_splits), TimeExtensions {
+class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     lateinit var category: Category
     lateinit var mAdapter: SplitAdapter

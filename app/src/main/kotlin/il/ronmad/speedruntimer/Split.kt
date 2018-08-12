@@ -15,7 +15,9 @@ open class Split : RealmObject(), HasPrimaryId {
     var name: String = ""
 
     var pbTime: Long = 0
+
     var bestTime: Long = 0
+        set(value) { field = if (value != 0L) value else pbTime }
 
     @LinkingObjects("splits")
     val category: RealmResults<Category>? = null

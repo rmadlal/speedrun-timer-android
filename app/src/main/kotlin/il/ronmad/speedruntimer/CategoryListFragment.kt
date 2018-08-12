@@ -48,7 +48,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             backFromPermissionCheck = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {
                 if (Settings.canDrawOverlays(context)) {
-                    startTimerService()
+                    TimerService.launchTimer(context, game.name to selectedCategory!!.name)
                 } else {
                     checkPermissionAndStartTimerDelayed()
                 }
@@ -63,10 +63,10 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             OVERLAY_REQUEST_CODE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (Settings.canDrawOverlays(context)) {
-                        startTimerService()
+                        TimerService.launchTimer(context, game.name to selectedCategory!!.name)
                     }
                 } else {
-                    startTimerService()
+                    TimerService.launchTimer(context, game.name to selectedCategory!!.name)
                 }
             }
         }
@@ -131,10 +131,10 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
                         Uri.parse("package:${activity.packageName}"))
                 startActivityForResult(intent, OVERLAY_REQUEST_CODE, Bundle())
             } else {
-                startTimerService()
+                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
             }
         } else {
-            startTimerService()
+            TimerService.launchTimer(context, game.name to selectedCategory!!.name)
         }
     }
 
@@ -148,41 +148,21 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         val handler = Handler()
         handler.postDelayed({
             if (Settings.canDrawOverlays(context)) {
-                startTimerService()
+                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
             } else {
                 handler.postDelayed({
                     if (Settings.canDrawOverlays(context)) {
-                        startTimerService()
+                        TimerService.launchTimer(context, game.name to selectedCategory!!.name)
                     } else {
                         handler.postDelayed({
                             if (Settings.canDrawOverlays(context)) {
-                                startTimerService()
+                                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
                             }
                         }, 500)
                     }
                 }, 500)
             }
         }, 500)
-    }
-
-    private fun startTimerService() {
-        if (!tryLaunchGame()) {
-            val homeIntent = Intent(Intent.ACTION_MAIN)
-            homeIntent.addCategory(Intent.CATEGORY_HOME)
-            startActivity(homeIntent)
-        }
-        if (TimerService.IS_ACTIVE) {
-            activity.stopService(Intent(activity, TimerService::class.java))
-        }
-        val serviceIntent = Intent(activity, TimerService::class.java)
-        serviceIntent.putExtra(getString(R.string.extra_game), game.name)
-        serviceIntent.putExtra(getString(R.string.extra_category), selectedCategory!!.name)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            activity.startForegroundService(serviceIntent)
-        } else {
-            activity.startService(serviceIntent)
-        }
-        TimerService.IS_ACTIVE = true
     }
 
     private fun addCategory(name: String) {
@@ -222,22 +202,6 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
                 TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
         bottomSheetDialog.onViewSplitsClickListener = { viewSplits() }
         bottomSheetDialog.onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
-    }
-
-    private fun tryLaunchGame(): Boolean {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity)
-        if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
-            return false
-        }
-        activity.installedApps.find {
-            activity.packageManager.getApplicationLabel(it).toString().toLowerCase() == game.name.toLowerCase()
-        }?.let {
-            Toast.makeText(activity,
-                    "Launching ${activity.packageManager.getApplicationLabel(it)}...", Toast.LENGTH_SHORT).show()
-            startActivity(activity.packageManager.getLaunchIntentForPackage(it.packageName))
-            return true
-        }
-        return false
     }
 
     private fun actionRemoveCategories(toRemove: Collection<Long>) {

@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.new_category_dialog.view.*
 import kotlinx.android.synthetic.main.new_game_dialog.view.*
 import kotlinx.android.synthetic.main.new_split_dialog.view.*
 
-object Dialogs : TimeExtensions {
+object Dialogs {
 
     internal fun newGameDialog(context: Context, realm: Realm,
                                callback: (String) -> Unit): AlertDialog {
@@ -216,13 +216,11 @@ object Dialogs : TimeExtensions {
         return dialog
     }
 
-    internal fun timerActiveDialog(context: Context): AlertDialog {
+    internal fun timerActiveDialog(context: Context, callback: () -> Unit): AlertDialog {
         val dialog = AlertDialog.Builder(context)
                 .setMessage("Timer is active. Close anyway?")
-                .setPositiveButton(R.string.close) { _, _ ->
-                    context.stopService(Intent(context, TimerService::class.java))
-                }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.close) { _, _ -> callback() }
+                .setNegativeButton(android.R.string.cancel) { _, _ -> context.minimizeApp() }
                 .create()
         dialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -231,17 +229,11 @@ object Dialogs : TimeExtensions {
         return dialog
     }
 
-    internal fun closeTimerOnResumeDialog(context: Context): AlertDialog {
+    internal fun closeTimerOnResumeDialog(context: Context, callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
                 .setMessage("Timer must be closed in order to use the app.")
-                .setPositiveButton(R.string.close) { _, _ ->
-                    context.stopService(Intent(context, TimerService::class.java))
-                }
-                .setNegativeButton(android.R.string.cancel) { _, _ ->
-                    val homeIntent = Intent(Intent.ACTION_MAIN)
-                    homeIntent.addCategory(Intent.CATEGORY_HOME)
-                    context.startActivity(homeIntent)
-                }
+                .setPositiveButton(R.string.close) { _, _ -> callback() }
+                .setNegativeButton(android.R.string.cancel) { _, _ -> context.minimizeApp() }
                 .setCancelable(false)
                 .create()
     }

@@ -10,7 +10,7 @@ import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
 
-class CountdownPreference : DialogPreference, TimeExtensions {
+class CountdownPreference : DialogPreference {
 
     @TargetApi(21)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)

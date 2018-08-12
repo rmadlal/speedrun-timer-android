@@ -8,8 +8,7 @@ import kotlinx.android.synthetic.main.split_list_item.view.*
 
 class SplitAdapter(splits: List<Split>,
                    comparison: Comparison = Comparison.PERSONAL_BEST)
-    : BaseRecyclerViewAdapter<Split>(splits),
-        TimeExtensions {
+    : BaseRecyclerViewAdapter<Split>(splits) {
 
     var comparison: Comparison = comparison
         set(value) {

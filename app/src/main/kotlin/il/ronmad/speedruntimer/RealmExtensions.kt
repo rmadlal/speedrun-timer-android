@@ -20,7 +20,10 @@ fun Realm.getGameByName(name: String) =
         this.where<Game>().equalTo("name", name, Case.INSENSITIVE).findFirst()
 
 fun Realm.getGames(ids: Collection<Long>) =
-        this.where<Game>().oneOf("id", ids.toTypedArray()).findAll()
+        this.where<Game>().oneOf("id", ids.toTypedArray()).findAll()!!
+
+fun Realm.getAllGames() =
+        this.where<Game>().findAll()!!
 
 fun Realm.gameExists(name: String) =
         this.where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0
@@ -49,7 +52,7 @@ fun Game.getCategoryByName(name: String) =
         this.categories.where().equalTo("name", name, Case.INSENSITIVE).findFirst()
 
 fun Game.getCategories(ids: Collection<Long>) =
-        this.categories.where().oneOf("id", ids.toTypedArray()).findAll()
+        this.categories.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
 fun Game.categoryExists(name: String) =
         this.categories.where().equalTo("name", name, Case.INSENSITIVE).count() > 0
@@ -81,7 +84,7 @@ fun Category.getSplitById(id: Long) =
         this.splits.where().equalTo("id", id).findFirst()
 
 fun Category.getSplits(ids: Collection<Long>) =
-        this.splits.where().oneOf("id", ids.toTypedArray()).findAll()
+        this.splits.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
 fun Category.addSplit(name: String, position: Int = this.splits.count()) = realm.executeTransaction {
     val split = realm.createObject<Split>(realm.getNextId<Split>())
@@ -93,7 +96,7 @@ fun Category.splitExists(splitName: String) =
         this.splits.where().equalTo("name", splitName, Case.INSENSITIVE).count() > 0
 
 fun Category.clearSplits(clearPBTimes: Boolean = true, clearBestTimes: Boolean = true) =
-        realm.executeTransaction {
+        realm.executeTransaction { _ ->
             this.splits.forEach {
                 if (clearPBTimes) it.pbTime = 0L
                 if (clearBestTimes) it.bestTime = 0L

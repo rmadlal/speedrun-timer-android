@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/viewSplitsItem"
+        android:id="@+id/launchTimerItem"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
@@ -15,7 +15,48 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/launchTimerItem">
+        app:layout_constraintBottom_toTopOf="@+id/viewSplitsItem">
+
+        <ImageView
+            android:id="@+id/launchTimerImg"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/img_view_splits"
+            app:srcCompat="@drawable/ic_timer_black_48dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/launchTimerText"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/launchTimerText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:padding="16dp"
+            android:layout_marginStart="8dp"
+            android:text="@string/bottom_sheet_view_launch"
+            android:gravity="start|center_vertical"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/launchTimerImg" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/viewSplitsItem"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/launchTimerItem"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/viewSplitsImg"
@@ -23,7 +64,7 @@
             android:layout_height="24dp"
             android:layout_margin="16dp"
             android:contentDescription="@string/img_view_splits"
-            app:srcCompat="@drawable/ic_timer_black_48dp"
+            app:srcCompat="@drawable/ic_list_black_24dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/viewSplitsText"
@@ -41,46 +82,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/viewSplitsImg" />
-
-    </android.support.constraint.ConstraintLayout>
-
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/launchTimerItem"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:focusable="true"
-        android:clickable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        app:layout_constraintTop_toBottomOf="@id/viewSplitsItem"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageView
-            android:id="@+id/launchTimerImg"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_margin="16dp"
-            android:contentDescription="@string/img_view_splits"
-            app:srcCompat="@drawable/ic_launch_black_24dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/launchTimerText"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <TextView
-            android:id="@+id/launchTimerText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:minHeight="56dp"
-            android:padding="16dp"
-            android:layout_marginStart="8dp"
-            android:text="@string/bottom_sheet_view_launch"
-            android:gravity="start|center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/launchTimerImg" />
 
     </android.support.constraint.ConstraintLayout>
 

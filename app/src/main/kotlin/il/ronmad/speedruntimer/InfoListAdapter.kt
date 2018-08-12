@@ -12,7 +12,7 @@ import android.widget.BaseExpandableListAdapter
 import kotlinx.android.synthetic.main.game_info_item.view.*
 import kotlinx.android.synthetic.main.game_info_item_header.view.*
 
-class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableListAdapter(), TimeExtensions {
+class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableListAdapter() {
 
     var data: List<SrcLeaderboard> = listOf()
         set(value) {

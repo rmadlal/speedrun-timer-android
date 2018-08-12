@@ -11,7 +11,7 @@ import java.lang.ref.WeakReference
 
 class Chronometer(private val timerService: TimerService,
                   private val chronoView: View,
-                  private val chronoViewSet: Set<TextView>) : TimeExtensions {
+                  private val chronoViewSet: Set<TextView>) {
 
     private var base = 0L
 
