@@ -90,8 +90,8 @@ class TimerService : Service() {
         realm.removeChangeListener(realmChangeListener)
         if (startedProperly) {
             mWindowManager.removeView(mView)
+            unregisterReceiver(receiver)
         }
-        unregisterReceiver(receiver)
         realm.close()
         IS_ACTIVE = false
         super.onDestroy()
