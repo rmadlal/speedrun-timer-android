@@ -11,8 +11,8 @@ android {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 40
-        versionName '4.10'
+        versionCode 41
+        versionName '4.11'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -57,6 +57,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'ru.gildor.coroutines:kotlin-coroutines-retrofit:0.10.0'
     implementation 'com.google.guava:guava:25.1-android'
+    implementation 'com.github.mukeshsolanki:MarkdownView-Android:1.0.5'
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"

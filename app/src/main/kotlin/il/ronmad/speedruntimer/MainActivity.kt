@@ -88,6 +88,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
+            R.id.menu_help-> {
+                startActivity(Intent(this, HelpActivity::class.java))
+                true
+            }
             R.id.menu_add_games -> {
                 addInstalledGames()
                 true

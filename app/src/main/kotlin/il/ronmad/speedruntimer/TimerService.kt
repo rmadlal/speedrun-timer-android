@@ -97,6 +97,15 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
+    fun closeTimer() {
+        if (Chronometer.started) {
+            sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
+            Dialogs.timerActiveDialog(this) { stopSelf() }.show()
+        } else {
+            stopSelf()
+        }
+    }
+
     private fun onDataChange() {
         notificationBuilder.setContentText(if (category.bestTime > 0)
             "PB: ${category.bestTime.getFormattedTime()}"
@@ -127,12 +136,7 @@ class TimerService : Service() {
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 when (intent.action) {
-                    getString(R.string.action_close_timer) -> if (Chronometer.started) {
-                        sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-                        Dialogs.timerActiveDialog(context) { stopSelf() }.show()
-                    } else {
-                        stopSelf()
-                    }
+                    getString(R.string.action_close_timer) -> closeTimer()
                 }
             }
         }
