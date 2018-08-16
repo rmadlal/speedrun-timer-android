@@ -63,7 +63,7 @@
     <string name="split_name_hint">Split Name</string>
     <string name="pb_seg_text">PB Seg.:</string>
     <string name="best_seg_text">Best Seg.:</string>
-    <string name="bottom_sheet_view_splits">View splits</string>
+    <string name="bottom_sheet_view_splits">View &amp; edit splits</string>
     <string name="bottom_sheet_view_launch">Launch timer</string>
 
     <string-array name="category_autocomplete">

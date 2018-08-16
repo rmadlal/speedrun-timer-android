@@ -16,6 +16,7 @@ import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
 import android.view.*
 import android.widget.TextView
+import android.widget.Toast
 
 import io.realm.Realm
 import io.realm.RealmChangeListener
@@ -29,7 +30,7 @@ class TimerService : Service() {
     private lateinit var chronometer: Chronometer
     private lateinit var category: Category
     private var splitsIter: MutableListIterator<Split>? = null
-    private var segmentTimes = mutableListOf<Long>()
+    private var segmentTimes: List<Long> = emptyList()
     private var currentSplitStartTime = 0L
     private var hasSplits = false
     private var comparison: Comparison = Comparison.PERSONAL_BEST
@@ -246,7 +247,7 @@ class TimerService : Service() {
                             if (hasSplits) {
                                 // Split, or stop if on final split.
                                 val segmentTime = splitTime - currentSplitStartTime
-                                segmentTimes.add(segmentTime)
+                                segmentTimes += segmentTime
                                 if (prefs.getBoolean(getString(R.string.key_pref_timer_show_delta), true))
                                     getCurrentSplit()?.let { updateDelta(it, splitTime) }
 
@@ -285,39 +286,35 @@ class TimerService : Service() {
 
         mView.setOnLongClickListener {
             val time = chronometer.timeElapsed
-            if (moved) {
-                return@setOnLongClickListener false
-            }
-            if (time <= 0) {
-                timerReset(updateData = false)
-            } else if (Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time)) {
-                timerReset()
-            } else if (category.bestTime == 0L) {
-                timerReset(time)
-            } else {
-                if (!prefs.getBoolean(getString(R.string.key_pref_save_time_data), true)) {
-                    timerReset(updateData = false)
-                    return@setOnLongClickListener true
+            val updateData = prefs.getBoolean(getString(R.string.key_pref_save_time_data), true)
+            when {
+                moved -> return@setOnLongClickListener false
+                time <= 0 -> timerReset(updateData = false)
+                Chronometer.running || (category.bestTime > 0 && category.bestTime in 0..time) ->
+                    timerReset(updateData = updateData)
+                category.bestTime == 0L -> timerReset(time, updateData = updateData)
+                !updateData -> timerReset(updateData = false)
+                else -> {
+                    val resetDialog = AlertDialog.Builder(this)
+                            .setTitle(if (category.bestTime == 0L)
+                                "New personal best!"
+                            else
+                                "New personal best! (${(time - category.bestTime).getFormattedTime()})")
+                            .setMessage("Save it?")
+                            .setPositiveButton(R.string.save_reset) { _, _ ->
+                                timerReset(time)
+                            }
+                            .setNegativeButton(R.string.reset) { _, _ ->
+                                timerReset()
+                            }
+                            .setNeutralButton(android.R.string.cancel, null)
+                            .create()
+                    resetDialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+                    resetDialog.show()
                 }
-                val resetDialog = AlertDialog.Builder(this)
-                        .setTitle(if (category.bestTime == 0L)
-                            "New personal best!"
-                        else
-                            "New personal best! (${(time - category.bestTime).getFormattedTime()})")
-                        .setMessage("Save it?")
-                        .setPositiveButton(R.string.save_reset) { _, _ ->
-                            timerReset(time)
-                        }
-                        .setNegativeButton(R.string.reset) { _, _ ->
-                            timerReset()
-                        }
-                        .setNeutralButton(android.R.string.cancel, null)
-                        .create()
-                resetDialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else
-                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
-                resetDialog.show()
             }
             true
         }
@@ -397,6 +394,7 @@ class TimerService : Service() {
             } else {
                 category.updateData(bestTime = newPB, runCount = category.runCount + 1)
                 category.updateSplits(segmentTimes, true)
+                FSTWidget.forceUpdateWidgets(this)
             }
         }
         resetSplits()
@@ -404,7 +402,7 @@ class TimerService : Service() {
     }
 
     private fun resetSplits() {
-        segmentTimes.clear()
+        segmentTimes = emptyList()
         splitsIter = null
         mView.delta.visibility = View.GONE
         mView.currentSplit.visibility = View.GONE
@@ -464,7 +462,11 @@ class TimerService : Service() {
                         gameAndCategoryNames: Pair<String, String>,
                         minimizeIfNoGameLaunch: Boolean = true) {
             context ?: return
-            if (TimerService.IS_ACTIVE) return
+            if (TimerService.IS_ACTIVE) {
+                Toast.makeText(context, "Please close the currently active timer.", Toast.LENGTH_SHORT)
+                        .show()
+                return
+            }
             val (gameName, categoryName) = gameAndCategoryNames
             if (!(context.applicationContext as MyApplication).tryLaunchGame(gameName)) {
                 if (minimizeIfNoGameLaunch)

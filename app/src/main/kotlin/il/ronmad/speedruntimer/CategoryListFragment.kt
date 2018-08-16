@@ -6,14 +6,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.preference.PreferenceManager
 import android.provider.Settings
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.ActionMode
 import android.view.View
-import android.widget.Toast
 import kotlinx.android.synthetic.main.fragment_category_list.*
 
 class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
@@ -44,11 +42,10 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     override fun onResume() {
         super.onResume()
         mAdapter.onItemsEdited()
-        if (backFromPermissionCheck) {
-            backFromPermissionCheck = false
+        if (waitingForTimerPermission) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {
                 if (Settings.canDrawOverlays(context)) {
-                    TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                    launchTimer()
                 } else {
                     checkPermissionAndStartTimerDelayed()
                 }
@@ -63,13 +60,18 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             OVERLAY_REQUEST_CODE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (Settings.canDrawOverlays(context)) {
-                        TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                        launchTimer()
                     }
                 } else {
-                    TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                    launchTimer()
                 }
             }
         }
+    }
+
+    private fun launchTimer() {
+        waitingForTimerPermission = false
+        TimerService.launchTimer(context, game.name to selectedCategory!!.name)
     }
 
     private fun checkEmptyList() {
@@ -122,19 +124,20 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             addCategory(it)
         }.show()
     }
+
     @SuppressLint("RestrictedApi")
     private fun checkPermissionAndStartTimer() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(context)) {
-                backFromPermissionCheck = true
+                waitingForTimerPermission = true
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:${activity.packageName}"))
                 startActivityForResult(intent, OVERLAY_REQUEST_CODE, Bundle())
             } else {
-                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                launchTimer()
             }
         } else {
-            TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+            launchTimer()
         }
     }
 
@@ -148,15 +151,15 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         val handler = Handler()
         handler.postDelayed({
             if (Settings.canDrawOverlays(context)) {
-                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                launchTimer()
             } else {
                 handler.postDelayed({
                     if (Settings.canDrawOverlays(context)) {
-                        TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                        launchTimer()
                     } else {
                         handler.postDelayed({
                             if (Settings.canDrawOverlays(context)) {
-                                TimerService.launchTimer(context, game.name to selectedCategory!!.name)
+                                launchTimer()
                             }
                         }, 500)
                     }
@@ -236,7 +239,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     companion object {
 
-        private var backFromPermissionCheck = false
+        private var waitingForTimerPermission = false
         private const val OVERLAY_REQUEST_CODE = 251
 
         fun newInstance(gameName: String): CategoryListFragment {

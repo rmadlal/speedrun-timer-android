@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
                 .putBoolean(getString(R.string.key_rate_snackbar_shown), rateSnackbarShown)
                 .putBoolean(getString(R.string.key_add_games_snackbar_shown), addGamesSnackbarShown)
                 .apply()
+        FSTWidget.forceUpdateWidgets(this)
     }
 
     override fun onDestroy() {

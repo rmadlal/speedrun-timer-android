@@ -15,7 +15,7 @@ open class Category : RealmObject(), HasPrimaryId {
     @Index
     var name: String = ""
 
-    var bestTime: Long = 0
+    var bestTime: Long = 0L
     var runCount: Int = 0
     var splits: RealmList<Split> = RealmList()
 

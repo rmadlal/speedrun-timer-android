@@ -68,7 +68,7 @@ fun Long.getFormattedTime(withMillis: Boolean = true,
                           dashIfZero: Boolean = false): String {
     if (dashIfZero && this == 0L) return "-"
     val (hours, minutes, seconds, millis) = getTimeUnits(true)
-    var formattedTime = when {
+    val formattedTime = when {
         hours > 0 ->
             if (withMillis) "%d:%02d:%02d.%02d".format(hours, minutes, seconds, millis)
             else "%d:%02d:%02d".format(hours, minutes, seconds)
@@ -79,12 +79,11 @@ fun Long.getFormattedTime(withMillis: Boolean = true,
             if (withMillis) "%d.%02d".format(seconds, millis)
             else "%d".format(seconds)
     }
-    if (this < 0) {
-        formattedTime = "-$formattedTime"
-    } else if (plusSign) {
-        formattedTime = "+$formattedTime"
+    return when {
+        this < 0 -> "-$formattedTime"
+        plusSign -> "+$formattedTime"
+        else -> formattedTime
     }
-    return formattedTime
 }
 
 fun Long.setEditTextsFromTime(containingView: View) {
@@ -100,10 +99,10 @@ fun View.getTimeFromEditTexts(): Long {
     val minutesStr = this.minutes.text.toString()
     val secondsStr = this.seconds.text.toString()
     val millisStr = this.milliseconds.text.toString()
-    val hours = if (hoursStr.isEmpty()) 0 else Integer.parseInt(hoursStr)
-    val minutes = if (minutesStr.isEmpty()) 0 else Integer.parseInt(minutesStr)
-    val seconds = if (secondsStr.isEmpty()) 0 else Integer.parseInt(secondsStr)
-    val millis = if (millisStr.isEmpty()) 0 else Integer.parseInt(millisStr)
+    val hours = if (hoursStr.isNotEmpty()) Integer.parseInt(hoursStr) else 0
+    val minutes = if (minutesStr.isNotEmpty()) Integer.parseInt(minutesStr) else 0
+    val seconds = if (secondsStr.isNotEmpty()) Integer.parseInt(secondsStr) else 0
+    val millis = if (millisStr.isNotEmpty()) Integer.parseInt(millisStr) else 0
     return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
 }
 

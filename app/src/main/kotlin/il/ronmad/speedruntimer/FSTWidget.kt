@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import io.realm.Realm
+import android.content.ComponentName
+
 
 /**
  * Implementation of App Widget functionality.
@@ -38,6 +40,7 @@ class FSTWidget : AppWidgetProvider() {
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
         context ?: return
         when (intent?.action) {
             context.getString(R.string.action_start_timer) -> {
@@ -75,6 +78,15 @@ class FSTWidget : AppWidgetProvider() {
 
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        fun forceUpdateWidgets(context: Context) {
+            val intent = Intent(context, FSTWidget::class.java)
+            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            val ids = AppWidgetManager.getInstance(context.applicationContext)
+                    .getAppWidgetIds(ComponentName(context.applicationContext, FSTWidget::class.java))
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
         }
     }
 }

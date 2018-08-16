@@ -14,9 +14,9 @@ open class Split : RealmObject(), HasPrimaryId {
     @Index
     var name: String = ""
 
-    var pbTime: Long = 0
+    var pbTime: Long = 0L
 
-    var bestTime: Long = 0
+    var bestTime: Long = 0L
         set(value) { field = if (value != 0L) value else pbTime }
 
     @LinkingObjects("splits")

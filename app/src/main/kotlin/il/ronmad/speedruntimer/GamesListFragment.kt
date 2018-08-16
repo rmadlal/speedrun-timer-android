@@ -10,9 +10,9 @@ import kotlinx.android.synthetic.main.fragment_games_list.*
 
 class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
-    private lateinit var mAdapter: GameAdapter
+    private var mAdapter: GameAdapter? = null
     private var mActionMode: ActionMode? = null
-    private lateinit var mActionModeCallback: MyActionModeCallback
+    private var mActionModeCallback: MyActionModeCallback? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -34,7 +34,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     fun refreshList() {
-        mAdapter.notifyDataSetChanged()
+        mAdapter?.notifyDataSetChanged()
         checkEmptyList()
         mActionMode?.finish()
     }
@@ -45,44 +45,48 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
     private fun addGame(name: String) {
         realm.addGame(name)
-        mAdapter.onItemAdded()
+        mAdapter?.onItemAdded()
         checkEmptyList()
         mActionMode?.finish()
     }
 
     private fun editGameName(game: Game, newName: String) {
         game.setGameName(newName)
-        mAdapter.onItemsEdited()
+        mAdapter?.onItemsEdited()
         mActionMode?.finish()
     }
 
     private fun removeGames(toRemove: Collection<Long>) {
         realm.removeGames(toRemove)
-        mAdapter.onItemsRemoved()
+        mAdapter?.onItemsRemoved()
         checkEmptyList()
         mActionMode?.finish()
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter)
-        mActionModeCallback.onEditPressed = {
-            realm.getGameById(mAdapter.selectedItems.first())?.let { game ->
-                Dialogs.editGameDialog(activity, realm, game) {
-                    editGameName(game, it)
+        mActionModeCallback = MyActionModeCallback(mAdapter!!)
+        mActionModeCallback?.onEditPressed = {
+            mAdapter?.let { adapter ->
+                realm.getGameById(adapter.selectedItems.first())?.let { game ->
+                    Dialogs.editGameDialog(activity, realm, game) {
+                        editGameName(game, it)
+                    }.show()
+                }
+            }
+        }
+        mActionModeCallback?.onDeletePressed = {
+            mAdapter?.let { adapter ->
+                Dialogs.deleteGamesDialog(activity) {
+                    removeGames(adapter.selectedItems)
                 }.show()
             }
         }
-        mActionModeCallback.onDeletePressed = {
-            Dialogs.deleteGamesDialog(activity) {
-                removeGames(mAdapter.selectedItems)
-            }.show()
-        }
-        mActionModeCallback.onDestroy = { mActionMode = null }
+        mActionModeCallback?.onDestroy = { mActionMode = null }
     }
 
     private fun setupRecyclerView() {
         mAdapter = GameAdapter(realm.where<Game>().findAll())
-        mAdapter.onItemClickListener = { holder, position ->
+        mAdapter?.onItemClickListener = { holder, position ->
             if (mActionMode == null) {
                 val game = holder.item
                 activity.supportFragmentManager.beginTransaction()
@@ -94,13 +98,13 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
                         .addToBackStack(null)
                         .commit()
             } else {
-                mAdapter.toggleItemSelected(position)
+                mAdapter?.toggleItemSelected(position)
                 mActionMode?.invalidate()
             }
         }
-        mAdapter.onItemLongClickListener = { holder, position ->
+        mAdapter?.onItemLongClickListener = { holder, position ->
             if (mActionMode == null) {
-                mAdapter.toggleItemSelected(position)
+                mAdapter?.toggleItemSelected(position)
                 mActionMode = activity.startActionMode(mActionModeCallback)
                 true
             } else false
