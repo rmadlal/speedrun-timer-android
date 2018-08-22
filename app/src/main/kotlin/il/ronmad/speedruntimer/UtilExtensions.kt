@@ -137,6 +137,7 @@ fun Context.pixelToDp(pixels: Float): Int {
 fun Context.minimizeApp() {
     val homeIntent = Intent(Intent.ACTION_MAIN)
     homeIntent.addCategory(Intent.CATEGORY_HOME)
+    homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     startActivity(homeIntent)
 }
 
