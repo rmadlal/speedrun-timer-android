@@ -20,7 +20,7 @@ abstract class BaseRecyclerViewAdapter<T: HasPrimaryId>(val data: List<T>)
     }
     */
 
-    fun getItem(position: Int) = data[position]
+    private fun getItem(position: Int) = data[position]
 
     operator fun get(position: Int) = getItem(position)
 
@@ -62,7 +62,7 @@ abstract class BaseRecyclerViewAdapter<T: HasPrimaryId>(val data: List<T>)
         onItemEdited(position)
     }
 
-    fun isItemSelected(position: Int) = selectedItems.contains(getItemId(position))
+    private fun isItemSelected(position: Int) = selectedItems.contains(getItemId(position))
 
     fun clearSelections() {
         selectedItems = setOf()

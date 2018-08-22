@@ -15,7 +15,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/currentSplit"
         app:layout_constraintEnd_toStartOf="@+id/chronoHr2"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/chronoHr2"
@@ -51,7 +52,7 @@
         app:layout_constraintEnd_toStartOf="@+id/chronoMin2"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
-        />
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/chronoMin2"
@@ -89,7 +90,7 @@
         app:layout_constraintEnd_toStartOf="@+id/chronoSec2"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
-        />
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/chronoSec2"
@@ -125,7 +126,7 @@
         app:layout_constraintStart_toEndOf="@id/chronoSec1"
         app:layout_constraintEnd_toStartOf="@+id/chronoMilli2"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoSec1"
-        />
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/chronoMilli2"

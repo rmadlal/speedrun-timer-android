@@ -8,12 +8,9 @@
     <string name="hint_game_category">Category</string>
     <string name="hint_new_split">Split name</string>
     <string name="split_position">Position:</string>
-    <string name="text_title">Title:</string>
     <string name="text_name">Name:</string>
     <string name="empty_games_list">No games</string>
     <string name="empty_category_list">No categories</string>
-    <string name="empty_split_list">No splits</string>
-    <string name="empty_game_info">No data (pull to refresh)</string>
     <string name="empty_leaderboard">Leaderboard is empty</string>
     <string name="pb_text">PB:</string>
     <string name="pb_placeholder">00:00:00.00</string>
@@ -45,16 +42,11 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_help">Help &amp; feedback</string>
     <string name="menu_add_installed_games">Add installed games</string>
-    <string name="menu_toggle_src_categories">Hide auto categories</string>
-    <string name="menu_view_splits">View splits</string>
     <string name="menu_clear_splits">Clear splits</string>
     <string name="img_next_desc">Go to game categories</string>
     <string name="img_play_desc">Open timer</string>
     <string name="img_show_more_desc">Show more</string>
     <string name="img_link_desc">External link</string>
-    <string name="img_edit_category">Edit category</string>
-    <string name="img_view_splits">View splits</string>
-    <string name="img_launch_timer">Launch timer</string>
     <string name="splits_comparison">Comparison:</string>
     <string name="splits_header_name">Segment Name</string>
     <string name="splits_header_segment_time">Segment Time</string>
@@ -65,12 +57,6 @@
     <string name="best_seg_text">Best Seg.:</string>
     <string name="bottom_sheet_view_splits">View &amp; edit splits</string>
     <string name="bottom_sheet_view_launch">Launch timer</string>
-
-    <string-array name="category_autocomplete">
-        <item>Any%</item>
-        <item>100%</item>
-        <item>Low%</item>
-    </string-array>
 
     <string-array name="fragment_game_tabs">
         <item>Categories</item>
@@ -163,7 +149,6 @@
     <string name="key_pref_timer_show_current_split">il.ronmad.speedruntimer.key.SHOW_CURRENT_SPLIT</string>
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>
     <string name="key_pref_save_time_data">il.ronmad.speedruntimer.key.SAVE_DATA</string>
-    <string name="key_auto_load_categories">il.ronmad.speedruntimer.key.AUTO_LOAD_CATEGORIES</string>
     <string name="key_pref_compare_against">il.ronmad.speedruntimer.key.COMPARE_AGAINST</string>
     <string name="appwidget_text">FST</string>
     <string name="configure">Choose game and category</string>

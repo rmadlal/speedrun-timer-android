@@ -12,7 +12,6 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 
 import io.realm.Realm
 import io.realm.exceptions.RealmException
@@ -180,12 +179,12 @@ class MainActivity : AppCompatActivity() {
     private fun addInstalledGames() {
         val gameNames = getAvailableInstalledGames()
         if (gameNames.isEmpty()) {
-            Toast.makeText(this, getString(R.string.no_games_to_add), Toast.LENGTH_SHORT).show()
+            showToast(getString(R.string.no_games_to_add))
         } else {
             Dialogs.addInstalledGamesDialog(this, realm, gameNames) {
                 (supportFragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT) as? GamesListFragment)
                         ?.refreshList()
-                Snackbar.make(this.fabAdd, "Games added", Toast.LENGTH_SHORT).show()
+                Snackbar.make(this.fabAdd, "Games added", Snackbar.LENGTH_SHORT).show()
             }.show()
         }
     }

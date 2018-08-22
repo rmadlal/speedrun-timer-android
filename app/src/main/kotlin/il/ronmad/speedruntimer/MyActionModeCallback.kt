@@ -4,7 +4,7 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 
-class MyActionModeCallback(val adapter: BaseRecyclerViewAdapter<*>) : ActionMode.Callback {
+class MyActionModeCallback(private val adapter: BaseRecyclerViewAdapter<*>) : ActionMode.Callback {
 
     var onEditPressed: (() -> Unit)? = null
     var onDeletePressed: (() -> Unit)? = null

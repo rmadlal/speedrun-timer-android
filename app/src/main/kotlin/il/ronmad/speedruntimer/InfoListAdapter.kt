@@ -1,5 +1,6 @@
 package il.ronmad.speedruntimer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -48,6 +49,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
 
     override fun getGroupId(groupPosition: Int) = groupPosition.toLong()
 
+    @SuppressLint("SetTextI18n")
     override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
         val listItem = convertView ?:
         LayoutInflater.from(context).inflate(R.layout.game_info_item, parent, false)
@@ -87,7 +89,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
             category?.let {
                 val pb = it.bestTime
                 if (pb > 0) {
-                    val bopped = leaderboard.runs.find { it.time >= pb }
+                    val bopped = leaderboard.runs.find { run -> run.time >= pb }
                     val place = bopped?.place ?:
                     leaderboard.runs[leaderboard.runs.size - 1].place + 1
 

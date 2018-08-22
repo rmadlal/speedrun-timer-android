@@ -57,6 +57,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     private fun removeGames(toRemove: Collection<Long>) {
+        if (toRemove.isEmpty()) return
         realm.removeGames(toRemove)
         mAdapter?.onItemsRemoved()
         checkEmptyList()
@@ -65,49 +66,55 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
     private fun setupActionMode() {
         mActionModeCallback = MyActionModeCallback(mAdapter!!)
-        mActionModeCallback?.onEditPressed = {
-            mAdapter?.let { adapter ->
-                realm.getGameById(adapter.selectedItems.first())?.let { game ->
-                    Dialogs.editGameDialog(activity, realm, game) {
-                        editGameName(game, it)
-                    }.show()
+        mActionModeCallback?.apply {
+            onEditPressed = {
+                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                    realm.getGameById(id)?.let { game ->
+                        Dialogs.editGameDialog(activity, realm, game) {
+                            editGameName(game, it)
+                        }.show()
+                    }
                 }
             }
-        }
-        mActionModeCallback?.onDeletePressed = {
-            mAdapter?.let { adapter ->
-                Dialogs.deleteGamesDialog(activity) {
-                    removeGames(adapter.selectedItems)
-                }.show()
+            onDeletePressed = {
+                mAdapter?.let {
+                    if (it.selectedItems.isNotEmpty()) {
+                        Dialogs.deleteGamesDialog(activity) {
+                            removeGames(it.selectedItems)
+                        }.show()
+                    }
+                }
             }
+            onDestroy = { mActionMode = null }
         }
-        mActionModeCallback?.onDestroy = { mActionMode = null }
     }
 
     private fun setupRecyclerView() {
         mAdapter = GameAdapter(realm.where<Game>().findAll())
-        mAdapter?.onItemClickListener = { holder, position ->
-            if (mActionMode == null) {
-                val game = holder.item
-                activity.supportFragmentManager.beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
-                                R.anim.fade_in, R.anim.fade_out)
-                        .replace(R.id.fragment_container,
-                                GameFragment.newInstance(game.name),
-                                TAG_GAME_FRAGMENT)
-                        .addToBackStack(null)
-                        .commit()
-            } else {
-                mAdapter?.toggleItemSelected(position)
-                mActionMode?.invalidate()
+        mAdapter?.apply {
+            onItemClickListener = { holder, position ->
+                if (mActionMode == null) {
+                    val game = holder.item
+                    activity.supportFragmentManager.beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+                                    R.anim.fade_in, R.anim.fade_out)
+                            .replace(R.id.fragment_container,
+                                    GameFragment.newInstance(game.name),
+                                    TAG_GAME_FRAGMENT)
+                            .addToBackStack(null)
+                            .commit()
+                } else {
+                    mAdapter?.toggleItemSelected(position)
+                    mActionMode?.invalidate()
+                }
             }
-        }
-        mAdapter?.onItemLongClickListener = { holder, position ->
-            if (mActionMode == null) {
-                mAdapter?.toggleItemSelected(position)
-                mActionMode = activity.startActionMode(mActionModeCallback)
-                true
-            } else false
+            onItemLongClickListener = { _, position ->
+                if (mActionMode == null) {
+                    mAdapter?.toggleItemSelected(position)
+                    mActionMode = activity.startActionMode(mActionModeCallback)
+                    true
+                } else false
+            }
         }
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)

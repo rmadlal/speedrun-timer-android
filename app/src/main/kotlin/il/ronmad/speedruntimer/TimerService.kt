@@ -1,11 +1,7 @@
 package il.ronmad.speedruntimer
 
 import android.annotation.TargetApi
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.*
 import android.graphics.PixelFormat
 import android.graphics.Typeface
@@ -14,10 +10,11 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
-import android.view.*
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
 import android.widget.TextView
-import android.widget.Toast
-
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.timer_overlay.view.*
@@ -40,7 +37,7 @@ class TimerService : Service() {
     private lateinit var receiver: BroadcastReceiver
 
     lateinit var mView: View
-    var chronoViews: Set<TextView> = emptySet()
+    private var chronoViews: Set<TextView> = emptySet()
     private lateinit var mWindowManager: WindowManager
     private lateinit var mWindowParams: WindowManager.LayoutParams
     private var moved = false
@@ -208,7 +205,7 @@ class TimerService : Service() {
 
         setupDisplayPrefs()
 
-        chronometer = Chronometer(this, mView, chronoViews)
+        chronometer = Chronometer(mView, chronoViews)
 
         mView.isLongClickable = true
         mView.setOnTouchListener(object : View.OnTouchListener {
@@ -463,8 +460,7 @@ class TimerService : Service() {
                         minimizeIfNoGameLaunch: Boolean = true) {
             context ?: return
             if (TimerService.IS_ACTIVE) {
-                Toast.makeText(context, "Please close the currently active timer.", Toast.LENGTH_SHORT)
-                        .show()
+                context.showToast("Please close the currently active timer.")
                 return
             }
             val (gameName, categoryName) = gameAndCategoryNames

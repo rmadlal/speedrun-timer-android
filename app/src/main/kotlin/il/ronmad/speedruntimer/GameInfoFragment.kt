@@ -1,7 +1,6 @@
 package il.ronmad.speedruntimer
 
 import android.os.Bundle
-import android.widget.Toast
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.fragment_game.*
@@ -13,10 +12,10 @@ import kotlinx.coroutines.experimental.Job
 
 class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
-    private val realmChangeListener = RealmChangeListener<Realm> { adapter.notifyDataSetChanged() }
+    private val realmChangeListener = RealmChangeListener<Realm> { mAdapter?.notifyDataSetChanged() }
     private lateinit var game: Game
     private var pbs: Map<String, Long> = mapOf()
-    private lateinit var adapter: InfoListAdapter
+    private var mAdapter: InfoListAdapter? = null
     internal var isDataShowing = false
     private var refreshJob: Job? = null
 
@@ -48,8 +47,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     override fun onFabAddPressed() {}
 
     internal fun refreshData() {
-        pbs = mapOf()
-        game.categories.forEach { pbs += it.name.toLowerCase() to it.bestTime }
+        pbs = game.categories.map { it.name.toLowerCase() to it.bestTime }.toMap()
         refreshJob = launch(UI) {
             swipeRefreshLayout.isRefreshing = true
             val leaderboards = Src.fetchLeaderboardsForGame(getContext(), game.name)
@@ -61,18 +59,18 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     }
 
     private fun setupListView() {
-        adapter = InfoListAdapter(context, game)
-        expandableListView.setAdapter(adapter)
+        mAdapter = InfoListAdapter(context, game)
+        expandableListView.setAdapter(mAdapter)
         ViewCompat.setNestedScrollingEnabled(expandableListView, true)
     }
 
     private fun displayData(data: List<SrcLeaderboard>) {
-        adapter.clear()
+        mAdapter?.clear()
         if (data.isEmpty()) {
-            Toast.makeText(context, "No data available", Toast.LENGTH_SHORT).show()
+            context?.showToast("No data available")
             (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
         } else {
-            adapter.data = data
+            mAdapter?.data = data
         }
         isDataShowing = !data.isEmpty()
     }

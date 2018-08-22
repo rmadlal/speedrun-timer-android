@@ -11,9 +11,9 @@ import kotlinx.android.synthetic.main.fragment_splits.*
 class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     lateinit var category: Category
-    lateinit var mAdapter: SplitAdapter
+    var mAdapter: SplitAdapter? = null
     private var mActionMode: ActionMode? = null
-    private lateinit var mActionModeCallback: MyActionModeCallback
+    private var mActionModeCallback: MyActionModeCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,10 +72,9 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun addSplit(name: String, position: Int) {
         category.addSplit(name, position)
-        mAdapter.onItemAdded(position)
+        mAdapter?.onItemAdded(position)
         mActionMode?.finish()
     }
-
 
     private fun editSplit(split: Split,
                           newName: String,
@@ -84,10 +83,10 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                           newPosition: Int) {
         split.updateData(newName, newPBTime, newBestTime)
         val position = split.getPosition()
-        mAdapter.onItemEdited(position)
+        mAdapter?.onItemEdited(position)
         if (newPosition != position) {
             split.moveToPosition(newPosition)
-            mAdapter.onItemMoved(position, newPosition)
+            mAdapter?.onItemMoved(position, newPosition)
         }
         category.setPBFromSplits()
         calculateSob()
@@ -95,8 +94,9 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun removeSplits(toRemove: Collection<Long>) {
+        if (toRemove.isEmpty()) return
         category.removeSplits(toRemove)
-        mAdapter.onItemsRemoved()
+        mAdapter?.onItemsRemoved()
         category.setPBFromSplits()
         calculateSob()
         mActionMode?.finish()
@@ -104,7 +104,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun clearSplits() {
         category.clearSplits()
-        mAdapter.onItemsEdited()
+        mAdapter?.onItemsEdited()
         category.setPBFromSplits()
         calculateSob()
     }
@@ -126,42 +126,53 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter)
-        mActionModeCallback.onEditPressed = {
-            category.getSplitById(mAdapter.selectedItems.first())?.let {
+        mActionModeCallback = MyActionModeCallback(mAdapter!!)
+        mActionModeCallback?.apply {
+            onEditPressed = {
+                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                    category.getSplitById(id)?.let {
                         Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
                             editSplit(it, name, newPBTime, newBestTime, newPosition)
                         }.show()
                     }
-        }
-        mActionModeCallback.onDeletePressed = {
-            AlertDialog.Builder(activity)
-                    .setTitle("Remove splits")
-                    .setMessage("Are you sure?")
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        removeSplits(mAdapter.selectedItems)
+                }
+            }
+            onDeletePressed = {
+                mAdapter?.let {
+                    if (it.selectedItems.isNotEmpty()) {
+                        AlertDialog.Builder(activity)
+                                .setTitle("Remove splits")
+                                .setMessage("Are you sure?")
+                                .setPositiveButton(android.R.string.ok) { _, _ ->
+                                    removeSplits(it.selectedItems)
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
                     }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
+                }
+
+            }
+            onDestroy = { mActionMode = null }
         }
-        mActionModeCallback.onDestroy = { mActionMode = null }
     }
 
     private fun setupRecyclerView() {
         mAdapter = SplitAdapter(category.splits, activity.getComparison())
-        mAdapter.onItemClickListener = { holder, position ->
-            mActionMode?.let {
-                mAdapter.toggleItemSelected(position)
-                it.invalidate()
+        mAdapter?.apply {
+            onItemClickListener = { _, position ->
+                mActionMode?.let {
+                    mAdapter?.toggleItemSelected(position)
+                    it.invalidate()
+                }
             }
-        }
-        mAdapter.onItemLongClickListener = { holder, position ->
-            if (mActionMode == null) {
-                mAdapter.toggleItemSelected(position)
-                mActionMode = activity.startActionMode(mActionModeCallback)
-                true
-            } else false
+            onItemLongClickListener = { _, position ->
+                if (mActionMode == null) {
+                    mAdapter?.toggleItemSelected(position)
+                    mActionMode = activity.startActionMode(mActionModeCallback)
+                    true
+                } else false
 
+            }
         }
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
@@ -176,12 +187,12 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                mAdapter.comparison = when (position) {
-                // Current Comparison
+                mAdapter?.comparison = when (position) {
+                    // Current Comparison
                     0 ->  activity.getComparison()
-                // Personal Best
+                    // Personal Best
                     1 -> Comparison.PERSONAL_BEST
-                // Best Segments
+                    // Best Segments
                     2 -> Comparison.BEST_SEGMENTS
                     else -> Comparison.PERSONAL_BEST
                 }

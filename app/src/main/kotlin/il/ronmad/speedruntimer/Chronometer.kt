@@ -9,9 +9,7 @@ import kotlinx.android.synthetic.main.timer_overlay.view.*
 
 import java.lang.ref.WeakReference
 
-class Chronometer(private val timerService: TimerService,
-                  private val chronoView: View,
-                  private val chronoViewSet: Set<TextView>) {
+class Chronometer(private val chronoView: View, private val chronoViewSet: Set<TextView>) {
 
     private var base = 0L
 

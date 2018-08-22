@@ -2,15 +2,11 @@ package il.ronmad.speedruntimer
 
 import android.content.Context
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Build
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import io.realm.Realm
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.edit_category_dialog.view.*
 import kotlinx.android.synthetic.main.edit_split_dialog.view.*
 import kotlinx.android.synthetic.main.new_category_dialog.view.*
@@ -134,7 +130,7 @@ object Dialogs {
         dialogView.categoryName.setText(category.name)
         dialogView.categoryName.setSelection(dialogView.categoryName.text.length)
         if (category.bestTime > 0) {
-            category.bestTime.setEditTextsFromTime(dialogView)
+            dialogView.setEditTextsFromTime(category.bestTime)
         }
         dialogView.runCount.setText(category.runCount.toString())
         val dialog = AlertDialog.Builder(context)
@@ -148,7 +144,7 @@ object Dialogs {
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
             val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
-                0L.setEditTextsFromTime(dialogView)
+                dialogView.setEditTextsFromTime(0L)
                 dialogView.runCount.setText("0")
             }
             saveButton.setOnClickListener {
@@ -181,10 +177,10 @@ object Dialogs {
         splitPositionSpinner.setSelection(split.getPosition())
         splitNameInput.setText(split.name)
         if (split.pbTime > 0) {
-            split.pbTime.setEditTextsFromTime(pbSegmentTimeInput)
+            pbSegmentTimeInput.setEditTextsFromTime(split.pbTime)
         }
         if (split.bestTime > 0) {
-            split.bestTime.setEditTextsFromTime(bestSegmentTimeInput)
+            bestSegmentTimeInput.setEditTextsFromTime(split.bestTime)
         }
         val dialog = AlertDialog.Builder(context)
                 .setTitle("Edit split")
@@ -197,8 +193,8 @@ object Dialogs {
             val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
             val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
             clearButton.setOnClickListener {
-                0L.setEditTextsFromTime(pbSegmentTimeInput)
-                0L.setEditTextsFromTime(bestSegmentTimeInput)
+                pbSegmentTimeInput.setEditTextsFromTime(0L)
+                bestSegmentTimeInput.setEditTextsFromTime(0L)
             }
             saveButton.setOnClickListener {
                 val newName = splitNameInput.text.toString()

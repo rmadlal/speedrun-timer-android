@@ -25,7 +25,7 @@ class CountdownPreference : DialogPreference {
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
         super.onPrepareDialogBuilder(builder)
         view = View.inflate(context, R.layout.edit_time_layout, null)
-        countdown.setEditTextsFromTime(view)
+        view.setEditTextsFromTime(countdown)
         builder.setView(view)
                 .setPositiveButton(R.string.save) { _, _ ->
                     countdown = view.getTimeFromEditTexts()
@@ -39,7 +39,7 @@ class CountdownPreference : DialogPreference {
     override fun showDialog(state: Bundle?) {
         super.showDialog(state)
         (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
-                .setOnClickListener { 0L.setEditTextsFromTime(view) }
+                .setOnClickListener { view.setEditTextsFromTime(0L) }
     }
 
     override fun onGetDefaultValue(a: TypedArray?, index: Int) = a?.getInt(index, 0)?.toLong()

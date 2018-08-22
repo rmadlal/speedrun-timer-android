@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.preference.PreferenceManager
 import android.util.Log
-import android.widget.Toast
 import io.realm.FieldAttribute
 
 import io.realm.Realm
@@ -16,7 +15,8 @@ class MyApplication : Application() {
 
     lateinit var srcApi: SrcAPI
     var srcGameCache: Map<String, SrcGame> = emptyMap()
-    var installedApps: List<ApplicationInfo> = listOf()
+
+    private var installedApps: List<ApplicationInfo> = listOf()
     var installedGames: List<String> = listOf()
 
     override fun onCreate() {
@@ -34,8 +34,7 @@ class MyApplication : Application() {
         installedApps.find {
             packageManager.getApplicationLabel(it).toString().toLowerCase() == gameName.toLowerCase()
         }?.let {
-            Toast.makeText(this,
-                    "Launching ${packageManager.getApplicationLabel(it)}...", Toast.LENGTH_SHORT).show()
+            showToast("Launching ${packageManager.getApplicationLabel(it)}...")
             startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
             return true
         }

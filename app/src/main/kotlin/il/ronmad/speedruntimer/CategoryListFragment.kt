@@ -18,9 +18,9 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     private lateinit var game: Game
     private var selectedCategory: Category? = null
-    lateinit var mAdapter: CategoryAdapter
+    private var mAdapter: CategoryAdapter? = null
     var mActionMode: ActionMode? = null
-    private lateinit var mActionModeCallback: MyActionModeCallback
+    private var mActionModeCallback: MyActionModeCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     override fun onResume() {
         super.onResume()
-        mAdapter.onItemsEdited()
+        mAdapter?.onItemsEdited()
         if (waitingForTimerPermission) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {
                 if (Settings.canDrawOverlays(context)) {
@@ -79,37 +79,45 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter)
-        mActionModeCallback.onEditPressed = {
-            game.getCategoryById(mAdapter.selectedItems.first())?.let {
-                Dialogs.editCategoryDialog(activity, it) { name, pbTime, runCount ->
-                    actionEditCategory(it, name, pbTime, runCount)
-                }.show()
+        mActionModeCallback = MyActionModeCallback(mAdapter!!)
+        mActionModeCallback?.apply {
+            onEditPressed = {
+                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                    game.getCategoryById(id)?.let {
+                        Dialogs.editCategoryDialog(activity, it) { name, pbTime, runCount ->
+                            actionEditCategory(it, name, pbTime, runCount)
+                        }.show()
+                    }
+                }
             }
+            onDeletePressed = {
+                mAdapter?.let {
+                    actionRemoveCategories(it.selectedItems)
+                }
+            }
+            onDestroy = { mActionMode = null }
         }
-        mActionModeCallback.onDeletePressed = {
-            actionRemoveCategories(mAdapter.selectedItems)
-        }
-        mActionModeCallback.onDestroy = { mActionMode = null }
     }
 
     private fun setupRecyclerView() {
         mAdapter = CategoryAdapter(activity, game.categories)
-        mAdapter.onItemClickListener = { holder, position ->
-            if (mActionMode == null) {
-                selectedCategory = holder.item
-                showBottomSheetDialog()
-            } else {
-                mAdapter.toggleItemSelected(position)
-                mActionMode?.invalidate()
+        mAdapter?.apply {
+            onItemClickListener = { holder, position ->
+                if (mActionMode == null) {
+                    selectedCategory = holder.item
+                    showBottomSheetDialog()
+                } else {
+                    mAdapter?.toggleItemSelected(position)
+                    mActionMode?.invalidate()
+                }
             }
-        }
-        mAdapter.onItemLongClickListener = { holder, position ->
-            if (mActionMode == null) {
-                mAdapter.toggleItemSelected(position)
-                mActionMode = activity.startActionMode(mActionModeCallback)
-                true
-            } else false
+            onItemLongClickListener = { _, position ->
+                if (mActionMode == null) {
+                    mAdapter?.toggleItemSelected(position)
+                    mActionMode = activity.startActionMode(mActionModeCallback)
+                    true
+                } else false
+            }
         }
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
@@ -170,20 +178,21 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     private fun addCategory(name: String) {
         game.addCategory(name)
-        mAdapter.onItemAdded()
+        mAdapter?.onItemAdded()
         checkEmptyList()
         mActionMode?.finish()
     }
 
     private fun editCategory(category: Category, newName: String, newBestTime: Long, newRunCount: Int) {
         category.updateData(newName, newBestTime, newRunCount)
-        mAdapter.onItemsEdited()
+        mAdapter?.onItemsEdited()
         mActionMode?.finish()
     }
 
     private fun removeCategories(toRemove: Collection<Long>) {
+        if (toRemove.isEmpty()) return
         game.removeCategories(toRemove)
-        mAdapter.onItemsRemoved()
+        mAdapter?.onItemsRemoved()
         checkEmptyList()
         mActionMode?.finish()
     }
@@ -208,6 +217,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun actionRemoveCategories(toRemove: Collection<Long>) {
+        if (toRemove.isEmpty()) return
         game.getCategories(toRemove).singleOrNull()?.let {
             if (it.bestTime > 0) {
                 Dialogs.deleteCategoryDialog(activity, it) {
@@ -221,7 +231,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         }.show()
     }
 
-    fun actionEditCategory(category: Category, newName: String, newBestTime: Long, newRunCount: Int) {
+    private fun actionEditCategory(category: Category, newName: String, newBestTime: Long, newRunCount: Int) {
         val prevName = category.name
         val prevBestTime = category.bestTime
         val prevRunCount = category.runCount

@@ -67,12 +67,6 @@ class FSTWidgetConfigureActivity : Activity() {
             finish()
             return
         }
-
-        val (gameName, categoryName) = loadWidgetPref(this@FSTWidgetConfigureActivity, mAppWidgetId)
-        val game = realm.getGameByName(gameName)
-        appwidget_spinner_game.setSelection(games.indexOfFirst { it.name == gameName })
-        appwidget_spinner_category.setSelection(
-                game?.categories?.indexOfFirst { it.name == categoryName } ?: -1)
     }
 
     private fun setupSpinners() {

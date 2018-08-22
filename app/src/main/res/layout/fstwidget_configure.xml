@@ -1,42 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="16dp">
 
     <TextView
+        android:id="@+id/appwidget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="@string/configure" />
+        android:layout_marginBottom="16dp"
+        android:text="@string/configure"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/appwidget_spinner_game" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Spinner
+        android:id="@+id/appwidget_spinner_game"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:weightSum="2">
+        app:layout_constraintTop_toBottomOf="@id/appwidget_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/appwidget_spinner_category"
+        app:layout_constraintBottom_toTopOf="@+id/add_button" />
 
-        <Spinner
-            android:id="@+id/appwidget_spinner_game"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-
-        <Spinner
-            android:id="@+id/appwidget_spinner_category"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-
-    </LinearLayout>
+    <Spinner
+        android:id="@+id/appwidget_spinner_category"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/appwidget_spinner_game"
+        app:layout_constraintBottom_toBottomOf="@id/appwidget_spinner_game"
+        app:layout_constraintStart_toEndOf="@id/appwidget_spinner_game"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/add_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/add_widget" />
+        android:layout_marginTop="16dp"
+        android:text="@string/add_widget"
+        app:layout_constraintTop_toBottomOf="@id/appwidget_spinner_game"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>

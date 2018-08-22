@@ -6,6 +6,7 @@ import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
@@ -86,15 +87,17 @@ fun Long.getFormattedTime(withMillis: Boolean = true,
     }
 }
 
-fun Long.setEditTextsFromTime(containingView: View) {
-    val (hours, minutes, seconds, millis) = getTimeUnits()
-    containingView.hours.setText(if (hours > 0) "$hours" else "")
-    containingView.minutes.setText(if (minutes > 0) "$minutes" else "")
-    containingView.seconds.setText(if (seconds > 0) "$seconds" else "")
-    containingView.milliseconds.setText(if (millis > 0) "$millis" else "")
+fun View.setEditTextsFromTime(time: Long) {
+    checkTimeViewsNotNull(this)
+    val (hours, minutes, seconds, millis) = time.getTimeUnits()
+    this.hours.setText(if (hours > 0) hours.toString() else "")
+    this.minutes.setText(if (minutes > 0) minutes.toString() else "")
+    this.seconds.setText(if (seconds > 0) seconds.toString() else "")
+    this.milliseconds.setText(if (millis > 0) millis.toString() else "")
 }
 
 fun View.getTimeFromEditTexts(): Long {
+    checkTimeViewsNotNull(this)
     val hoursStr = this.hours.text.toString()
     val minutesStr = this.minutes.text.toString()
     val secondsStr = this.seconds.text.toString()
@@ -104,6 +107,13 @@ fun View.getTimeFromEditTexts(): Long {
     val seconds = if (secondsStr.isNotEmpty()) Integer.parseInt(secondsStr) else 0
     val millis = if (millisStr.isNotEmpty()) Integer.parseInt(millisStr) else 0
     return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
+}
+
+private fun checkTimeViewsNotNull(view: View) {
+    checkNotNull(view.hours)
+    checkNotNull(view.minutes)
+    checkNotNull(view.seconds)
+    checkNotNull(view.milliseconds)
 }
 
 fun Int.toOrdinal(): String {
@@ -128,6 +138,10 @@ fun Context.minimizeApp() {
     val homeIntent = Intent(Intent.ACTION_MAIN)
     homeIntent.addCategory(Intent.CATEGORY_HOME)
     startActivity(homeIntent)
+}
+
+fun Context.showToast(text: String, length: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, text, length).show()
 }
 
 fun MainActivity.getComparison() = getComparison(this)
