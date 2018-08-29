@@ -75,14 +75,14 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun checkEmptyList() {
-        emptyList.visibility = if (game.categories.count() == 0) View.VISIBLE else View.GONE
+        emptyList.visibility = if (game.categories.size == 0) View.VISIBLE else View.GONE
     }
 
     private fun setupActionMode() {
         mActionModeCallback = MyActionModeCallback(mAdapter!!)
         mActionModeCallback?.apply {
             onEditPressed = {
-                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     game.getCategoryById(id)?.let {
                         Dialogs.editCategoryDialog(activity, it) { name, pbTime, runCount ->
                             actionEditCategory(it, name, pbTime, runCount)
@@ -210,10 +210,12 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     private fun showBottomSheetDialog() {
         val bottomSheetDialog = CategoryBottomSheetFragment.newInstance()
-        bottomSheetDialog.show(activity.supportFragmentManager,
-                TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
-        bottomSheetDialog.onViewSplitsClickListener = { viewSplits() }
-        bottomSheetDialog.onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
+        bottomSheetDialog.apply {
+            show(this@CategoryListFragment.activity.supportFragmentManager,
+                    TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
+            onViewSplitsClickListener = { viewSplits() }
+            onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
+        }
     }
 
     private fun actionRemoveCategories(toRemove: Collection<Long>) {

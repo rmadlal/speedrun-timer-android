@@ -129,7 +129,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         mActionModeCallback = MyActionModeCallback(mAdapter!!)
         mActionModeCallback?.apply {
             onEditPressed = {
-                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     category.getSplitById(id)?.let {
                         Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
                             editSplit(it, name, newPBTime, newBestTime, newPosition)

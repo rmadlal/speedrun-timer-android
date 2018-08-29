@@ -116,7 +116,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
 
     override fun getChildId(groupPosition: Int, childPosition: Int) = getGroupId(groupPosition)
 
-    override fun getGroupCount() = data.count()
+    override fun getGroupCount() = data.size
 
     fun clear() {
         data = listOf()

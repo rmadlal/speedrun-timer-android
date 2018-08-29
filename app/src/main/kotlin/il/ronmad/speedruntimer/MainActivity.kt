@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
         rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false)
         if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty) {
             val savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0)
-            launchCounter = Math.min(3, savedLaunchCounter) + 1
+            launchCounter = (savedLaunchCounter + 1).coerceAtMost(4)
             toShowRateSnackbar = launchCounter == 3
         }
 
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
             Dialogs.addInstalledGamesDialog(this, realm, gameNames) {
                 (supportFragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT) as? GamesListFragment)
                         ?.refreshList()
-                Snackbar.make(this.fabAdd, "Games added", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(fabAdd, "Games added", Snackbar.LENGTH_SHORT).show()
             }.show()
         }
     }

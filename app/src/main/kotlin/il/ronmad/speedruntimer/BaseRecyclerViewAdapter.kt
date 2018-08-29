@@ -24,7 +24,7 @@ abstract class BaseRecyclerViewAdapter<T: HasPrimaryId>(val data: List<T>)
 
     operator fun get(position: Int) = getItem(position)
 
-    override fun getItemCount() = data.count()
+    override fun getItemCount() = data.size
 
     override fun getItemId(position: Int) = getItem(position).id
 

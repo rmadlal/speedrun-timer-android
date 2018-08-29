@@ -14,7 +14,6 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     private val realmChangeListener = RealmChangeListener<Realm> { mAdapter?.notifyDataSetChanged() }
     private lateinit var game: Game
-    private var pbs: Map<String, Long> = mapOf()
     private var mAdapter: InfoListAdapter? = null
     internal var isDataShowing = false
     private var refreshJob: Job? = null
@@ -47,10 +46,9 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
     override fun onFabAddPressed() {}
 
     internal fun refreshData() {
-        pbs = game.categories.map { it.name.toLowerCase() to it.bestTime }.toMap()
         refreshJob = launch(UI) {
             swipeRefreshLayout.isRefreshing = true
-            val leaderboards = Src.fetchLeaderboardsForGame(getContext(), game.name)
+            val leaderboards = Src.fetchLeaderboardsForGame(context, game.name)
             if (isActive) {
                 displayData(leaderboards)
                 swipeRefreshLayout.isRefreshing = false

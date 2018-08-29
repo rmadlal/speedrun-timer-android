@@ -10,6 +10,7 @@ import io.realm.FieldAttribute
 
 import io.realm.Realm
 import io.realm.RealmConfiguration
+import kotlinx.coroutines.experimental.launch
 
 class MyApplication : Application() {
 
@@ -23,7 +24,7 @@ class MyApplication : Application() {
         super.onCreate()
         initRealm()
         srcApi = Src.srcAPI()
-        setupInstalledAppsLists()
+        launch { setupInstalledAppsLists() }
     }
 
     fun tryLaunchGame(gameName: String): Boolean {
@@ -69,7 +70,7 @@ class MyApplication : Application() {
                         ++oldVer
                     }
                     if (oldVer == 2) {
-                        // added primary keys to all objects (id: Int)
+                        // added primary keys to all objects (id: Long)
                         realm.schema.get("Game")
                                 ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++gamePrimaryKey) }

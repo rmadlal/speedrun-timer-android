@@ -68,7 +68,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
         mActionModeCallback = MyActionModeCallback(mAdapter!!)
         mActionModeCallback?.apply {
             onEditPressed = {
-                mAdapter?.selectedItems?.firstOrNull()?.let { id ->
+                mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     realm.getGameById(id)?.let { game ->
                         Dialogs.editGameDialog(activity, realm, game) {
                             editGameName(game, it)
@@ -102,7 +102,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
                                     GameFragment.newInstance(game.name),
                                     TAG_GAME_FRAGMENT)
                             .addToBackStack(null)
-                            .commit()
+                            .commitAllowingStateLoss()
                 } else {
                     mAdapter?.toggleItemSelected(position)
                     mActionMode?.invalidate()

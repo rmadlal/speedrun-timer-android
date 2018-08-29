@@ -9,8 +9,8 @@ import kotlinx.android.synthetic.main.category_bottom_sheet_dialog.view.*
 
 class CategoryBottomSheetFragment : BottomSheetDialogFragment() {
 
-    var onViewSplitsClickListener: (() -> Unit)? = null
     var onLaunchTimerClickListener: (() -> Unit)? = null
+    var onViewSplitsClickListener: (() -> Unit)? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.category_bottom_sheet_dialog, container, false)
@@ -18,13 +18,15 @@ class CategoryBottomSheetFragment : BottomSheetDialogFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        view?.viewSplitsItem?.setOnClickListener {
-            dismiss()
-            onViewSplitsClickListener?.invoke()
-        }
-        view?.launchTimerItem?.setOnClickListener {
-            dismiss()
-            onLaunchTimerClickListener?.invoke()
+        view?.apply {
+            launchTimerItem.setOnClickListener {
+                onLaunchTimerClickListener?.invoke()
+                dismiss()
+            }
+            viewSplitsItem.setOnClickListener {
+                onViewSplitsClickListener?.invoke()
+                dismiss()
+            }
         }
     }
 

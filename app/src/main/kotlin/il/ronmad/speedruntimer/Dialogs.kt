@@ -70,7 +70,7 @@ object Dialogs {
         val splitNameInput = dialogView.newSplitInput
         val splitPositionSpinner = dialogView.positionSpinner
         splitPositionSpinner.adapter = SplitPositionSpinnerAdapter(context,
-                category.splits.count() + 1)
+                category.splits.size + 1)
         splitPositionSpinner.setSelection(splitPositionSpinner.count - 1)
         val dialog = AlertDialog.Builder(context)
                 .setTitle("New split")
@@ -173,7 +173,7 @@ object Dialogs {
         val bestSegmentTimeInput = dialogView.editTimeBest
         val splitPositionSpinner = dialogView.editPositionSpinner
         splitPositionSpinner.adapter = SplitPositionSpinnerAdapter(context,
-                split.getCategory().splits.count())
+                split.getCategory().splits.size)
         splitPositionSpinner.setSelection(split.getPosition())
         splitNameInput.setText(split.name)
         if (split.pbTime > 0) {

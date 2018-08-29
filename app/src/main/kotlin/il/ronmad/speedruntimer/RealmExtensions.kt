@@ -86,7 +86,7 @@ fun Category.getSplitById(id: Long) =
 fun Category.getSplits(ids: Collection<Long>) =
         this.splits.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
-fun Category.addSplit(name: String, position: Int = this.splits.count()) = realm.executeTransaction {
+fun Category.addSplit(name: String, position: Int = this.splits.size) = realm.executeTransaction {
     val split = realm.createObject<Split>(realm.getNextId<Split>())
     split.name = name
     this.splits.add(position, split)
