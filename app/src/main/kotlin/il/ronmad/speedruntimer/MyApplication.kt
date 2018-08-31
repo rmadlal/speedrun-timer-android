@@ -10,21 +10,20 @@ import io.realm.FieldAttribute
 
 import io.realm.Realm
 import io.realm.RealmConfiguration
-import kotlinx.coroutines.experimental.launch
 
 class MyApplication : Application() {
 
     lateinit var srcApi: SrcAPI
     var srcGameCache: Map<String, SrcGame> = emptyMap()
 
-    private var installedApps: List<ApplicationInfo> = listOf()
+    private var installedApps: Map<String, ApplicationInfo> = mapOf()
     var installedGames: List<String> = listOf()
 
     override fun onCreate() {
         super.onCreate()
         initRealm()
         srcApi = Src.srcAPI()
-        launch { setupInstalledAppsLists() }
+        setupInstalledAppsLists()
     }
 
     fun tryLaunchGame(gameName: String): Boolean {
@@ -32,9 +31,7 @@ class MyApplication : Application() {
         if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
             return false
         }
-        installedApps.find {
-            packageManager.getApplicationLabel(it).toString().toLowerCase() == gameName.toLowerCase()
-        }?.let {
+        installedApps[gameName.toLowerCase()]?.let {
             showToast("Launching ${packageManager.getApplicationLabel(it)}...")
             startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
             return true
@@ -96,11 +93,15 @@ class MyApplication : Application() {
 
     private fun setupInstalledAppsLists() {
         val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-        installedApps = allInstalledApps.filter {
-            it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
-        }
+                .filter {
+                    it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
+                }
+        installedApps = allInstalledApps
+                .map { packageManager.getApplicationLabel(it).toString().toLowerCase() to it }
+                .toMap()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            installedGames = installedApps.filter { it.category == ApplicationInfo.CATEGORY_GAME }
+            installedGames = allInstalledApps
+                    .filter { it.category == ApplicationInfo.CATEGORY_GAME }
                     .map { packageManager.getApplicationLabel(it).toString() }
         }
     }

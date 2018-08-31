@@ -8,6 +8,9 @@ import android.content.Intent
 import android.widget.RemoteViews
 import io.realm.Realm
 import android.content.ComponentName
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 
 
 /**
@@ -45,10 +48,17 @@ class FSTWidget : AppWidgetProvider() {
         when (intent?.action) {
             context.getString(R.string.action_start_timer) -> {
                 intent ?: return
-                val gameName = intent.getStringExtra(context.getString(R.string.extra_game))
-                val categoryName = intent.getStringExtra(context.getString(R.string.extra_category))
-                TimerService.launchTimer(context, gameName to categoryName,
-                        minimizeIfNoGameLaunch = false)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && !Settings.canDrawOverlays(context)) {
+                    context.showToast(context.getString(R.string.toast_allow_permission), 1)
+                    context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:${context.packageName}")))
+                } else {
+                    val gameName = intent.getStringExtra(context.getString(R.string.extra_game))
+                    val categoryName = intent.getStringExtra(context.getString(R.string.extra_category))
+                    TimerService.launchTimer(context, gameName to categoryName,
+                            minimizeIfNoGameLaunch = false)
+                }
             }
         }
     }

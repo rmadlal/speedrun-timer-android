@@ -88,7 +88,7 @@ fun Long.getFormattedTime(withMillis: Boolean = true,
 }
 
 fun View.setEditTextsFromTime(time: Long) {
-    checkTimeViewsNotNull(this)
+    requireTimeViewsNotNull(this)
     val (hours, minutes, seconds, millis) = time.getTimeUnits()
     this.hours.setText(if (hours > 0) hours.toString() else "")
     this.minutes.setText(if (minutes > 0) minutes.toString() else "")
@@ -97,7 +97,7 @@ fun View.setEditTextsFromTime(time: Long) {
 }
 
 fun View.getTimeFromEditTexts(): Long {
-    checkTimeViewsNotNull(this)
+    requireTimeViewsNotNull(this)
     val hoursStr = this.hours.text.toString()
     val minutesStr = this.minutes.text.toString()
     val secondsStr = this.seconds.text.toString()
@@ -109,11 +109,11 @@ fun View.getTimeFromEditTexts(): Long {
     return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
 }
 
-private fun checkTimeViewsNotNull(view: View) {
-    checkNotNull(view.hours)
-    checkNotNull(view.minutes)
-    checkNotNull(view.seconds)
-    checkNotNull(view.milliseconds)
+private fun requireTimeViewsNotNull(view: View) {
+    requireNotNull(view.hours)
+    requireNotNull(view.minutes)
+    requireNotNull(view.seconds)
+    requireNotNull(view.milliseconds)
 }
 
 fun Int.toOrdinal(): String {

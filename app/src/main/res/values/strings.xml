@@ -34,6 +34,8 @@
     <string name="rate_snackbar">If you like this app, please rate it in the Play Store.</string>
     <string name="add_games_snackbar">Games detected on device. Add them?</string>
     <string name="no_games_to_add">There are no games to add</string>
+    <string name="toast_close_active_timer">"Please close the currently active timer."</string>
+    <string name="toast_allow_permission">"Please allow the app to display over other apps for the timer to work."</string>
     <string name="close_timer">Close timer</string>
     <string name="button_lb_link">View on Speedrun.com</string>
     <string name="button_wr_link">Watch WR</string>

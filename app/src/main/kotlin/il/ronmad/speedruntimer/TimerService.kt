@@ -460,7 +460,7 @@ class TimerService : Service() {
                         minimizeIfNoGameLaunch: Boolean = true) {
             context ?: return
             if (TimerService.IS_ACTIVE) {
-                context.showToast("Please close the currently active timer.")
+                context.showToast(context.getString(R.string.toast_close_active_timer))
                 return
             }
             val (gameName, categoryName) = gameAndCategoryNames

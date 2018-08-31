@@ -55,14 +55,10 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         when (requestCode) {
             OVERLAY_REQUEST_CODE -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (Settings.canDrawOverlays(context)) {
-                        launchTimer()
-                    }
-                } else {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                        || Settings.canDrawOverlays(context)) {
                     launchTimer()
                 }
             }
@@ -135,17 +131,17 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     @SuppressLint("RestrictedApi")
     private fun checkPermissionAndStartTimer() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(context)) {
+        context?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && !Settings.canDrawOverlays(it)) {
                 waitingForTimerPermission = true
+                it.showToast(it.getString(R.string.toast_allow_permission), 1)
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:${activity.packageName}"))
                 startActivityForResult(intent, OVERLAY_REQUEST_CODE, Bundle())
             } else {
                 launchTimer()
             }
-        } else {
-            launchTimer()
         }
     }
 

@@ -21,11 +21,11 @@ class CategoryBottomSheetFragment : BottomSheetDialogFragment() {
         view?.apply {
             launchTimerItem.setOnClickListener {
                 onLaunchTimerClickListener?.invoke()
-                dismiss()
+                dismissAllowingStateLoss()
             }
             viewSplitsItem.setOnClickListener {
                 onViewSplitsClickListener?.invoke()
-                dismiss()
+                dismissAllowingStateLoss()
             }
         }
     }
