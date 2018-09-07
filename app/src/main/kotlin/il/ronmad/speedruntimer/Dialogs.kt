@@ -237,7 +237,7 @@ object Dialogs {
     internal fun deleteCategoryDialog(context: Context, category: Category,
                                       callback: () -> Unit): AlertDialog {
         return AlertDialog.Builder(context)
-                .setTitle("Delete ${category.getGame().name} ${category.name}?")
+                .setTitle("Delete ${category.gameName} ${category.name}?")
                 .setMessage("Your PB of ${category.bestTime.getFormattedTime()} and splits will be lost.")
                 .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)

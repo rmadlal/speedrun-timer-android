@@ -18,12 +18,15 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
+    private val defaultCategories: List<String>
+        get() = listOf("Any%", "100%", "Low%")
+
     internal fun setCategories(gameName: String) {
         launch(UI) {
-            val game = Src.fetchGameData(getContext(), gameName)
-            val categoryNames = if (game == SrcGame.EMPTY_GAME) {
-                listOf("Any%", "100%", "Low%")
-            } else try {
+            val app = context?.applicationContext as? MyApplication ?: return@launch
+            val game = app.srcApi.fetchGameData(context, gameName)
+            val categoryNames = if (game == SrcGame.EMPTY_GAME) defaultCategories
+            else try {
                 game.categories.flatMap { category ->
                     if (category.subCategories.isEmpty())
                         listOf(category.name)
@@ -40,10 +43,8 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
                         }
                     }
                 }
-            } catch (e: OutOfMemoryError) {
-                listOf("Any%", "100%", "Low%")
-            }
-            setAdapter(ArrayAdapter(getContext(),
+            } catch (e: OutOfMemoryError) { defaultCategories }
+            setAdapter(ArrayAdapter(context,
                     R.layout.autocomplete_dropdown_item, categoryNames))
             postDelayed({ if (isShown) showDropDown() }, 200)
         }

@@ -47,8 +47,12 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     internal fun refreshData() {
         refreshJob = launch(UI) {
+            val app = context?.applicationContext as? MyApplication ?: run {
+                displayData(emptyList())
+                return@launch
+            }
             swipeRefreshLayout.isRefreshing = true
-            val leaderboards = Src.fetchLeaderboardsForGame(context, game.name)
+            val leaderboards = app.srcApi.fetchLeaderboardsForGame(context, game.name)
             if (isActive) {
                 displayData(leaderboards)
                 swipeRefreshLayout.isRefreshing = false

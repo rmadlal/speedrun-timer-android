@@ -159,3 +159,11 @@ private fun getComparison(context: Context): Comparison {
         else -> Comparison.PERSONAL_BEST
     }
 }
+
+inline fun <T> Iterable<T>.sumBy(selector: (T) -> Long): Long {
+    var sum = 0L
+    for (element in this) {
+        sum += selector(element)
+    }
+    return sum
+}

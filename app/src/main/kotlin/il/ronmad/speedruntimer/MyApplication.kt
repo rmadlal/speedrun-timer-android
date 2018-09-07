@@ -11,9 +11,11 @@ import io.realm.FieldAttribute
 import io.realm.Realm
 import io.realm.RealmConfiguration
 
+const val REALM_SCHEMA_VERSION = 4L
+
 class MyApplication : Application() {
 
-    lateinit var srcApi: SrcAPI
+    lateinit var srcApi: Src
     var srcGameCache: Map<String, SrcGame> = emptyMap()
 
     private var installedApps: Map<String, ApplicationInfo> = mapOf()
@@ -22,7 +24,7 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         initRealm()
-        srcApi = Src.srcAPI()
+        srcApi = Src()
         setupInstalledAppsLists()
     }
 
@@ -46,7 +48,7 @@ class MyApplication : Application() {
         var splitPrimaryKey = 0L
         var pointPrimaryKey = 0L
         val realmConfig = RealmConfiguration.Builder()
-                .schemaVersion(3)
+                .schemaVersion(REALM_SCHEMA_VERSION)
                 .migration { realm, oldVersion, newVersion ->
                     Log.d("MigrateRealm", "old: $oldVersion, new: $newVersion")
                     var oldVer = oldVersion.toInt()
@@ -84,6 +86,11 @@ class MyApplication : Application() {
                                 ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
                                 ?.transform { it.setLong("id", ++pointPrimaryKey) }
                                 ?.addPrimaryKey("id")
+                        ++oldVer
+                    }
+                    if (oldVer == 3) {
+                        // gameName field added to Category class
+                        realm.schema.get("Category")?.addField("gameName", String::class.java)
                         ++oldVer
                     }
                 }

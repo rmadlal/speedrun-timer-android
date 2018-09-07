@@ -7,10 +7,14 @@ import io.realm.kotlin.createObject
 import io.realm.kotlin.oneOf
 import io.realm.kotlin.where
 
-fun Realm.addGame(gameName: String) = this.executeTransaction {
-    val game = this.createObject<Game>(getNextId<Game>())
-    game.name = gameName
-    game.timerPosition = this.createObject(getNextId<Point>())
+fun Realm.addGame(gameName: String): Game {
+    var game: Game? = null
+    this.executeTransaction {
+        game = this.createObject<Game>(getNextId<Game>())
+        game!!.name = gameName
+        game!!.timerPosition = this.createObject(getNextId<Point>())
+    }
+    return game!!
 }
 
 fun Realm.getGameById(id: Long) =
@@ -39,10 +43,15 @@ fun Realm.getCategoryByName(gameName: String, categoryName: String) =
 
 fun Game.setGameName(newName: String) = realm.executeTransaction { this.name = newName }
 
-fun Game.addCategory(name: String) = realm.executeTransaction {
-    val category = realm.createObject<Category>(realm.getNextId<Category>())
-    category.name = name
-    this.categories.add(category)
+fun Game.addCategory(name: String): Category {
+    var category: Category? = null
+    realm.executeTransaction {
+        category = realm.createObject<Category>(realm.getNextId<Category>())
+        category!!.name = name
+        category!!.gameName = this.name
+        this.categories.add(category)
+    }
+    return category!!
 }
 
 fun Game.getCategoryById(id: Long) =
@@ -86,10 +95,14 @@ fun Category.getSplitById(id: Long) =
 fun Category.getSplits(ids: Collection<Long>) =
         this.splits.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
-fun Category.addSplit(name: String, position: Int = this.splits.size) = realm.executeTransaction {
-    val split = realm.createObject<Split>(realm.getNextId<Split>())
-    split.name = name
-    this.splits.add(position, split)
+fun Category.addSplit(name: String, position: Int = this.splits.size): Split {
+    var split: Split? = null
+    realm.executeTransaction {
+        split = realm.createObject<Split>(realm.getNextId<Split>())
+        split!!.name = name
+        this.splits.add(position, split)
+    }
+    return split!!
 }
 
 fun Category.splitExists(splitName: String) =
@@ -107,7 +120,7 @@ fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction
     this.getSplits(toRemove).deleteAllFromRealm()
 }
 
-fun Category.setPBFromSplits() = updateData(bestTime = splits.map { it.pbTime }.sum())
+fun Category.setPBFromSplits() = updateData(bestTime = splits.sumBy { it.pbTime })
 
 fun Split.getCategory() = this.category!!.first()!!
 
@@ -123,9 +136,9 @@ fun Split.calculateSplitTime(comparison: Comparison = Comparison.PERSONAL_BEST):
     val splits = this.getCategory().splits
     return when (comparison) {
         Comparison.PERSONAL_BEST ->
-            splits.subList(0, splits.indexOf(this)).map { it.pbTime }.sum() + this.pbTime
+            splits.subList(0, splits.indexOf(this)).sumBy { it.pbTime } + this.pbTime
         Comparison.BEST_SEGMENTS ->
-            splits.subList(0, splits.indexOf(this)).map { it.bestTime }.sum() + this.bestTime
+            splits.subList(0, splits.indexOf(this)).sumBy { it.bestTime } + this.bestTime
     }
 }
 

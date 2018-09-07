@@ -2,30 +2,18 @@ package il.ronmad.speedruntimer
 
 import com.google.common.collect.Lists
 import kotlinx.coroutines.experimental.runBlocking
-import org.junit.Before
 import org.junit.Test
-import retrofit2.Retrofit
 import ru.gildor.coroutines.retrofit.Result
 import ru.gildor.coroutines.retrofit.awaitResult
 import kotlin.test.*
 
 class SrcTests {
 
-    lateinit var api: SrcAPI
-
-    @Before
-    fun setUp() {
-        api = Retrofit.Builder()
-                .addConverterFactory(Src.gsonConverter())
-                .baseUrl(SRC_API)
-                .build()
-                .create(SrcAPI::class.java)
-    }
-
     @Test
     @Throws(Exception::class)
     fun testGame140() {
         runBlocking {
+            val api = Src().api
             val game140Res = api.game("140").awaitResult()
             when (game140Res) {
                 is Result.Ok -> {
@@ -52,6 +40,7 @@ class SrcTests {
     @Throws(Exception::class)
     fun testGameThoth() {
         runBlocking {
+            val api = Src().api
             val gameThothRes = api.game("Thoth").awaitResult()
             when (gameThothRes) {
                 is Result.Ok -> {
@@ -80,6 +69,7 @@ class SrcTests {
     @Throws(Exception::class)
     fun testLeaderboards() {
         runBlocking {
+            val api = Src().api
             val gameRes = api.game("Thoth").awaitResult()
             when (gameRes) {
                 is Result.Ok -> {

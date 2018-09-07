@@ -26,7 +26,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mActionBar?.title = category.getGame().name
+        mActionBar?.title = category.gameName
         mActionBar?.subtitle = category.name
         mActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -110,7 +110,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun calculateSob() {
-        sobValueText.text = category.splits.map { it.bestTime }.sum()
+        sobValueText.text = category.splits.sumBy { it.bestTime }
                 .getFormattedTime(dashIfZero = true)
     }
 

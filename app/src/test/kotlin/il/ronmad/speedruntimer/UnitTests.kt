@@ -1,7 +1,5 @@
 package il.ronmad.speedruntimer
 
-import android.graphics.Color
-
 import org.junit.Test
 
 import org.junit.Assert.*

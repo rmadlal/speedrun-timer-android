@@ -150,7 +150,7 @@ class TimerService : Service() {
                     R.drawable.ic_timer_black_48dp
                 else
                     R.drawable.ic_stat_timer)
-                .setContentTitle("${category.getGame().name} ${category.name}")
+                .setContentTitle("${category.gameName} ${category.name}")
                 .setContentIntent(PendingIntent.getActivity(this, 0,
                         Intent(this, MainActivity::class.java),
                         PendingIntent.FLAG_UPDATE_CURRENT))

@@ -1,5 +1,6 @@
 package il.ronmad.speedruntimer
 
+import com.google.gson.annotations.Expose
 import io.realm.RealmObject
 import io.realm.RealmResults
 import io.realm.annotations.Index
@@ -11,11 +12,14 @@ open class Split : RealmObject(), HasPrimaryId {
     @PrimaryKey
     override var id: Long = 0L
 
+    @Expose
     @Index
     var name: String = ""
 
+    @Expose
     var pbTime: Long = 0L
 
+    @Expose
     var bestTime: Long = 0L
         set(value) { field = if (value != 0L) value.coerceAtMost(pbTime) else pbTime }
 

@@ -2,6 +2,7 @@ package il.ronmad.speedruntimer
 
 import android.content.Context
 import com.google.common.collect.Lists
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
@@ -82,62 +83,55 @@ data class SrcVariable(val id: String, val name: String, val values: List<SrcVal
 
 data class SrcValue(val id: String, val label: String)
 
-object Src {
+class Src {
 
-    fun srcAPI(): SrcAPI {
-        return Retrofit.Builder()
-                .addConverterFactory(Src.gsonConverter())
-                .baseUrl(SRC_API)
-                .build()
-                .create(SrcAPI::class.java)
-    }
+    private val gson = setupGson()
+    val api = setupApi()
 
-    private fun categoriesDeserializer(json: JsonArray): List<SrcCategory> {
-        return json
-                .map { categoryElement ->
-                    val categoryObj = categoryElement.asJsonObject
-                    val name = categoryObj.get("name").asString
-                    val subCategories = variablesDeserializer(
-                            categoryObj.get("variables").asJsonObject.get("data").asJsonArray)
-                    val links = GsonBuilder().create()
-                            .fromJson(categoryObj.get("links"), Array<SrcLink>::class.java)
-                    val leaderboardLink = links.find { it.rel == "leaderboard" }?.uri
-                    SrcCategory(name, subCategories, leaderboardLink)
-                }
-    }
-
-    private fun variablesDeserializer(json: JsonArray): List<SrcVariable> {
-        return json
-                .filter {
-                    val variableObj = it.asJsonObject
-                    variableObj.get("is-subcategory").asBoolean
-                }
-                .map { variableElement ->
-                    val variableObj = variableElement.asJsonObject
-                    val id = variableObj.get("id").asString
-                    val name = variableObj.get("name").asString
-                    val valuesObj = variableObj.get("values").asJsonObject.get("values").asJsonObject
-                    val values = valuesObj.entrySet().map {
-                        val label = it.value.asJsonObject.get("label").asString
-                        SrcValue(it.key, label)
+    private fun setupGson(): Gson {
+        fun variablesDeserializer(json: JsonArray): List<SrcVariable> {
+            return json
+                    .filter {
+                        val variableObj = it.asJsonObject
+                        variableObj.get("is-subcategory").asBoolean
                     }
-                    SrcVariable(id, name, values)
-                }
-    }
+                    .map { variableElement ->
+                        val variableObj = variableElement.asJsonObject
+                        val id = variableObj.get("id").asString
+                        val name = variableObj.get("name").asString
+                        val valuesObj = variableObj.get("values").asJsonObject.get("values").asJsonObject
+                        val values = valuesObj.entrySet().map {
+                            val label = it.value.asJsonObject.get("label").asString
+                            SrcValue(it.key, label)
+                        }
+                        SrcVariable(id, name, values)
+                    }
+        }
 
-    fun gsonConverter(): GsonConverterFactory {
+        fun categoriesDeserializer(json: JsonArray): List<SrcCategory> {
+            return json
+                    .map { categoryElement ->
+                        val categoryObj = categoryElement.asJsonObject
+                        val name = categoryObj.get("name").asString
+                        val subCategories = variablesDeserializer(
+                                categoryObj.get("variables").asJsonObject.get("data").asJsonArray)
+                        val links = Gson().fromJson(categoryObj.get("links"), Array<SrcLink>::class.java)
+                        val leaderboardLink = links.find { it.rel == "leaderboard" }?.uri
+                        SrcCategory(name, subCategories, leaderboardLink)
+                    }
+        }
 
         val gamesDeserializer = JsonDeserializer<SrcGame> { json, _, _ ->
             val gameArray = json.asJsonObject.get("data").asJsonArray
             val gameObj = gameArray[0].asJsonObject
             val name = gameObj.get("names").asJsonObject.get("international").asString
             val categories = categoriesDeserializer(gameObj.get("categories").asJsonObject.get("data").asJsonArray)
-            val links = GsonBuilder().create().fromJson(gameObj.get("links"), Array<SrcLink>::class.java)
+            val links = Gson().fromJson(gameObj.get("links"), Array<SrcLink>::class.java)
             SrcGame(name, categories, links.toList())
         }
 
         val leaderboardDeserializer = JsonDeserializer<SrcLeaderboard> { json, _, _ ->
-            val gson = GsonBuilder().create()
+            val gson = Gson()
             val leaderboardObj = json.asJsonObject.get("data").asJsonObject
             val weblink = leaderboardObj.get("weblink").asString
             val lbRuns = leaderboardObj.get("runs").asJsonArray
@@ -171,18 +165,26 @@ object Src {
             SrcPlatform(json.asJsonObject.get("data").asJsonObject.get("name").asString)
         }
 
-        return GsonConverterFactory.create(GsonBuilder()
+        return GsonBuilder()
                 .registerTypeAdapter(SrcGame::class.java, gamesDeserializer)
                 .registerTypeAdapter(SrcLeaderboard::class.java, leaderboardDeserializer)
                 .registerTypeAdapter(SrcUser::class.java, userDeserializer)
                 .registerTypeAdapter(SrcPlatform::class.java, platformDeserializer)
-                .create())
+                .create()
+    }
+
+    private fun setupApi(): SrcAPI {
+        return Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .baseUrl(SRC_API)
+                .build()
+                .create(SrcAPI::class.java)
     }
 
     suspend fun fetchGameData(context: Context?, gameName: String): SrcGame {
         val app = context?.applicationContext as? MyApplication ?: return SrcGame.EMPTY_GAME
         return app.srcGameCache.getOrElse(gameName) {
-            val gameRes = app.srcApi.game(gameName).awaitResult()
+            val gameRes = api.game(gameName).awaitResult()
             when (gameRes) {
                 is Result.Ok -> {
                     val game = gameRes.value
@@ -197,19 +199,18 @@ object Src {
     }
 
     suspend fun fetchLeaderboardsForGame(context: Context?, gameName: String): List<SrcLeaderboard> {
-        val app = context?.applicationContext as? MyApplication ?: return emptyList()
         val game = fetchGameData(context, gameName)
         return if (game == SrcGame.EMPTY_GAME) emptyList()
         else try {
             game.categories.flatMap { category ->
                 if (category.leaderboardUrl == null) return@flatMap emptyList<SrcLeaderboard>()
                 if (category.subCategories.isEmpty()) {
-                    val leaderboardRes = app.srcApi.leaderboard(category.leaderboardUrl).awaitResult()
+                    val leaderboardRes = api.leaderboard(category.leaderboardUrl).awaitResult()
                     when (leaderboardRes) {
                         is Result.Ok -> {
                             val leaderboard = leaderboardRes.value
                             leaderboard.categoryName = category.name
-                            leaderboard.initWrData(app.srcApi)
+                            leaderboard.initWrData(api)
                             listOf(leaderboard)
                         }
                         else -> emptyList()
@@ -222,13 +223,13 @@ object Src {
                         val varQuery: Map<String, String> = varValPairList.map {
                             "var-${it.first.id}" to it.second.id
                         }.toMap()
-                        val leaderboardRes = app.srcApi.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
+                        val leaderboardRes = api.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
                         when (leaderboardRes) {
                             is Result.Ok -> {
                                 val leaderboard = leaderboardRes.value
                                 leaderboard.categoryName = category.name
                                 leaderboard.subcategories = varValPairList.map { it.second.label }
-                                leaderboard.initWrData(app.srcApi)
+                                leaderboard.initWrData(api)
                                 leaderboard
                             }
                             else -> null

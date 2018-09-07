@@ -34,6 +34,7 @@
 -keepclasseswithmembers public class * {
     public static void main(java.lang.String[]);
 }
+-keepclassmembers enum * { *; }
 -keep class il.ronmad.speedruntimer.** { *; }
 -keep class kotlin.jvm.functions.**
 -keep class kotlin.jvm.internal.**
