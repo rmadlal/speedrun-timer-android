@@ -1,7 +1,8 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.activities
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import il.ronmad.speedruntimer.R
 import kotlinx.android.synthetic.main.activity_help.*
 
 class HelpActivity : AppCompatActivity() {

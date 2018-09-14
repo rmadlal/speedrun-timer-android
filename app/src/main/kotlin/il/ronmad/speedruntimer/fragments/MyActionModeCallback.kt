@@ -1,8 +1,10 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.adapters.BaseRecyclerViewAdapter
 
 class MyActionModeCallback(private val adapter: BaseRecyclerViewAdapter<*>) : ActionMode.Callback {
 

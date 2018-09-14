@@ -1,8 +1,10 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.activities
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +14,10 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import il.ronmad.speedruntimer.*
+import il.ronmad.speedruntimer.fragments.GamesListFragment
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.gameExists
 
 import io.realm.Realm
 import io.realm.exceptions.RealmException
@@ -41,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
+        setupInstalledAppsLists()
         setupSnackbars()
 
         if (savedInstanceState == null) {
@@ -88,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
-            R.id.menu_help-> {
+            R.id.menu_help -> {
                 startActivity(Intent(this, HelpActivity::class.java))
                 true
             }
@@ -120,6 +127,23 @@ class MainActivity : AppCompatActivity() {
             sharedPrefs.edit()
                     .remove(getString(R.string.key_games))
                     .apply()
+        }
+    }
+
+    private fun setupInstalledAppsLists() {
+        val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+                .filter {
+                    it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
+                }
+        app.installedApps = allInstalledApps
+                .map { packageManager.getApplicationLabel(it).toString().toLowerCase() to it }
+                .toMap()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            app.installedGames = allInstalledApps
+                    .asSequence()
+                    .filter { it.category == ApplicationInfo.CATEGORY_GAME }
+                    .map { packageManager.getApplicationLabel(it).toString() }
+                    .toList()
         }
     }
 
@@ -173,7 +197,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getAvailableInstalledGames(): List<String> {
-        return (application as MyApplication).installedGames.filter { !realm.gameExists(it) }
+        return app.installedGames.filter { !realm.gameExists(it) }
     }
 
     private fun addInstalledGames() {

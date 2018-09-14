@@ -7,10 +7,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
 import com.google.common.collect.Lists
-
+import il.ronmad.speedruntimer.web.SrcGame
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import java.lang.IllegalArgumentException
 
 class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
 

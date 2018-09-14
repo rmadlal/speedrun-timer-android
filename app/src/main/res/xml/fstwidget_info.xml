@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:configure="il.ronmad.speedruntimer.FSTWidgetConfigureActivity"
+    android:configure="il.ronmad.speedruntimer.activities.FSTWidgetConfigureActivity"
     android:initialKeyguardLayout="@layout/fstwidget"
     android:initialLayout="@layout/fstwidget"
     android:minHeight="40dp"

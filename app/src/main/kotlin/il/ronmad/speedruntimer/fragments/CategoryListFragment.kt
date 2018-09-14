@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -8,10 +8,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.provider.Settings
 import android.support.design.widget.Snackbar
+import android.support.v4.view.ViewCompat
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.ActionMode
 import android.view.View
+import il.ronmad.speedruntimer.*
+import il.ronmad.speedruntimer.adapters.CategoryAdapter
+import il.ronmad.speedruntimer.realm.*
 import kotlinx.android.synthetic.main.fragment_category_list.*
 
 class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
@@ -70,7 +74,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         try {
             checkNotNull(selectedCategory)
             selectedCategory?.let {
-                TimerService.launchTimer(context, game.name to it.name)
+                TimerService.launchTimer(context, game.name, it.name)
             }
         } catch (e: IllegalStateException) { /* selectedCategory was null */ }
     }
@@ -124,7 +128,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
-            isNestedScrollingEnabled = false
+            ViewCompat.setNestedScrollingEnabled(this, false)
         }
     }
 

@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.web
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -7,6 +7,8 @@ import com.google.gson.TypeAdapter
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import il.ronmad.speedruntimer.BuildConfig
+import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -91,16 +93,15 @@ class SplitsIO {
 
             private fun addToRealm(gameName: String,
                                    categoryName: String,
-                                   segmentsInfo: List<Triple<String, Long, Long>>): Category {
+                                   segmentsInfo: List<Segment>): Category {
 
                 val realm = Realm.getDefaultInstance()
                 val game =  realm.getGameByName(gameName) ?: realm.addGame(gameName)
                 val category = game.getCategoryByName(categoryName) ?: game.addCategory(categoryName)
                 category.splits.deleteAllFromRealm()
                 segmentsInfo.forEach {
-                    val (name, pbTime, bestTime) = it
-                    val split = category.addSplit(name)
-                    split.updateData(pbTime = pbTime, bestTime = bestTime)
+                    val split = category.addSplit(it.segmentName)
+                    split.updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
                 }
                 category.setPBFromSplits()
                 realm.close()
@@ -147,7 +148,7 @@ class SplitsIO {
                 `in`?.apply {
                     var gameName = ""
                     var categoryName = ""
-                    var segmentsInfo: List<Triple<String, Long, Long>> = listOf()
+                    var segmentsInfo: List<Segment> = emptyList()
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
@@ -191,7 +192,7 @@ class SplitsIO {
                                         }
                                     }
                                     endObject()
-                                    segmentsInfo += Triple(segmentName, pbDuration, bestDuration)
+                                    segmentsInfo += Segment(segmentName, pbDuration, bestDuration)
                                 }
                                 endArray()
                             }
@@ -247,4 +248,8 @@ class SplitsIO {
 
     // Also creates all necessary Realm objects
     fun deserializeRun(json: String): Category = gson.fromJson(json, Category::class.java)
+
+    private class Segment(val segmentName: String,
+                          val pbDuration: Long,
+                          val bestDuration: Long)
 }

@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
@@ -7,6 +7,7 @@ import android.support.v7.app.ActionBar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import il.ronmad.speedruntimer.activities.MainActivity
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 

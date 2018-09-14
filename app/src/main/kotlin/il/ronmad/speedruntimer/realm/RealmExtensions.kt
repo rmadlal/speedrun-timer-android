@@ -1,8 +1,11 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.realm
 
+import il.ronmad.speedruntimer.Comparison
+import il.ronmad.speedruntimer.sumBy
 import io.realm.Case
 import io.realm.Realm
 import io.realm.RealmObject
+import io.realm.RealmSchema
 import io.realm.kotlin.createObject
 import io.realm.kotlin.oneOf
 import io.realm.kotlin.where
@@ -10,7 +13,7 @@ import io.realm.kotlin.where
 fun Realm.addGame(gameName: String): Game {
     var game: Game? = null
     this.executeTransaction {
-        game = this.createObject<Game>(getNextId<Game>())
+        game = this.createObject(getNextId<Game>())
         game!!.name = gameName
         game!!.timerPosition = this.createObject(getNextId<Point>())
     }

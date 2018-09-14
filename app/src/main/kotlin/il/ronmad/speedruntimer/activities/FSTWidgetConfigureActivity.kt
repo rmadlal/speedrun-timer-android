@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.activities
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
@@ -9,6 +9,10 @@ import android.support.design.widget.Snackbar
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import il.ronmad.speedruntimer.FSTWidget
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.getAllGames
 import io.realm.Realm
 import kotlinx.android.synthetic.main.fstwidget_configure.*
 

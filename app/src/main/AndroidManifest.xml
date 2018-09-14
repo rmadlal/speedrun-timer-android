@@ -14,7 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,23 +26,23 @@
         <service android:name=".TimerService" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activities.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/SettingsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="il.ronmad.speedruntimer.MainActivity" />
+                android:value="il.ronmad.speedruntimer.activities.MainActivity" />
         </activity>
 
         <activity
-            android:name=".HelpActivity"
+            android:name=".activities.HelpActivity"
             android:label="@string/title_activity_help"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/SettingsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="il.ronmad.speedruntimer.MainActivity" />
+                android:value="il.ronmad.speedruntimer.activities.MainActivity" />
         </activity>
 
         <receiver android:name=".FSTWidget">
@@ -55,7 +55,7 @@
                 android:resource="@xml/fstwidget_info" />
         </receiver>
 
-        <activity android:name=".FSTWidgetConfigureActivity">
+        <activity android:name=".activities.FSTWidgetConfigureActivity">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

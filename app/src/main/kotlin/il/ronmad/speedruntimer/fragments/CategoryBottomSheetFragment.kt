@@ -1,10 +1,11 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
 import android.support.design.widget.BottomSheetDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import il.ronmad.speedruntimer.R
 import kotlinx.android.synthetic.main.category_bottom_sheet_dialog.view.*
 
 class CategoryBottomSheetFragment : BottomSheetDialogFragment() {

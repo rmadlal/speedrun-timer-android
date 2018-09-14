@@ -1,9 +1,14 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import il.ronmad.speedruntimer.Comparison
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.getFormattedTime
+import il.ronmad.speedruntimer.realm.Split
+import il.ronmad.speedruntimer.realm.calculateSplitTime
 import kotlinx.android.synthetic.main.split_list_item.view.*
 
 class SplitAdapter(splits: List<Split>,

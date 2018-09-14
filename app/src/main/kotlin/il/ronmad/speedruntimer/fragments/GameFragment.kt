@@ -1,10 +1,20 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
+import android.support.design.widget.AppBarLayout
+import android.support.design.widget.AppBarLayout.LayoutParams.*
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
-import android.view.*
+import android.view.KeyEvent
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import il.ronmad.speedruntimer.ARG_GAME_NAME
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.adapters.SmartFragmentStatePagerAdapter
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.getGameByName
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_game.*
 
@@ -38,9 +48,16 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         fabAdd.setOnClickListener { onFabAddPressed() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        (activity.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+                SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         tabLayout.visibility = View.GONE
+        (activity.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags = 0
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

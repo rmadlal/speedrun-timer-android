@@ -2,14 +2,17 @@ package il.ronmad.speedruntimer
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
-import android.os.Build
-import android.preference.PreferenceManager
 import android.util.Log
+import il.ronmad.speedruntimer.realm.Category
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.Point
+import il.ronmad.speedruntimer.realm.Split
+import il.ronmad.speedruntimer.web.Src
+import il.ronmad.speedruntimer.web.SrcGame
 import io.realm.FieldAttribute
-
 import io.realm.Realm
 import io.realm.RealmConfiguration
+import io.realm.RealmSchema
 
 const val REALM_SCHEMA_VERSION = 4L
 
@@ -18,27 +21,13 @@ class MyApplication : Application() {
     lateinit var srcApi: Src
     var srcGameCache: Map<String, SrcGame> = emptyMap()
 
-    private var installedApps: Map<String, ApplicationInfo> = mapOf()
+    var installedApps: Map<String, ApplicationInfo> = mapOf()
     var installedGames: List<String> = listOf()
 
     override fun onCreate() {
         super.onCreate()
         initRealm()
         srcApi = Src()
-        setupInstalledAppsLists()
-    }
-
-    fun tryLaunchGame(gameName: String): Boolean {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
-            return false
-        }
-        installedApps[gameName.toLowerCase()]?.let {
-            showToast("Launching ${packageManager.getApplicationLabel(it)}...")
-            startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
-            return true
-        }
-        return false
     }
 
     private fun initRealm() {
@@ -51,65 +40,75 @@ class MyApplication : Application() {
                 .schemaVersion(REALM_SCHEMA_VERSION)
                 .migration { realm, oldVersion, newVersion ->
                     Log.d("MigrateRealm", "old: $oldVersion, new: $newVersion")
-                    var oldVer = oldVersion.toInt()
-                    if (oldVer == 0) {
-                        // Split class added, RealmList<Split> field added to Category class
-                        val splitSchema = realm.schema.create("Split")
-                                .addField("name", String::class.java, FieldAttribute.REQUIRED)
-                                .addField("pbTime", Long::class.java, FieldAttribute.REQUIRED)
-                                .addField("bestTime", Long::class.java, FieldAttribute.REQUIRED)
-                        realm.schema.get("Category")?.addRealmListField("splits", splitSchema)
-                        ++oldVer
+                    realm.schema.apply {
+                        var oldVer = oldVersion.toInt()
+
+                        fun updateVersion(updater: RealmSchema.() -> Unit) {
+                            updater()
+                            ++oldVer
+                        }
+
+                        if (oldVer == 0) {
+                            // Split class added, RealmList<Split> field added to Category class
+                            updateVersion {
+                                val splitSchema = create(Split::class.java.simpleName)
+                                        .addField("name", String::class.java, FieldAttribute.REQUIRED)
+                                        .addField("pbTime", Long::class.java, FieldAttribute.REQUIRED)
+                                        .addField("bestTime", Long::class.java, FieldAttribute.REQUIRED)
+                                get(Category::class.java.simpleName)
+                                        ?.addRealmListField("splits", splitSchema)
+                            }
+                        }
+                        if (oldVer == 1) {
+                            // "name" fields have been made indexed
+                            updateVersion {
+                                get(Game::class.java.simpleName)?.addIndex("name")
+                                get(Category::class.java.simpleName)?.addIndex("name")
+                                get(Split::class.java.simpleName)?.addIndex("name")
+                            }
+                        }
+                        if (oldVer == 2) {
+                            // added primary keys to all objects (id: Long)
+                            updateVersion {
+                                get(Game::class.java.simpleName)?.apply {
+                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                    transform { it.setLong("id", ++gamePrimaryKey) }
+                                    addPrimaryKey("id")
+                                }
+                                get(Category::class.java.simpleName)?.apply {
+                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                    transform { it.setLong("id", ++categoryPrimaryKey) }
+                                    addPrimaryKey("id")
+                                }
+                                get(Split::class.java.simpleName)?.apply {
+                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                    transform { it.setLong("id", ++splitPrimaryKey) }
+                                    addPrimaryKey("id")
+                                }
+                                get(Point::class.java.simpleName)?.apply {
+                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                    transform { it.setLong("id", ++pointPrimaryKey) }
+                                    addPrimaryKey("id")
+                                }
+                            }
+                        }
+                        if (oldVer == 3) {
+                            // gameName field added to Category class
+                            updateVersion {
+                                get(Category::class.java.simpleName)?.apply {
+                                    addField("gameName", String::class.java, FieldAttribute.REQUIRED)
+                                    transform {
+                                        it.linkingObjects(Game::class.java.simpleName, "categories")[0]?.let { game ->
+                                            it.setString("gameName", game.getString("name"))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    if (oldVer == 1) {
-                        // "name" fields have been made indexed
-                        realm.schema.get("Game")?.addIndex("name")
-                        realm.schema.get("Category")?.addIndex("name")
-                        realm.schema.get("Split")?.addIndex("name")
-                        ++oldVer
-                    }
-                    if (oldVer == 2) {
-                        // added primary keys to all objects (id: Long)
-                        realm.schema.get("Game")
-                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                ?.transform { it.setLong("id", ++gamePrimaryKey) }
-                                ?.addPrimaryKey("id")
-                        realm.schema.get("Category")
-                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                ?.transform { it.setLong("id", ++categoryPrimaryKey) }
-                                ?.addPrimaryKey("id")
-                        realm.schema.get("Split")
-                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                ?.transform { it.setLong("id", ++splitPrimaryKey) }
-                                ?.addPrimaryKey("id")
-                        realm.schema.get("Point")
-                                ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                ?.transform { it.setLong("id", ++pointPrimaryKey) }
-                                ?.addPrimaryKey("id")
-                        ++oldVer
-                    }
-                    if (oldVer == 3) {
-                        // gameName field added to Category class
-                        realm.schema.get("Category")?.addField("gameName", String::class.java)
-                        ++oldVer
-                    }
+
                 }
                 .build()
         Realm.setDefaultConfiguration(realmConfig)
-    }
-
-    private fun setupInstalledAppsLists() {
-        val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-                .filter {
-                    it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
-                }
-        installedApps = allInstalledApps
-                .map { packageManager.getApplicationLabel(it).toString().toLowerCase() to it }
-                .toMap()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            installedGames = allInstalledApps
-                    .filter { it.category == ApplicationInfo.CATEGORY_GAME }
-                    .map { packageManager.getApplicationLabel(it).toString() }
-        }
     }
 }

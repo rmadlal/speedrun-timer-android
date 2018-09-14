@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.content.Context
 import android.view.Gravity

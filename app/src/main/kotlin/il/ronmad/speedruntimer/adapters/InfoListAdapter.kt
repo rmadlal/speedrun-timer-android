@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -10,6 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.getColorCpt
+import il.ronmad.speedruntimer.getFormattedTime
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.getCategoryByName
+import il.ronmad.speedruntimer.toOrdinal
+import il.ronmad.speedruntimer.web.SrcLeaderboard
 import kotlinx.android.synthetic.main.game_info_item.view.*
 import kotlinx.android.synthetic.main.game_info_item_header.view.*
 

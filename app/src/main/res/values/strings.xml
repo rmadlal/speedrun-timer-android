@@ -59,6 +59,9 @@
     <string name="best_seg_text">Best Seg.:</string>
     <string name="bottom_sheet_view_splits">View &amp; edit splits</string>
     <string name="bottom_sheet_view_launch">Launch timer</string>
+    <string name="appwidget_text">FST</string>
+    <string name="configure">Choose game and category</string>
+    <string name="add_widget">Add widget</string>
 
     <string-array name="fragment_game_tabs">
         <item>Categories</item>
@@ -152,8 +155,5 @@
     <string name="key_pref_launch_games">il.ronmad.speedruntimer.key.LAUNCH_GAMES</string>
     <string name="key_pref_save_time_data">il.ronmad.speedruntimer.key.SAVE_DATA</string>
     <string name="key_pref_compare_against">il.ronmad.speedruntimer.key.COMPARE_AGAINST</string>
-    <string name="appwidget_text">FST</string>
-    <string name="configure">Choose game and category</string>
-    <string name="add_widget">Add widget</string>
 
 </resources>

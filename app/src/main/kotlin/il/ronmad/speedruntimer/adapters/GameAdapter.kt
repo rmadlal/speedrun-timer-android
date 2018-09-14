@@ -1,11 +1,12 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.realm.Game
 import kotlinx.android.synthetic.main.games_list_item.view.*
-
 
 class GameAdapter(games: List<Game>) : BaseRecyclerViewAdapter<Game>(games) {
 

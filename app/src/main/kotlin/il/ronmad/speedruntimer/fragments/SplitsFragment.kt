@@ -1,11 +1,15 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
+import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.*
 import android.widget.AdapterView
+import il.ronmad.speedruntimer.*
+import il.ronmad.speedruntimer.adapters.SplitAdapter
+import il.ronmad.speedruntimer.realm.*
 import kotlinx.android.synthetic.main.fragment_splits.*
 
 class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
@@ -178,7 +182,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
-            isNestedScrollingEnabled = false
+            ViewCompat.setNestedScrollingEnabled(this, false)
         }
     }
 

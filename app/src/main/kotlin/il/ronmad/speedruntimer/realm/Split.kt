@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.realm
 
 import com.google.gson.annotations.Expose
 import io.realm.RealmObject

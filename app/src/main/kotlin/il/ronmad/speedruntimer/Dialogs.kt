@@ -6,6 +6,8 @@ import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.view.View
 import android.view.WindowManager
+import il.ronmad.speedruntimer.adapters.SplitPositionSpinnerAdapter
+import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_category_dialog.view.*
 import kotlinx.android.synthetic.main.edit_split_dialog.view.*

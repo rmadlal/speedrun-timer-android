@@ -2,11 +2,14 @@ package il.ronmad.speedruntimer
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import il.ronmad.speedruntimer.activities.MainActivity
+import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
@@ -127,6 +130,9 @@ fun Int.toOrdinal(): String {
     return "$this$suffix"
 }
 
+val Context.app
+    get() = this.applicationContext as MyApplication
+
 fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)
 
 fun Context.pixelToDp(pixels: Float): Int {
@@ -134,11 +140,35 @@ fun Context.pixelToDp(pixels: Float): Int {
     return (pixels * scale + 0.5f).toInt()
 }
 
+fun Context.startTimerService(gameName: String, categoryName: String) {
+    val serviceIntent = Intent(this, TimerService::class.java)
+    serviceIntent.putExtra(this.getString(R.string.extra_game), gameName)
+    serviceIntent.putExtra(this.getString(R.string.extra_category), categoryName)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        this.startForegroundService(serviceIntent)
+    } else {
+        this.startService(serviceIntent)
+    }
+}
+
 fun Context.minimizeApp() {
     val homeIntent = Intent(Intent.ACTION_MAIN)
     homeIntent.addCategory(Intent.CATEGORY_HOME)
     homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     startActivity(homeIntent)
+}
+
+fun Context.tryLaunchGame(gameName: String): Boolean {
+    val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+    if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
+        return false
+    }
+    app.installedApps[gameName.toLowerCase()]?.let {
+        showToast("Launching ${packageManager.getApplicationLabel(it)}...")
+        startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
+        return true
+    }
+    return false
 }
 
 fun Context.showToast(text: String, length: Int = Toast.LENGTH_SHORT) {

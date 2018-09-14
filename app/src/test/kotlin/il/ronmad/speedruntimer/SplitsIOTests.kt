@@ -1,6 +1,7 @@
 package il.ronmad.speedruntimer
 
 import com.google.gson.internal.LazilyParsedNumber
+import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.test.TestCoroutineContext
 import org.junit.Test

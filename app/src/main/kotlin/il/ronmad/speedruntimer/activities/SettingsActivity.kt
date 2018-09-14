@@ -1,11 +1,13 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.activities
 
 import android.os.Bundle
 import android.preference.*
-import android.view.MenuItem
 import android.support.v4.app.NavUtils
-
+import android.view.MenuItem
 import com.jaredrummler.android.colorpicker.ColorPreference
+import il.ronmad.speedruntimer.CountdownPreference
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.getFormattedTime
 
 class SettingsActivity : AppCompatPreferenceActivity() {
 

@@ -1,10 +1,16 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
+import android.support.v4.view.ViewCompat
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.ActionMode
 import android.view.View
+import il.ronmad.speedruntimer.Dialogs
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.TAG_GAME_FRAGMENT
+import il.ronmad.speedruntimer.adapters.GameAdapter
+import il.ronmad.speedruntimer.realm.*
 import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.fragment_games_list.*
 
@@ -120,7 +126,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
-            isNestedScrollingEnabled = false
+            ViewCompat.setNestedScrollingEnabled(this, false)
         }
     }
 

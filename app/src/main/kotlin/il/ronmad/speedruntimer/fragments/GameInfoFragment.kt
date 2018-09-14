@@ -1,14 +1,22 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
+import android.support.v4.view.ViewCompat
+import il.ronmad.speedruntimer.ARG_GAME_NAME
+import il.ronmad.speedruntimer.MyApplication
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.adapters.InfoListAdapter
+import il.ronmad.speedruntimer.realm.Game
+import il.ronmad.speedruntimer.realm.getGameByName
+import il.ronmad.speedruntimer.showToast
+import il.ronmad.speedruntimer.web.SrcLeaderboard
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.fragment_game.*
 import kotlinx.android.synthetic.main.fragment_game_info.*
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import android.support.v4.view.ViewCompat
-import kotlinx.coroutines.experimental.Job
 
 class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 

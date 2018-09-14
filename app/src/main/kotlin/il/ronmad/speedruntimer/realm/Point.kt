@@ -1,4 +1,4 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.realm
 
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey

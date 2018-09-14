@@ -1,10 +1,14 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.getColorCpt
+import il.ronmad.speedruntimer.getFormattedTime
+import il.ronmad.speedruntimer.realm.Category
 import kotlinx.android.synthetic.main.category_list_item.view.*
 
 class CategoryAdapter(val context: Context, categories: List<Category>)

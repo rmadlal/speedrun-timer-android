@@ -15,6 +15,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
+import il.ronmad.speedruntimer.activities.MainActivity
+import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.timer_overlay.view.*
@@ -456,26 +458,19 @@ class TimerService : Service() {
         var categoryName = ""
 
         fun launchTimer(context: Context?,
-                        gameAndCategoryNames: Pair<String, String>,
+                        gameName: String,
+                        categoryName: String,
                         minimizeIfNoGameLaunch: Boolean = true) {
             context ?: return
             if (TimerService.IS_ACTIVE) {
                 context.showToast(context.getString(R.string.toast_close_active_timer))
                 return
             }
-            val (gameName, categoryName) = gameAndCategoryNames
-            if (!(context.applicationContext as MyApplication).tryLaunchGame(gameName)) {
+            if (!context.tryLaunchGame(gameName)) {
                 if (minimizeIfNoGameLaunch)
                     context.minimizeApp()
             }
-            val serviceIntent = Intent(context, TimerService::class.java)
-            serviceIntent.putExtra(context.getString(R.string.extra_game), gameName)
-            serviceIntent.putExtra(context.getString(R.string.extra_category), categoryName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            context.startTimerService(gameName, categoryName)
         }
     }
 }

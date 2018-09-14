@@ -1,8 +1,10 @@
-package il.ronmad.speedruntimer
+package il.ronmad.speedruntimer.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import il.ronmad.speedruntimer.BaseRecyclerViewAdapter.BaseViewHolder
+import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.adapters.BaseRecyclerViewAdapter.BaseViewHolder
+import il.ronmad.speedruntimer.realm.HasPrimaryId
 
 abstract class BaseRecyclerViewAdapter<T: HasPrimaryId>(val data: List<T>)
     : RecyclerView.Adapter<BaseViewHolder<T>>() {

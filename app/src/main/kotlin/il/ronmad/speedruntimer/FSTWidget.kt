@@ -3,15 +3,16 @@ package il.ronmad.speedruntimer
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.widget.RemoteViews
-import io.realm.Realm
-import android.content.ComponentName
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-
+import android.widget.RemoteViews
+import il.ronmad.speedruntimer.activities.FSTWidgetConfigureActivity
+import il.ronmad.speedruntimer.realm.getCategoryByName
+import io.realm.Realm
 
 /**
  * Implementation of App Widget functionality.
@@ -56,7 +57,7 @@ class FSTWidget : AppWidgetProvider() {
                 } else {
                     val gameName = intent.getStringExtra(context.getString(R.string.extra_game))
                     val categoryName = intent.getStringExtra(context.getString(R.string.extra_category))
-                    TimerService.launchTimer(context, gameName to categoryName,
+                    TimerService.launchTimer(context, gameName, categoryName,
                             minimizeIfNoGameLaunch = false)
                 }
             }
