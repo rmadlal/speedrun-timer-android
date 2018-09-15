@@ -2,10 +2,7 @@ package il.ronmad.speedruntimer
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
-import il.ronmad.speedruntimer.realm.addCategory
-import il.ronmad.speedruntimer.realm.addGame
-import il.ronmad.speedruntimer.realm.addSplit
-import il.ronmad.speedruntimer.realm.updateData
+import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
 import io.realm.Realm
 import org.junit.After

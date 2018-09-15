@@ -70,43 +70,39 @@ class MyApplication : Application() {
                         if (oldVer == 2) {
                             // added primary keys to all objects (id: Long)
                             updateVersion {
-                                get(Game::class.java.simpleName)?.apply {
-                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                    transform { it.setLong("id", ++gamePrimaryKey) }
-                                    addPrimaryKey("id")
-                                }
-                                get(Category::class.java.simpleName)?.apply {
-                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                    transform { it.setLong("id", ++categoryPrimaryKey) }
-                                    addPrimaryKey("id")
-                                }
-                                get(Split::class.java.simpleName)?.apply {
-                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                    transform { it.setLong("id", ++splitPrimaryKey) }
-                                    addPrimaryKey("id")
-                                }
-                                get(Point::class.java.simpleName)?.apply {
-                                    addField("id", Long::class.java, FieldAttribute.INDEXED)
-                                    transform { it.setLong("id", ++pointPrimaryKey) }
-                                    addPrimaryKey("id")
-                                }
+                                get(Game::class.java.simpleName)
+                                        ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                        ?.transform { it.setLong("id", ++gamePrimaryKey) }
+                                        ?.addPrimaryKey("id")
+                                get(Category::class.java.simpleName)
+                                        ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                        ?.transform { it.setLong("id", ++categoryPrimaryKey) }
+                                        ?.addPrimaryKey("id")
+                                get(Split::class.java.simpleName)
+                                        ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                        ?.transform { it.setLong("id", ++splitPrimaryKey) }
+                                        ?.addPrimaryKey("id")
+                                get(Point::class.java.simpleName)
+                                        ?.addField("id", Long::class.java, FieldAttribute.INDEXED)
+                                        ?.transform { it.setLong("id", ++pointPrimaryKey) }
+                                        ?.addPrimaryKey("id")
                             }
                         }
                         if (oldVer == 3) {
                             // gameName field added to Category class
                             updateVersion {
-                                get(Category::class.java.simpleName)?.apply {
-                                    addField("gameName", String::class.java, FieldAttribute.REQUIRED)
-                                    transform {
-                                        it.linkingObjects(Game::class.java.simpleName, "categories")[0]?.let { game ->
-                                            it.setString("gameName", game.getString("name"))
+                                get(Category::class.java.simpleName)
+                                        ?.addField("gameName", String::class.java, FieldAttribute.REQUIRED)
+                                        ?.transform {
+                                            it.linkingObjects(Game::class.java.simpleName, "categories")
+                                                    // Only one game has a reference to this category.
+                                                    .singleOrNull()?.let { game ->
+                                                        it.setString("gameName", game.getString("name"))
+                                                    }
                                         }
-                                    }
-                                }
                             }
                         }
                     }
-
                 }
                 .build()
         Realm.setDefaultConfiguration(realmConfig)

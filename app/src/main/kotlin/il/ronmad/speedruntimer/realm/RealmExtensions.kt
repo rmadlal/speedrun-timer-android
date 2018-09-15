@@ -49,7 +49,7 @@ fun Game.setGameName(newName: String) = realm.executeTransaction { this.name = n
 fun Game.addCategory(name: String): Category {
     var category: Category? = null
     realm.executeTransaction {
-        category = realm.createObject<Category>(realm.getNextId<Category>())
+        category = realm.createObject(realm.getNextId<Category>())
         category!!.name = name
         category!!.gameName = this.name
         this.categories.add(category)
@@ -101,7 +101,7 @@ fun Category.getSplits(ids: Collection<Long>) =
 fun Category.addSplit(name: String, position: Int = this.splits.size): Split {
     var split: Split? = null
     realm.executeTransaction {
-        split = realm.createObject<Split>(realm.getNextId<Split>())
+        split = realm.createObject(realm.getNextId<Split>())
         split!!.name = name
         this.splits.add(position, split)
     }
