@@ -6,8 +6,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
-import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.SRC_API
+import il.ronmad.speedruntimer.app
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -184,7 +184,7 @@ class Src {
     }
 
     suspend fun fetchGameData(context: Context?, gameName: String): SrcGame {
-        val app = context?.applicationContext as? MyApplication ?: return SrcGame.EMPTY_GAME
+        val app = context?.app ?: return SrcGame.EMPTY_GAME
         return app.srcGameCache.getOrElse(gameName) {
             val gameRes = api.game(gameName).awaitResult()
             when (gameRes) {

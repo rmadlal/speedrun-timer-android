@@ -3,9 +3,9 @@ package il.ronmad.speedruntimer.fragments
 import android.os.Bundle
 import android.support.v4.view.ViewCompat
 import il.ronmad.speedruntimer.ARG_GAME_NAME
-import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.InfoListAdapter
+import il.ronmad.speedruntimer.app
 import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.getGameByName
 import il.ronmad.speedruntimer.showToast
@@ -55,7 +55,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     internal fun refreshData() {
         refreshJob = launch(UI) {
-            val app = context?.applicationContext as? MyApplication ?: run {
+            val app = context?.app ?: run {
                 displayData(emptyList())
                 return@launch
             }

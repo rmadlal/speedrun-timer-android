@@ -12,6 +12,7 @@ import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
+import kotlinx.coroutines.experimental.Job
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -190,10 +191,10 @@ private fun getComparison(context: Context): Comparison {
     }
 }
 
-inline fun <T> Iterable<T>.sumBy(selector: (T) -> Long): Long {
-    var sum = 0L
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
+inline fun <T> Iterable<T>.sumBy(selector: (T) -> Long) =
+        fold(0L) { acc, curr -> acc + selector(curr) }
+
+suspend inline fun Job.then(block: () -> Unit) {
+    join()
+    block()
 }

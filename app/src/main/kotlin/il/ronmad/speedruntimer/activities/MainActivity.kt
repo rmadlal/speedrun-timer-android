@@ -18,10 +18,11 @@ import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.fragments.GamesListFragment
 import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.gameExists
-
 import io.realm.Realm
 import io.realm.exceptions.RealmException
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,8 +48,12 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
-        setupInstalledAppsLists()
-        setupSnackbars()
+        launch(UI) {
+            setupInstalledAppsLists()
+                    .then {
+                        setupSnackbars()
+                    }
+        }
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -130,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupInstalledAppsLists() {
+    private fun setupInstalledAppsLists() = launch {
         val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 .filter {
                     it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
@@ -146,6 +151,7 @@ class MainActivity : AppCompatActivity() {
                     .toList()
         }
     }
+
 
     private fun setupSnackbars() {
         var toShowRateSnackbar = false
@@ -176,9 +182,9 @@ class MainActivity : AppCompatActivity() {
                     Uri.parse("market://details?id=$packageName"))
             marketIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                     or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        else
-                            Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET)
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+            else
+                Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET)
                     or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
             try {
                 startActivity(marketIntent)
