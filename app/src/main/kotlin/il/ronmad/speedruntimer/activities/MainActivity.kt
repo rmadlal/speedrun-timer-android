@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRealm() {
-        val savedData = sharedPrefs.getString(getString(R.string.key_games), "")
+        val savedData = sharedPrefs.getString(getString(R.string.key_games), "")!!
         if (savedData.isEmpty()) {
             realm = Realm.getDefaultInstance()
         } else {

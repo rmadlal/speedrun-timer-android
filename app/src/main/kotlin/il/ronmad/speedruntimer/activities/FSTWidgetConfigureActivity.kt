@@ -73,6 +73,11 @@ class FSTWidgetConfigureActivity : Activity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        realm.close()
+    }
+
     private fun setupSpinners() {
         appwidget_spinner_game.adapter = ArrayAdapter(this,
                 android.R.layout.simple_spinner_dropdown_item,

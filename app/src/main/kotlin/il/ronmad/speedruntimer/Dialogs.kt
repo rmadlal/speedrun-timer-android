@@ -11,6 +11,7 @@ import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_category_dialog.view.*
 import kotlinx.android.synthetic.main.edit_split_dialog.view.*
+import kotlinx.android.synthetic.main.import_splits_dialog.view.*
 import kotlinx.android.synthetic.main.new_category_dialog.view.*
 import kotlinx.android.synthetic.main.new_game_dialog.view.*
 import kotlinx.android.synthetic.main.new_split_dialog.view.*
@@ -21,24 +22,25 @@ object Dialogs {
                                callback: (String) -> Unit): AlertDialog {
         val dialogView = View.inflate(context, R.layout.new_game_dialog, null)
         val gameNameInput = dialogView.newGameNameInput
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("New game")
                 .setView(dialogView)
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            createButton.setOnClickListener {
-                if (!gameNameInput.isValidForGame(realm)) {
-                    gameNameInput.requestFocus()
-                } else {
-                    callback(gameNameInput.text.toString())
-                    dialog.dismiss()
+                .apply {
+                    setOnShowListener { _ ->
+                        val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        createButton.setOnClickListener {
+                            if (!gameNameInput.isValidForGame(realm)) {
+                                gameNameInput.requestFocus()
+                            } else {
+                                callback(gameNameInput.text.toString())
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-            }
-        }
-        return dialog
     }
 
     internal fun newCategoryDialog(context: Context, game: Game,
@@ -46,24 +48,25 @@ object Dialogs {
         val dialogView = View.inflate(context, R.layout.new_category_dialog, null)
         val categoryNameInput = dialogView.newCategoryInput
         categoryNameInput.setCategories(game.name)
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("New category")
                 .setView(dialogView)
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            createButton.setOnClickListener {
-                if (!categoryNameInput.isValidForCategory(game)) {
-                    categoryNameInput.requestFocus()
-                } else {
-                    callback(categoryNameInput.text.toString())
-                    dialog.dismiss()
+                .apply {
+                    setOnShowListener { _ ->
+                        val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        createButton.setOnClickListener {
+                            if (!categoryNameInput.isValidForCategory(game)) {
+                                categoryNameInput.requestFocus()
+                            } else {
+                                callback(categoryNameInput.text.toString())
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-            }
-        }
-        return dialog
     }
 
     fun newSplitDialog(context: Context, category: Category,
@@ -74,25 +77,26 @@ object Dialogs {
         splitPositionSpinner.adapter = SplitPositionSpinnerAdapter(context,
                 category.splits.size + 1)
         splitPositionSpinner.setSelection(splitPositionSpinner.count - 1)
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("New split")
                 .setView(dialogView)
                 .setPositiveButton(R.string.create, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            createButton.setOnClickListener {
-                if (!splitNameInput.isValidForSplit(category)) {
-                    splitNameInput.requestFocus()
-                } else {
-                    val position = splitPositionSpinner.selectedItem as Int - 1
-                    callback(splitNameInput.text.toString(), position)
-                    dialog.dismiss()
+                .apply {
+                    setOnShowListener { _ ->
+                        val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        createButton.setOnClickListener {
+                            if (!splitNameInput.isValidForSplit(category)) {
+                                splitNameInput.requestFocus()
+                            } else {
+                                val position = splitPositionSpinner.selectedItem as Int - 1
+                                callback(splitNameInput.text.toString(), position)
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-            }
-        }
-        return dialog
     }
 
     internal fun editGameDialog(context: Context, realm: Realm, game: Game,
@@ -101,29 +105,28 @@ object Dialogs {
         val gameNameInput = dialogView.newGameNameInput
         gameNameInput.setText(game.name)
         gameNameInput.setSelection(gameNameInput.text.length)
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("Edit name")
                 .setView(dialogView)
                 .setPositiveButton(R.string.save, null)
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            createButton.setOnClickListener {
-                val newName = gameNameInput.text.toString()
-                if (newName == game.name) {
-                    dialog.dismiss()
-                    return@setOnClickListener
+                .apply {
+                    setOnShowListener { _ ->
+                        val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        createButton.setOnClickListener {
+                            val newName = gameNameInput.text.toString()
+                            if (newName == game.name) {
+                                dismiss()
+                                return@setOnClickListener
+                            }
+                            if (gameNameInput.isValidForGame(realm)) {
+                                callback(newName)
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-                if (!gameNameInput.isValidForGame(realm)) {
-                    gameNameInput.requestFocus()
-                } else {
-                    callback(newName)
-                    dialog.dismiss()
-                }
-            }
-        }
-        return dialog
     }
 
     internal fun editCategoryDialog(context: Context, category: Category,
@@ -135,35 +138,34 @@ object Dialogs {
             dialogView.setEditTextsFromTime(category.bestTime)
         }
         dialogView.runCount.setText(category.runCount.toString())
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("Edit category")
                 .setView(dialogView)
                 .setPositiveButton(R.string.save, null)
                 .setNegativeButton(R.string.pb_clear, null)
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
-            val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            clearButton.setOnClickListener {
-                dialogView.setEditTextsFromTime(0L)
-                dialogView.runCount.setText("0")
-            }
-            saveButton.setOnClickListener {
-                val newName = dialogView.categoryName.text.toString()
-                if (newName != category.name
-                        && !dialogView.categoryName.isValidForCategory(category.getGame())) {
-                    dialogView.categoryName.requestFocus()
-                    return@setOnClickListener
+                .apply {
+                    setOnShowListener { _ ->
+                        val clearButton = getButton(DialogInterface.BUTTON_NEGATIVE)
+                        val saveButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        clearButton.setOnClickListener {
+                            dialogView.setEditTextsFromTime(0L)
+                            dialogView.runCount.setText("0")
+                        }
+                        saveButton.setOnClickListener {
+                            val newName = dialogView.categoryName.text.toString()
+                            if (newName == category.name
+                                    || dialogView.categoryName.isValidForCategory(category.getGame())) {
+                                val newTime = dialogView.getTimeFromEditTexts()
+                                val newRunCountStr = dialogView.runCount.text.toString()
+                                val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
+                                callback(newName, newTime, newRunCount)
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-                val newTime = dialogView.getTimeFromEditTexts()
-                val newRunCountStr = dialogView.runCount.text.toString()
-                val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
-                callback(newName, newTime, newRunCount)
-                dialog.dismiss()
-            }
-        }
-        return dialog
     }
 
     internal fun editSplitDialog(context: Context,
@@ -184,47 +186,47 @@ object Dialogs {
         if (split.bestTime > 0) {
             bestSegmentTimeInput.setEditTextsFromTime(split.bestTime)
         }
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setTitle("Edit split")
                 .setView(dialogView)
                 .setPositiveButton(R.string.save, null)
                 .setNegativeButton(R.string.pb_clear, null)
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
-        dialog.setOnShowListener { _ ->
-            val clearButton = dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
-            val saveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            clearButton.setOnClickListener {
-                pbSegmentTimeInput.setEditTextsFromTime(0L)
-                bestSegmentTimeInput.setEditTextsFromTime(0L)
-            }
-            saveButton.setOnClickListener {
-                val newName = splitNameInput.text.toString()
-                if (newName != split.name && !splitNameInput.isValidForSplit(split.getCategory())) {
-                    splitNameInput.requestFocus()
-                    return@setOnClickListener
+                .apply {
+                    setOnShowListener { _ ->
+                        val clearButton = getButton(DialogInterface.BUTTON_NEGATIVE)
+                        val saveButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        clearButton.setOnClickListener {
+                            pbSegmentTimeInput.setEditTextsFromTime(0L)
+                            bestSegmentTimeInput.setEditTextsFromTime(0L)
+                        }
+                        saveButton.setOnClickListener {
+                            val newName = splitNameInput.text.toString()
+                            if (newName == split.name || splitNameInput.isValidForSplit(split.getCategory())) {
+                                val newPBSegmentTime = pbSegmentTimeInput.getTimeFromEditTexts()
+                                val newBestSegmentTime = bestSegmentTimeInput.getTimeFromEditTexts()
+                                val position = splitPositionSpinner.selectedItem as Int - 1
+                                callback(newName, newPBSegmentTime, newBestSegmentTime, position)
+                                dismiss()
+                            }
+                        }
+                    }
                 }
-                val newPBSegmentTime = pbSegmentTimeInput.getTimeFromEditTexts()
-                val newBestSegmentTime = bestSegmentTimeInput.getTimeFromEditTexts()
-                val position = splitPositionSpinner.selectedItem as Int - 1
-                callback(newName, newPBSegmentTime, newBestSegmentTime, position)
-                dialog.dismiss()
-            }
-        }
-        return dialog
     }
 
     internal fun timerActiveDialog(context: Context, callback: () -> Unit): AlertDialog {
-        val dialog = AlertDialog.Builder(context)
+        return AlertDialog.Builder(context)
                 .setMessage("Timer is active. Close anyway?")
                 .setPositiveButton(R.string.close) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel) { _, _ -> context.minimizeApp() }
                 .create()
-        dialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
-        return dialog
+                .apply {
+                    window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+                }
     }
 
     internal fun closeTimerOnResumeDialog(context: Context, callback: () -> Unit): AlertDialog {
@@ -262,7 +264,7 @@ object Dialogs {
                 .setTitle("Select games")
                 .setPositiveButton(R.string.add) { _, _ ->
                     gameNames.filterIndexed { index, _ -> checked[index] }
-                             .forEach { realm.addGame(it) }
+                            .forEach { realm.addGame(it) }
                     if (checked.any { it }) callback()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
@@ -279,5 +281,30 @@ object Dialogs {
                 .setPositiveButton(R.string.delete) { _, _ -> callback() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
+    }
+
+    internal fun importSplitsDialog(context: Context, callback: (String) -> Unit): AlertDialog {
+        val dialogView = View.inflate(context, R.layout.import_splits_dialog, null)
+        val runIdInput = dialogView.runIdInput
+        return AlertDialog.Builder(context)
+                .setTitle("Import Splits from splits.io")
+                .setView(dialogView)
+                .setPositiveButton(R.string.do_import, null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create()
+                .apply {
+                    setOnShowListener { _ ->
+                        val importButton = getButton(DialogInterface.BUTTON_POSITIVE)
+                        importButton.setOnClickListener {
+                            if (runIdInput.text.isNullOrEmpty()) {
+                                runIdInput.error = "Please enter a run ID"
+                                runIdInput.requestFocus()
+                                return@setOnClickListener
+                            }
+                            callback(runIdInput.text.toString())
+                            dismiss()
+                        }
+                    }
+                }
     }
 }

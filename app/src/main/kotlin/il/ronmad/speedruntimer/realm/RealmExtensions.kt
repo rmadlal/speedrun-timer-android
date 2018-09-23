@@ -2,10 +2,10 @@ package il.ronmad.speedruntimer.realm
 
 import il.ronmad.speedruntimer.Comparison
 import il.ronmad.speedruntimer.sumBy
+import il.ronmad.speedruntimer.web.SplitsIO
 import io.realm.Case
 import io.realm.Realm
 import io.realm.RealmObject
-import io.realm.RealmSchema
 import io.realm.kotlin.createObject
 import io.realm.kotlin.oneOf
 import io.realm.kotlin.where
@@ -125,6 +125,12 @@ fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction
 
 fun Category.setPBFromSplits() = updateData(bestTime = splits.sumBy { it.pbTime })
 
+fun Category.toRun(): SplitsIO.Run =
+        SplitsIO.Run(gameName,
+                name,
+                runCount,
+                splits.map { it.toSegment() })
+
 fun Split.getCategory() = this.category!!.first()!!
 
 fun Split.updateData(name: String = this.name,
@@ -159,6 +165,8 @@ fun Split.moveToPosition(newPosition: Int) = realm.executeTransaction {
 
 fun Split.getPosition() = getCategory().splits.indexOf(this)
 
+fun Split.toSegment(): SplitsIO.Segment = SplitsIO.Segment(name, pbTime, bestTime)
+
 fun Point.set(x: Int, y: Int) = realm.executeTransaction {
     this.x = x
     this.y = y
@@ -166,3 +174,9 @@ fun Point.set(x: Int, y: Int) = realm.executeTransaction {
 
 inline fun <reified T : RealmObject> Realm.getNextId() =
         (this.where<T>().max("id")?.toLong() ?: 0L) + 1
+
+inline fun <R> withRealm(block: Realm.() -> R): R {
+    Realm.getDefaultInstance().use {
+        return block(it)
+    }
+}

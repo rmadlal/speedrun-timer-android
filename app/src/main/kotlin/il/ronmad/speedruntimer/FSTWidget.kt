@@ -89,6 +89,8 @@ class FSTWidget : AppWidgetProvider() {
 
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, views)
+
+            realm.close()
         }
 
         fun forceUpdateWidgets(context: Context) {

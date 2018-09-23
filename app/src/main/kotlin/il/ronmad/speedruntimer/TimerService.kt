@@ -331,7 +331,7 @@ class TimerService : Service() {
 
     private fun setupSize() {
         val timerSizesVals = resources.getStringArray(R.array.timer_sizes_values)
-        val size = prefs.getString(getString(R.string.key_pref_timer_size), timerSizesVals[1]).toFloat()
+        val size = prefs.getString(getString(R.string.key_pref_timer_size), timerSizesVals[1])!!.toFloat()
         val millisSize = size * 0.75f
         val deltaSize = size * 0.375f
         val splitSize = size * 0.5f

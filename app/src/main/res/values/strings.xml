@@ -7,6 +7,7 @@
     <string name="hint_game_title">Game title</string>
     <string name="hint_game_category">Category</string>
     <string name="hint_new_split">Split name</string>
+    <string name="hint_run_id">Run ID</string>
     <string name="split_position">Position:</string>
     <string name="text_name">Name:</string>
     <string name="empty_games_list">No games</string>
@@ -31,6 +32,7 @@
     <string name="undo">Undo</string>
     <string name="rate">Rate</string>
     <string name="add">Add</string>
+    <string name="do_import">Import</string>
     <string name="rate_snackbar">If you like this app, please rate it in the Play Store.</string>
     <string name="add_games_snackbar">Games detected on device. Add them?</string>
     <string name="no_games_to_add">There are no games to add</string>
@@ -45,6 +47,7 @@
     <string name="menu_help">Help &amp; feedback</string>
     <string name="menu_add_installed_games">Add installed games</string>
     <string name="menu_clear_splits">Clear splits</string>
+    <string name="menu_import_splitsio">Import from splits.io</string>
     <string name="img_next_desc">Go to game categories</string>
     <string name="img_play_desc">Open timer</string>
     <string name="img_show_more_desc">Show more</string>

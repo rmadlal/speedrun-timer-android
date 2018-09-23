@@ -10,6 +10,7 @@ import android.widget.EditText
 import android.widget.Toast
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
+import il.ronmad.speedruntimer.web.SplitsIO
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.coroutines.experimental.Job
@@ -18,10 +19,12 @@ fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
         this.text.isNullOrBlank() -> {
             this.error = "Title must not be empty"
+            requestFocus()
             false
         }
         realm.gameExists(this.text.toString()) -> {
             this.error = "This game already exists"
+            requestFocus()
             false
         }
         else -> true
@@ -32,10 +35,12 @@ fun EditText.isValidForCategory(game: Game): Boolean {
     return when {
         this.text.isNullOrBlank() -> {
             this.error = "Category must not be empty"
+            requestFocus()
             false
         }
         game.categoryExists(this.text.toString()) -> {
             this.error = "This category already exists"
+            requestFocus()
             false
         }
         else -> true
@@ -197,4 +202,21 @@ inline fun <T> Iterable<T>.sumBy(selector: (T) -> Long) =
 suspend inline fun Job.then(block: () -> Unit) {
     join()
     block()
+}
+
+fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
+                                 categoryName: String = this.categoryName): Category {
+    return withRealm {
+        val game =  getGameByName(gameName) ?: addGame(gameName)
+        val category = game.getCategoryByName(categoryName) ?: game.addCategory(categoryName)
+        category.apply {
+            this@withRealm.executeTransaction { splits.deleteAllFromRealm() }
+            segmentsInfo.forEach {
+                addSplit(it.segmentName)
+                        .updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
+            }
+            setPBFromSplits()
+            updateData(runCount = attemptsTotal)
+        }
+    }
 }

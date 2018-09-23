@@ -10,7 +10,10 @@ import android.widget.AdapterView
 import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
 import il.ronmad.speedruntimer.realm.*
+import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.android.synthetic.main.fragment_splits.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
@@ -22,8 +25,8 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)
-            val categoryName = it.getString(ARG_CATEGORY_NAME)
+            val gameName = it.getString(ARG_GAME_NAME)!!
+            val categoryName = it.getString(ARG_CATEGORY_NAME)!!
             category = realm.getCategoryByName(gameName, categoryName)!!
         }
     }
@@ -58,6 +61,10 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                     activity.onBackPressed()
                     true
                 }
+                R.id.menu_import_splitsio -> {
+                    onImportSplitsioPressed()
+                    true
+                }
                 R.id.menu_clear_splits -> {
                     onClearSplitsPressed()
                     true
@@ -72,6 +79,12 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         Dialogs.newSplitDialog(activity, category) { name, position ->
             addSplit(name, position)
         }.show()
+    }
+
+    private fun refresh() {
+        mAdapter?.notifyDataSetChanged()
+        calculateSob()
+        mActionMode?.finish()
     }
 
     private fun addSplit(name: String, position: Int) {
@@ -100,17 +113,14 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     private fun removeSplits(toRemove: Collection<Long>) {
         if (toRemove.isEmpty()) return
         category.removeSplits(toRemove)
-        mAdapter?.onItemsRemoved()
         category.setPBFromSplits()
-        calculateSob()
-        mActionMode?.finish()
+        refresh()
     }
 
     private fun clearSplits() {
         category.clearSplits()
-        mAdapter?.onItemsEdited()
         category.setPBFromSplits()
-        calculateSob()
+        refresh()
     }
 
     private fun calculateSob() {
@@ -127,6 +137,30 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
+    }
+
+    private fun onImportSplitsioPressed() {
+        val importSplitsDialog = Dialogs.importSplitsDialog(activity) { id ->
+            launch(UI) {
+                splitsProgressBar.visibility = View.VISIBLE
+                SplitsIO().getRun(id)?.let {
+                    it.toRealmCategory(category.gameName, category.name)
+                    refresh()
+                    context?.showToast("Splits imported successfully")
+                } ?: context?.showToast("Import failed")
+                splitsProgressBar.visibility = View.GONE
+            }
+        }
+        if (category.splits.isNotEmpty()) {
+            AlertDialog.Builder(activity)
+                    .setTitle("Import Splits from splits.io")
+                    .setMessage("All existing data will be overwritten and lost. Import anyway?")
+                    .setPositiveButton(android.R.string.ok) { _, _ -> importSplitsDialog.show() }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            return
+        }
+        importSplitsDialog.show()
     }
 
     private fun setupActionMode() {

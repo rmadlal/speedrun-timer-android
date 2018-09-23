@@ -102,6 +102,7 @@
             android:text="@string/sob_text"
             android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle"
             app:layout_constraintTop_toBottomOf="@id/recyclerView"
+            app:layout_constraintBottom_toTopOf="@+id/bottomSpace"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/sobSpace"
             app:layout_constraintHorizontal_chainStyle="spread_inside"
@@ -133,7 +134,22 @@
             app:layout_constraintHorizontal_weight="1"
             tools:text="27:58" />
 
+        <Space
+            android:id="@+id/bottomSpace"
+            android:layout_width="wrap_content"
+            android:layout_height="64dp"
+            app:layout_constraintTop_toBottomOf="@id/sobTitleText" />
+
+        <ProgressBar
+            android:id="@+id/splitsProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </android.support.constraint.ConstraintLayout>
 
 </android.support.v4.widget.NestedScrollView>
-
