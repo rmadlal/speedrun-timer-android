@@ -6,9 +6,7 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import il.ronmad.speedruntimer.BuildConfig
-import il.ronmad.speedruntimer.realm.Category
-import il.ronmad.speedruntimer.realm.toRun
-import il.ronmad.speedruntimer.toRealmCategory
+import il.ronmad.speedruntimer.readSingleObjectValue
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -17,13 +15,13 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import ru.gildor.coroutines.retrofit.Result
+import ru.gildor.coroutines.retrofit.awaitResponse
 import ru.gildor.coroutines.retrofit.awaitResult
-import java.io.File
 
 const val BASE_URL = "https://splits.io/api/v4/"
 
 interface SplitsIOAPI {
-    @Headers("Accept: application/json")    // awaiting support for application/splitsio
+    @Headers("Accept: application/splitsio")    // https://github.com/glacials/splits-io/tree/master/public/schema
     @GET("runs/{id}")
     fun run(@Path("id") id: String): Call<SplitsIO.Run>
 
@@ -37,33 +35,9 @@ interface SplitsIOAPI {
                   @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>): Call<ResponseBody>
 }
 
-/*
-data class SplitsIORun(val id: String,
-                       val realtime_duration_ms: Number,
-                       val realtime_sum_of_best_ms: Number,
-                       val attempts: Number,
-                       val game: Map<String, Any>,
-                       val category: Map<String, Any>,
-                       val segments: List<SplitsIOSegment>) {
-    val gameName
-        get() = game["name"] as String
-
-    val categoryName
-        get() = category["name"] as String
-}
-
-data class SplitsIOSegment(val id: String,
-                           val name: String,
-                           val segment_number: Number,
-                           val realtime_start_ms: Number,
-                           val realtime_end_ms: Number,
-                           val realtime_duration_ms: Number,
-                           val realtime_shortest_duration_ms: Number)
-*/
-
-data class SplitsIOUploadRequest(val claimUri: String,
-                                 val uploadUri: String,
-                                 val fields: Map<String, String>)
+class SplitsIOUploadRequest(val claimUri: String,
+                            val uploadUri: String,
+                            val fields: Map<String, String>)
 
 class SplitsIO {
 
@@ -71,16 +45,8 @@ class SplitsIO {
     private val api = setupApi()
 
     private fun setupGson(): Gson {
-
-/*
-        val splitsIORunDeserializer = JsonDeserializer<SplitsIORun> { json, _, _ ->
-            val run = json.asJsonObject.get("run")
-            Gson().fromJson(run, SplitsIORun::class.java)
-        }
-*/
-
         val runUploadRequestAdapter = object : TypeAdapter<SplitsIOUploadRequest>() {
-            // According to https://github.com/glacials/splits-io/blob/master/docs/api.md
+            // https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
 
             override fun write(out: JsonWriter?, value: SplitsIOUploadRequest?) { /* Irrelevant */ }
 
@@ -92,16 +58,7 @@ class SplitsIO {
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "uris" -> {
-                                beginObject()
-                                while (hasNext()) {
-                                    when (nextName()) {
-                                        "claim_uri" -> claimUri = nextString()
-                                        else -> skipValue()
-                                    }
-                                }
-                                endObject()
-                            }
+                            "uris" -> claimUri = readSingleObjectValue("claim_uri")
                             "presigned_request" -> {
                                 beginObject()
                                 while (hasNext()) {
@@ -130,9 +87,7 @@ class SplitsIO {
         }
 
         val runAdapter = object : TypeAdapter<Run>() {
-            // According to https://github.com/glacials/splits-io/tree/master/public/schema
 
-            // application/splitsio
             override fun write(out: JsonWriter?, run: Run?) {
                 run ?: return
                 out?.run {
@@ -153,119 +108,36 @@ class SplitsIO {
                         name("longname").value(run.categoryName)
                         endObject()
                     name("segments").beginArray()
-                    var splitTime = 0L
-                    run.segmentsInfo.forEach {
-                        splitTime += it.pbDuration
-                        beginObject()
-                        name("name").value(it.segmentName)
-                        name("endedAt").beginObject()
-                            name("realtimeMS").value(splitTime)
-                            endObject()
-                        name("bestDuration").beginObject()
-                            name("realtimeMS").value(it.bestDuration)
-                            endObject()
-                        endObject()
-                    }
-                    endArray()
-                    endObject()
-                }
-            }
-
-            // application/json
-            override fun read(`in`: JsonReader?): Run {
-                return `in`!!.run {
-                    beginObject()
-                    nextName()  // "run"
-                    var gameName = ""
-                    var categoryName = ""
-                    var segmentsInfo: List<Segment> = emptyList()
-                    var attemptsTotal = 0
-                    beginObject()
-                    while (hasNext()) {
-                        when (nextName()) {
-                            "attempts" -> attemptsTotal = nextInt()
-                            "game" -> {
-                                beginObject()
-                                while (hasNext()) {
-                                    when (nextName()) {
-                                        "name" -> gameName = nextString()
-                                        else -> skipValue()
-                                    }
-                                }
+                        var splitTime = 0L
+                        run.segments.forEach {
+                            splitTime += it.pbDuration
+                            beginObject()
+                            name("name").value(it.segmentName)
+                            name("endedAt").beginObject()
+                                name("realtimeMS").value(splitTime)
                                 endObject()
-                            }
-                            "category" -> {
-                                beginObject()
-                                while (hasNext()) {
-                                    when (nextName()) {
-                                        "name" -> categoryName = nextString()
-                                        else -> skipValue()
-                                    }
-                                }
+                            name("bestDuration").beginObject()
+                                name("realtimeMS").value(it.bestDuration)
                                 endObject()
-                            }
-                            "segments" -> {
-                                beginArray()
-                                while (hasNext()) {
-                                    var segmentName = ""
-                                    var pbDuration = 0L
-                                    var bestDuration = 0L
-                                    beginObject()
-                                    while (hasNext()) {
-                                        when (nextName()) {
-                                            "name" -> segmentName = nextString()
-                                            "realtime_duration_ms" -> pbDuration = nextString().toLong()
-                                            "realtime_shortest_duration_ms" -> bestDuration = nextString().toLong()
-                                            else -> skipValue()
-                                        }
-                                    }
-                                    endObject()
-                                    segmentsInfo += Segment(segmentName, pbDuration, bestDuration)
-                                }
-                                endArray()
-                            }
-                            else -> skipValue()
+                            endObject()
                         }
-                    }
+                        endArray()
                     endObject()
-                    endObject()
-                    Run(gameName, categoryName, attemptsTotal, segmentsInfo)
                 }
             }
 
-/*
-            // application/splitsio
             override fun read(`in`: JsonReader?): Run {
                 return `in`!!.run {
                     var gameName = ""
                     var categoryName = ""
-                    var segmentsInfo: List<Segment> = emptyList()
+                    var segments: List<Segment> = emptyList()
                     var attemptsTotal = 0
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "attempts" -> {
-                                beginObject()
-                                while (hasNext()) {
-                                    when(nextName()) {
-                                        "total" -> attemptsTotal = nextInt()
-                                        else -> skipValue()
-                                    }
-                                }
-                                endObject()
-                            }
-                            "game" -> {
-                                beginObject()
-                                nextName()  // "longname"
-                                gameName = nextString()
-                                endObject()
-                            }
-                            "category" -> {
-                                beginObject()
-                                nextName()  // "longname"
-                                categoryName = nextString()
-                                endObject()
-                            }
+                            "attempts" -> attemptsTotal = readSingleObjectValue("total").toInt()
+                            "game" -> gameName = readSingleObjectValue("longname")
+                            "category" -> categoryName = readSingleObjectValue("longname")
                             "segments" -> {
                                 var prevSplitTime = 0L
                                 beginArray()
@@ -278,24 +150,16 @@ class SplitsIO {
                                         when (nextName()) {
                                             "name" -> segmentName = nextString()
                                             "endedAt" -> {
-                                                beginObject()
-                                                nextName()  // "realtimeMS"
-                                                val endedAt = nextString().toLong()
+                                                val endedAt = readSingleObjectValue("realtimeMS").toLong()
                                                 pbDuration = endedAt - prevSplitTime
                                                 prevSplitTime = endedAt
-                                                endObject()
                                             }
-                                            "bestDuration" -> {
-                                                beginObject()
-                                                nextName()  // "realtimeMS"
-                                                bestDuration = nextString().toLong()
-                                                endObject()
-                                            }
+                                            "bestDuration" -> bestDuration = readSingleObjectValue("realtimeMS").toLong()
                                             else -> skipValue()
                                         }
                                     }
                                     endObject()
-                                    segmentsInfo += Segment(segmentName, pbDuration, bestDuration)
+                                    segments += Segment(segmentName, pbDuration, bestDuration)
                                 }
                                 endArray()
                             }
@@ -303,15 +167,12 @@ class SplitsIO {
                         }
                     }
                     endObject()
-                    Run(gameName, categoryName, attemptsTotal, segmentsInfo)
+                    Run(gameName, categoryName, attemptsTotal, segments)
                 }
             }
-*/
-
         }
 
         return GsonBuilder()
-//                .registerTypeAdapter(SplitsIORun::class.java, splitsIORunDeserializer)
                 .registerTypeAdapter(SplitsIOUploadRequest::class.java, runUploadRequestAdapter)
                 .registerTypeAdapter(Run::class.java, runAdapter)
                 .excludeFieldsWithoutExposeAnnotation()
@@ -331,28 +192,32 @@ class SplitsIO {
         return (runRequest as? Result.Ok)?.value
     }
 
-    suspend fun uploadRun(runFile: File): Boolean {
+    /**
+     * https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
+     * @return Claim URI for the uploaded run, or empty String if failed.
+     */
+    suspend fun uploadRun(run: Run): String? {
         val response1 = api.requestUploadRun().awaitResult()
-        val uploadRequest = (response1 as? Result.Ok)?.value ?: return false
-
-        val requestFile = RequestBody.create(MediaType.parse("application/octet-stream"), runFile)
-        val partMap: Map<String, RequestBody> = uploadRequest.fields.mapValues {
-            RequestBody.create(null, it.value)
-        } + ("file" to requestFile)
-        val response2 = api.uploadRun(uploadRequest.uploadUri, partMap).awaitResult()
-        return response2 is Result.Ok
+        return (response1 as? Result.Ok)?.value?.let { uploadRequest ->
+            val requestFile = RequestBody.create(
+                    MediaType.parse("application/octet-stream"),
+                    serializeRun(run))
+            val partMap: Map<String, RequestBody> = uploadRequest.fields.mapValues {
+                RequestBody.create(null, it.value)
+            } + ("file" to requestFile)
+            val response2 = api.uploadRun(uploadRequest.uploadUri, partMap).awaitResponse()
+            if (response2.isSuccessful) uploadRequest.claimUri else null
+        }
     }
 
-    fun serializeRun(category: Category): String = gson.toJson(category.toRun())
+    fun serializeRun(run: Run): String = gson.toJson(run)
 
-    // Also creates all necessary Realm objects
-    fun deserializeRun(json: String): Category =
-            gson.fromJson(json, Run::class.java).toRealmCategory()
+    fun deserializeRun(json: String): Run = gson.fromJson(json, Run::class.java)
 
     class Run(val gameName: String,
               val categoryName: String,
               val attemptsTotal: Int,
-              val segmentsInfo: List<Segment>)
+              val segments: List<Segment>)
 
     class Segment(val segmentName: String,
                   val pbDuration: Long,

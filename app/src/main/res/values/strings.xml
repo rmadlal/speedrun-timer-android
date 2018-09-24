@@ -48,6 +48,7 @@
     <string name="menu_add_installed_games">Add installed games</string>
     <string name="menu_clear_splits">Clear splits</string>
     <string name="menu_import_splitsio">Import from splits.io</string>
+    <string name="menu_export_splitsio">Upload to splits.io</string>
     <string name="img_next_desc">Go to game categories</string>
     <string name="img_play_desc">Open timer</string>
     <string name="img_show_more_desc">Show more</string>

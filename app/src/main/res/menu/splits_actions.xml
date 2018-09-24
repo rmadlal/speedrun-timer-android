@@ -10,10 +10,17 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_export_splitsio"
+        android:title="@string/menu_export_splitsio"
+        android:icon="@drawable/ic_file_upload_black_24dp"
+        android:orderInCategory="2"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menu_clear_splits"
         android:title="@string/menu_clear_splits"
         android:icon="@drawable/ic_timer_off_black_24dp"
-        android:orderInCategory="2"
+        android:orderInCategory="3"
         app:showAsAction="ifRoom" />
 
 </menu>

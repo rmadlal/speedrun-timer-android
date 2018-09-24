@@ -8,6 +8,7 @@ import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
@@ -211,7 +212,7 @@ fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
         val category = game.getCategoryByName(categoryName) ?: game.addCategory(categoryName)
         category.apply {
             this@withRealm.executeTransaction { splits.deleteAllFromRealm() }
-            segmentsInfo.forEach {
+            segments.forEach {
                 addSplit(it.segmentName)
                         .updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
             }
@@ -219,4 +220,17 @@ fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
             updateData(runCount = attemptsTotal)
         }
     }
+}
+
+fun JsonReader.readSingleObjectValue(name: String): String {
+    var value = ""
+    beginObject()
+    while (hasNext()) {
+        when (nextName()) {
+            name -> value = nextString()
+            else -> skipValue()
+        }
+    }
+    endObject()
+    return value
 }

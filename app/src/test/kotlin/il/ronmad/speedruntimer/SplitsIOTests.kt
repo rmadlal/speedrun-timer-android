@@ -1,24 +1,65 @@
 package il.ronmad.speedruntimer
 
-import com.google.gson.internal.LazilyParsedNumber
 import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.coroutines.experimental.runBlocking
-import kotlinx.coroutines.experimental.test.TestCoroutineContext
+import org.junit.Assert
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class SplitsIOTests {
 
     @Test
-    fun testAsnoobWR() {
-        val api = SplitsIO()
-        runBlocking(context = TestCoroutineContext("SplitsIOTest")) {
-            val run = api.getRun("2z69") ?: fail("request failed")
-            assertEquals("2z69", run.id)
-            assertEquals("Ori and the Blind Forest Definitive Edition", run.gameName)
-            assertEquals("All Skills no OOB", run.categoryName)
-            assertEquals(1690799, (run.realtime_duration_ms as LazilyParsedNumber).toInt())
-            assertEquals(190359, (run.segments[0].realtime_duration_ms as LazilyParsedNumber).toInt())
+    fun testSerializeRun() {
+        val run = SplitsIO.Run("TestGame", "TestCategory", 14,
+                listOf(SplitsIO.Segment("Test1", 10000, 9000),
+                        SplitsIO.Segment("Test2", 25000, 20000),
+                        SplitsIO.Segment("Test3", 5000, 4500),
+                        SplitsIO.Segment("Test4", 100000, 85000)
+                ))
+
+        val expectedJson = """{"_schemaVersion":"v1.0.0","timer":{"shortname":"fst","longname":"Floating Speedrun Timer","version":"v4.17"},"attempts":{"total":14},"game":{"longname":"TestGame"},"category":{"longname":"TestCategory"},"segments":[{"name":"Test1","endedAt":{"realtimeMS":10000},"bestDuration":{"realtimeMS":9000}},{"name":"Test2","endedAt":{"realtimeMS":35000},"bestDuration":{"realtimeMS":20000}},{"name":"Test3","endedAt":{"realtimeMS":40000},"bestDuration":{"realtimeMS":4500}},{"name":"Test4","endedAt":{"realtimeMS":140000},"bestDuration":{"realtimeMS":85000}}]}"""
+        Assert.assertEquals(expectedJson, SplitsIO().serializeRun(run))
+    }
+
+    @Test
+    fun testDeserializeRun() {
+        val json = """{"_schemaVersion":"v1.0.0","timer":{"shortname":"fst","longname":"Floating Speedrun Timer","version":"v4.17"},"attempts":{"total":28},"game":{"longname":"Ori"},"category":{"longname":"100%"},"segments":[{"name":"Yes","endedAt":{"realtimeMS":59000},"bestDuration":{"realtimeMS":55000}},{"name":"Dude","endedAt":{"realtimeMS":131755},"bestDuration":{"realtimeMS":65000}}]}"""
+        with(SplitsIO().deserializeRun(json)) {
+            Assert.assertEquals("Ori", gameName)
+            Assert.assertEquals("100%", categoryName)
+            Assert.assertEquals("Yes", segments[0].segmentName)
+            Assert.assertEquals(59000L, segments[0].pbDuration)
+            Assert.assertEquals(55000L, segments[0].bestDuration)
+            Assert.assertEquals("Dude", segments[1].segmentName)
+            Assert.assertEquals(131755L - 59000L, segments[1].pbDuration)
+            Assert.assertEquals(65000L, segments[1].bestDuration)
+            Assert.assertEquals(28, attemptsTotal)
+        }
+    }
+
+    @Test
+    fun testGetAsnoobWR() {
+        runBlocking {
+            SplitsIO().getRun("2z69")?.let {
+                assertEquals("Ori and the Blind Forest Definitive Edition", it.gameName)
+                assertEquals("All Skills no OOB", it.categoryName)
+                assertEquals(190359L, it.segments[0].pbDuration)
+            } ?: fail("request failed")
+        }
+    }
+
+    @Test
+    fun testUploadRun() {
+        val run = SplitsIO.Run("TestGame", "TestCategory", 14,
+                listOf(SplitsIO.Segment("Test1", 10000, 9000),
+                        SplitsIO.Segment("Test2", 25000, 20000),
+                        SplitsIO.Segment("Test3", 5000, 4500),
+                        SplitsIO.Segment("Test4", 100000, 85000)
+                ))
+
+        runBlocking {
+            SplitsIO().uploadRun(run)?.let(::println) ?: fail("upload failed")
         }
     }
 }

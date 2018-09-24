@@ -1,6 +1,9 @@
 package il.ronmad.speedruntimer.fragments
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
@@ -11,6 +14,7 @@ import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_splits.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -63,6 +67,10 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                 }
                 R.id.menu_import_splitsio -> {
                     onImportSplitsioPressed()
+                    true
+                }
+                R.id.menu_export_splitsio -> {
+                    onExportSplitsioPressed()
                     true
                 }
                 R.id.menu_clear_splits -> {
@@ -161,6 +169,23 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             return
         }
         importSplitsDialog.show()
+    }
+
+    private fun onExportSplitsioPressed() {
+        if (category.splits.isEmpty()) {
+            context?.showToast("There must be at least one split.")
+            return
+        }
+        launch(UI) {
+            context?.showToast("Uploading...")
+            SplitsIO().uploadRun(category.toRun())?.let { claimUri ->
+                Snackbar.make(activity.fabAdd, "Splits uploaded successfully.", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Claim") {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(claimUri)))
+                        }
+                        .show()
+            } ?: context?.showToast("Upload failed")
+        }
     }
 
     private fun setupActionMode() {

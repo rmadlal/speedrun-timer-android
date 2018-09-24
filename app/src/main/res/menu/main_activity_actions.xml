@@ -5,19 +5,19 @@
     <item
         android:id="@+id/menu_add_games"
         android:title="@string/menu_add_installed_games"
-        android:orderInCategory="1"
+        android:orderInCategory="100"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_settings"
         android:title="@string/menu_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="101"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_help"
         android:title="@string/menu_help"
-        android:orderInCategory="101"
+        android:orderInCategory="102"
         app:showAsAction="never" />
 
 </menu>
