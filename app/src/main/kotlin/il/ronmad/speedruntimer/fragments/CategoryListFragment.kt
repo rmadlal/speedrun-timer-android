@@ -29,7 +29,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)
+            val gameName = it.getString(ARG_GAME_NAME)!!
             game = realm.getGameByName(gameName)!!
         }
     }
@@ -73,19 +73,16 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         waitingForTimerPermission = false
         try {
             checkNotNull(selectedCategory)
-            selectedCategory?.let {
-                TimerService.launchTimer(context, game.name, it.name)
-            }
+            TimerService.launchTimer(context, game.name, selectedCategory!!.name)
         } catch (e: IllegalStateException) { /* selectedCategory was null */ }
     }
 
     private fun checkEmptyList() {
-        emptyList.visibility = if (game.categories.size == 0) View.VISIBLE else View.GONE
+        emptyList?.visibility = if (game.categories.size == 0) View.VISIBLE else View.GONE
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter!!)
-        mActionModeCallback?.apply {
+        mActionModeCallback = MyActionModeCallback(mAdapter!!).apply {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     game.getCategoryById(id)?.let {
@@ -105,8 +102,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun setupRecyclerView() {
-        mAdapter = CategoryAdapter(activity, game.categories)
-        mAdapter?.apply {
+        mAdapter = CategoryAdapter(activity, game.categories).apply {
             onItemClickListener = { holder, position ->
                 if (mActionMode == null) {
                     selectedCategory = holder.item
@@ -205,26 +201,23 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     private fun viewSplits() {
         try {
             checkNotNull(selectedCategory)
-            selectedCategory?.let {
-                activity.supportFragmentManager.beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
-                                R.anim.fade_in, R.anim.fade_out)
-                        .replace(R.id.fragment_container,
-                                SplitsFragment.newInstance(game.name, it.name),
-                                TAG_SPLITS_LIST_FRAGMENT)
-                        .addToBackStack(null)
-                        .commit()
-            }
+            activity.supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
+                            R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.fragment_container,
+                            SplitsFragment.newInstance(game.name, selectedCategory!!.name),
+                            TAG_SPLITS_LIST_FRAGMENT)
+                    .addToBackStack(null)
+                    .commit()
         } catch (e: IllegalStateException) { /* selectedCategory was null */ }
     }
 
     private fun showBottomSheetDialog() {
-        val bottomSheetDialog = CategoryBottomSheetFragment.newInstance()
-        bottomSheetDialog.apply {
-            show(this@CategoryListFragment.activity.supportFragmentManager,
-                    TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
+        CategoryBottomSheetFragment.newInstance().apply {
             onViewSplitsClickListener = { viewSplits() }
             onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
+            show(this@CategoryListFragment.activity.supportFragmentManager,
+                    TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
         }
     }
 
@@ -264,12 +257,8 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         private var waitingForTimerPermission = false
         private const val OVERLAY_REQUEST_CODE = 251
 
-        fun newInstance(gameName: String): CategoryListFragment {
-            val fragment = CategoryListFragment()
-            val args = Bundle()
-            args.putString(ARG_GAME_NAME, gameName)
-            fragment.arguments = args
-            return fragment
+        fun newInstance(gameName: String) = CategoryListFragment().apply {
+            arguments = Bundle().also { it.putString(ARG_GAME_NAME, gameName) }
         }
     }
 }

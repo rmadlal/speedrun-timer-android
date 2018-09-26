@@ -22,8 +22,10 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mActionBar?.title = activity.getString(R.string.app_name)
-        mActionBar?.setDisplayHomeAsUpEnabled(false)
+        mActionBar?.apply {
+            title = activity.getString(R.string.app_name)
+            setDisplayHomeAsUpEnabled(false)
+        }
 
         setupRecyclerView()
         setupActionMode()
@@ -71,8 +73,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter!!)
-        mActionModeCallback?.apply {
+        mActionModeCallback = MyActionModeCallback(mAdapter!!).apply {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     realm.getGameById(id)?.let { game ->
@@ -96,8 +97,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     private fun setupRecyclerView() {
-        mAdapter = GameAdapter(realm.where<Game>().findAll())
-        mAdapter?.apply {
+        mAdapter = GameAdapter(realm.where<Game>().findAll()).apply {
             onItemClickListener = { holder, position ->
                 if (mActionMode == null) {
                     val game = holder.item
@@ -132,8 +132,6 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
 
     companion object {
 
-        fun newInstance(): GamesListFragment {
-            return GamesListFragment()
-        }
+        fun newInstance() = GamesListFragment()
     }
 }

@@ -30,7 +30,7 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
         super.onCreate(savedInstanceState)
         realm.addChangeListener(realmChangeListener)
         arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)
+            val gameName = it.getString(ARG_GAME_NAME)!!
             game = realm.getGameByName(gameName)!!
         }
     }
@@ -39,11 +39,6 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
         super.onActivityCreated(savedInstanceState)
         setupListView()
         swipeRefreshLayout.setOnRefreshListener { refreshData() }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        refreshJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -57,14 +52,16 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
         refreshJob = launch(UI) {
             val app = context?.app ?: run {
                 displayData(emptyList())
+                refreshJob = null
                 return@launch
             }
-            swipeRefreshLayout.isRefreshing = true
+            swipeRefreshLayout?.isRefreshing = true
             val leaderboards = app.srcApi.fetchLeaderboardsForGame(context, game.name)
             if (isActive) {
                 displayData(leaderboards)
-                swipeRefreshLayout.isRefreshing = false
             }
+            swipeRefreshLayout?.isRefreshing = false
+            refreshJob = null
         }
     }
 
@@ -87,12 +84,8 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
     companion object {
 
-        fun newInstance(gameName: String): GameInfoFragment {
-            val fragment = GameInfoFragment()
-            val args = Bundle()
-            args.putString(ARG_GAME_NAME, gameName)
-            fragment.arguments = args
-            return fragment
+        fun newInstance(gameName: String) = GameInfoFragment().apply {
+            arguments = Bundle().also { it.putString(ARG_GAME_NAME, gameName) }
         }
     }
 }

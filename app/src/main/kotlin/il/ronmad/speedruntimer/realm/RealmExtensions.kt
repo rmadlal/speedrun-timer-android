@@ -125,6 +125,8 @@ fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction
 
 fun Category.setPBFromSplits() = updateData(bestTime = splits.sumBy { it.pbTime })
 
+fun Category.calculateSob() = splits.sumBy { it.bestTime }
+
 fun Category.toRun(): SplitsIO.Run =
         SplitsIO.Run(gameName,
                 name,

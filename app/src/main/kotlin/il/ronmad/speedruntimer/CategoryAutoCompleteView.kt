@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import com.google.common.collect.Lists
 import il.ronmad.speedruntimer.web.SrcGame
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
@@ -17,11 +18,13 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
+    private var setCategoriesJob: Job? = null
+
     private val defaultCategories: List<String>
         get() = listOf("Any%", "100%", "Low%")
 
     internal fun setCategories(gameName: String) {
-        launch(UI) {
+        setCategoriesJob = launch(UI) {
             val app = context?.applicationContext as? MyApplication ?: return@launch
             val game = app.srcApi.fetchGameData(context, gameName)
             val categoryNames = if (game == SrcGame.EMPTY_GAME) defaultCategories
@@ -43,9 +46,12 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
                     }
                 }
             } catch (e: OutOfMemoryError) { defaultCategories }
-            setAdapter(ArrayAdapter(context,
-                    R.layout.autocomplete_dropdown_item, categoryNames))
-            postDelayed({ if (isShown) showDropDown() }, 200)
+            if (isActive) {
+                setAdapter(ArrayAdapter(context,
+                        R.layout.autocomplete_dropdown_item, categoryNames))
+                postDelayed({ if (isShown) showDropDown() }, 200)
+            }
+            setCategoriesJob = null
         }
     }
 
@@ -65,4 +71,9 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     }
 
     override fun enoughToFilter() = true
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        setCategoriesJob?.cancel()
+    }
 }

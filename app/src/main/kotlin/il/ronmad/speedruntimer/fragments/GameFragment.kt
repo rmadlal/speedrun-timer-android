@@ -30,7 +30,7 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)
+            val gameName = it.getString(ARG_GAME_NAME)!!
             game = realm.getGameByName(gameName)!!
         }
     }
@@ -39,8 +39,10 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         super.onActivityCreated(savedInstanceState)
         view?.requestFocus()
 
-        mActionBar?.title = game.name
-        mActionBar?.setDisplayHomeAsUpEnabled(true)
+        mActionBar?.apply {
+            title = game.name
+            setDisplayHomeAsUpEnabled(true)
+        }
 
         setupViewPager()
         tabLayout.visibility = View.VISIBLE
@@ -78,11 +80,11 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
     private fun setupViewPager() {
         viewPagerAdapter = object : SmartFragmentStatePagerAdapter(childFragmentManager) {
             override fun instantiateItem(container: ViewGroup, position: Int): Fragment {
-                val fragment = super.instantiateItem(container, position)
-                if (fragment is GameInfoFragment && viewPager.currentItem == TAB_INFO) {
-                    fragment.refreshData()
+                return super.instantiateItem(container, position).also {
+                    if (it is GameInfoFragment && viewPager.currentItem == TAB_INFO) {
+                        it.refreshData()
+                    }
                 }
-                return fragment
             }
 
             override fun getItem(position: Int): Fragment {
@@ -142,12 +144,8 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         const val TAB_CATEGORIES = 0
         const val TAB_INFO = 1
 
-        fun newInstance(gameName: String): GameFragment {
-            val fragment = GameFragment()
-            val args = Bundle()
-            args.putString(ARG_GAME_NAME, gameName)
-            fragment.arguments = args
-            return fragment
+        fun newInstance(gameName: String) = GameFragment().apply {
+            arguments = Bundle().also { it.putString(ARG_GAME_NAME, gameName) }
         }
     }
 }

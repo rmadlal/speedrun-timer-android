@@ -16,6 +16,7 @@ import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_splits.*
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
@@ -25,6 +26,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     var mAdapter: SplitAdapter? = null
     private var mActionMode: ActionMode? = null
     private var mActionModeCallback: MyActionModeCallback? = null
+    private var importSplitsJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,21 +39,32 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mActionBar?.title = category.gameName
-        mActionBar?.subtitle = category.name
-        mActionBar?.setDisplayHomeAsUpEnabled(true)
-
+        mActionBar?.apply {
+            title = category.gameName
+            subtitle = category.name
+            setDisplayHomeAsUpEnabled(true)
+        }
         setupRecyclerView()
         setupActionMode()
         setupComparisonSpinner()
-        calculateSob()
+        updateSob()
 
         fabAdd.setOnClickListener { onFabAddPressed() }
+
+        savedInstanceState?.let {
+            if (it.getBoolean(KEY_IS_IMPORT_JOB_ACTIVE)) {
+                splitsProgressBar?.visibility = View.VISIBLE
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         mActionBar?.subtitle = null
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(KEY_IS_IMPORT_JOB_ACTIVE, importSplitsJob?.isActive ?: false)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -91,7 +104,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun refresh() {
         mAdapter?.notifyDataSetChanged()
-        calculateSob()
+        updateSob()
         mActionMode?.finish()
     }
 
@@ -114,7 +127,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             mAdapter?.onItemMoved(position, newPosition)
         }
         category.setPBFromSplits()
-        calculateSob()
+        updateSob()
         mActionMode?.finish()
     }
 
@@ -131,9 +144,8 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         refresh()
     }
 
-    private fun calculateSob() {
-        sobValueText.text = category.splits.sumBy { it.bestTime }
-                .getFormattedTime(dashIfZero = true)
+    private fun updateSob() {
+        sobValueText?.text = category.calculateSob().getFormattedTime(dashIfZero = true)
     }
 
     private fun onClearSplitsPressed() {
@@ -149,14 +161,17 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun onImportSplitsioPressed() {
         val importSplitsDialog = Dialogs.importSplitsDialog(activity) { id ->
-            launch(UI) {
-                splitsProgressBar.visibility = View.VISIBLE
+            importSplitsJob = launch(UI) {
+                splitsProgressBar?.visibility = View.VISIBLE
+                val gameName = category.gameName
+                val categoryName = category.name
                 SplitsIO().getRun(id)?.let {
-                    it.toRealmCategory(category.gameName, category.name)
+                    it.toRealmCategory(gameName, categoryName)
                     refresh()
                     context?.showToast("Splits imported successfully")
                 } ?: context?.showToast("Import failed")
-                splitsProgressBar.visibility = View.GONE
+                splitsProgressBar?.visibility = View.GONE
+                importSplitsJob = null
             }
         }
         if (category.splits.isNotEmpty()) {
@@ -189,8 +204,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun setupActionMode() {
-        mActionModeCallback = MyActionModeCallback(mAdapter!!)
-        mActionModeCallback?.apply {
+        mActionModeCallback = MyActionModeCallback(mAdapter!!).apply {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     category.getSplitById(id)?.let {
@@ -220,8 +234,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun setupRecyclerView() {
-        mAdapter = SplitAdapter(category.splits, activity.getComparison())
-        mAdapter?.apply {
+        mAdapter = SplitAdapter(category.splits, activity.getComparison()).apply {
             onItemClickListener = { _, position ->
                 mActionMode?.let {
                     mAdapter?.toggleItemSelected(position)
@@ -234,7 +247,6 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                     mActionMode = activity.startActionMode(mActionModeCallback)
                     true
                 } else false
-
             }
         }
         recyclerView.apply {
@@ -264,14 +276,14 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     companion object {
-        fun newInstance(gameName: String, categoryName: String): SplitsFragment {
-            val fragment = SplitsFragment()
-            val args = Bundle()
-            args.putString(ARG_GAME_NAME, gameName)
-            args.putString(ARG_CATEGORY_NAME, categoryName)
-            fragment.arguments = args
-            return fragment
+        fun newInstance(gameName: String, categoryName: String) = SplitsFragment().apply {
+            arguments = Bundle().also {
+                it.putString(ARG_GAME_NAME, gameName)
+                it.putString(ARG_CATEGORY_NAME, categoryName)
+            }
         }
+
+        const val KEY_IS_IMPORT_JOB_ACTIVE = "isImportJobActive"
     }
 }
 
