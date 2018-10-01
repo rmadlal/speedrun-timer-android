@@ -3,7 +3,6 @@ package il.ronmad.speedruntimer.fragments
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
@@ -14,9 +13,7 @@ import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_splits.*
-import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
@@ -26,7 +23,6 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     var mAdapter: SplitAdapter? = null
     private var mActionMode: ActionMode? = null
     private var mActionModeCallback: MyActionModeCallback? = null
-    private var importSplitsJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,21 +46,11 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         updateSob()
 
         fabAdd.setOnClickListener { onFabAddPressed() }
-
-        savedInstanceState?.let {
-            if (it.getBoolean(KEY_IS_IMPORT_JOB_ACTIVE)) {
-                splitsProgressBar?.visibility = View.VISIBLE
-            }
-        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         mActionBar?.subtitle = null
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(KEY_IS_IMPORT_JOB_ACTIVE, importSplitsJob?.isActive ?: false)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -161,7 +147,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun onImportSplitsioPressed() {
         val importSplitsDialog = Dialogs.importSplitsDialog(activity) { id ->
-            importSplitsJob = launch(UI) {
+            launch(UI) {
                 splitsProgressBar?.visibility = View.VISIBLE
                 val gameName = category.gameName
                 val categoryName = category.name
@@ -171,7 +157,6 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                     context?.showToast("Splits imported successfully")
                 } ?: context?.showToast("Import failed")
                 splitsProgressBar?.visibility = View.GONE
-                importSplitsJob = null
             }
         }
         if (category.splits.isNotEmpty()) {
@@ -194,11 +179,9 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         launch(UI) {
             context?.showToast("Uploading...")
             SplitsIO().uploadRun(category.toRun())?.let { claimUri ->
-                Snackbar.make(activity.fabAdd, "Splits uploaded successfully.", Snackbar.LENGTH_INDEFINITE)
-                        .setAction("Claim") {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(claimUri)))
-                        }
-                        .show()
+                context?.let {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(claimUri)))
+                }
             } ?: context?.showToast("Upload failed")
         }
     }
@@ -282,8 +265,6 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                 it.putString(ARG_CATEGORY_NAME, categoryName)
             }
         }
-
-        const val KEY_IS_IMPORT_JOB_ACTIVE = "isImportJobActive"
     }
 }
 

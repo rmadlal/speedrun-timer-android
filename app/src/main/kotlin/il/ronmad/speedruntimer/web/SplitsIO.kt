@@ -23,11 +23,10 @@ const val BASE_URL = "https://splits.io/api/v4/"
 interface SplitsIOAPI {
     @Headers("Accept: application/splitsio")    // https://github.com/glacials/splits-io/tree/master/public/schema
     @GET("runs/{id}")
-    fun run(@Path("id") id: String): Call<SplitsIO.Run>
+    fun getRun(@Path("id") id: String): Call<SplitsIO.Run>
 
     @POST("runs")
-    fun requestUploadRun(): Call<SplitsIOUploadRequest>
-
+    fun requestUploadRun(): Call<SplitsIO.UploadRequest>
 
     @Multipart
     @POST
@@ -35,22 +34,18 @@ interface SplitsIOAPI {
                   @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>): Call<ResponseBody>
 }
 
-class SplitsIOUploadRequest(val claimUri: String,
-                            val uploadUri: String,
-                            val fields: Map<String, String>)
-
 class SplitsIO {
 
     private val gson = setupGson()
     private val api = setupApi()
 
     private fun setupGson(): Gson {
-        val runUploadRequestAdapter = object : TypeAdapter<SplitsIOUploadRequest>() {
+        val runUploadRequestAdapter = object : TypeAdapter<UploadRequest>() {
             // https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
 
-            override fun write(out: JsonWriter?, value: SplitsIOUploadRequest?) { /* Irrelevant */ }
+            override fun write(out: JsonWriter?, value: UploadRequest?) { /* Irrelevant */ }
 
-            override fun read(`in`: JsonReader?): SplitsIOUploadRequest {
+            override fun read(`in`: JsonReader?): UploadRequest {
                 return `in`!!.run {
                     var claimUri = ""
                     var uploadUri = ""
@@ -81,7 +76,7 @@ class SplitsIO {
                         }
                     }
                     endObject()
-                    SplitsIOUploadRequest(claimUri, uploadUri, fields)
+                    UploadRequest(claimUri, uploadUri, fields)
                 }
             }
         }
@@ -173,7 +168,7 @@ class SplitsIO {
         }
 
         return GsonBuilder()
-                .registerTypeAdapter(SplitsIOUploadRequest::class.java, runUploadRequestAdapter)
+                .registerTypeAdapter(UploadRequest::class.java, runUploadRequestAdapter)
                 .registerTypeAdapter(Run::class.java, runAdapter)
                 .excludeFieldsWithoutExposeAnnotation()
                 .create()
@@ -188,7 +183,7 @@ class SplitsIO {
     }
 
     suspend fun getRun(id: String): Run? {
-        val runRequest = api.run(id).awaitResult()
+        val runRequest = api.getRun(id).awaitResult()
         return (runRequest as? Result.Ok)?.value
     }
 
@@ -222,4 +217,8 @@ class SplitsIO {
     class Segment(val segmentName: String,
                   val pbDuration: Long,
                   val bestDuration: Long)
+
+    class UploadRequest(val claimUri: String,
+                        val uploadUri: String,
+                        val fields: Map<String, String>)
 }

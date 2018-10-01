@@ -1,8 +1,7 @@
 package il.ronmad.speedruntimer
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import org.junit.Assert.*
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -12,7 +11,6 @@ import org.junit.Assert.*
 class UnitTests {
 
     @Test
-    @Throws(Exception::class)
     fun testTimeSplit() {
         val time = (43 + 1000 * 27 + 1000 * 60 * 5).toLong()
 
