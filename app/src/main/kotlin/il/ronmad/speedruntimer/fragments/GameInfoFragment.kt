@@ -12,7 +12,6 @@ import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.getGameByName
 import il.ronmad.speedruntimer.showToast
 import il.ronmad.speedruntimer.ui.GameInfoViewModel
-import il.ronmad.speedruntimer.web.SrcLeaderboard
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.fragment_game.*
@@ -53,7 +52,14 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
             })
             leaderboards.observe(this@GameInfoFragment, Observer { leaderboards ->
                 leaderboards?.let {
-                    displayData(it)
+                    mAdapter?.data = it
+                    isDataShowing = it.isNotEmpty()
+                }
+            })
+            toast.observe(this@GameInfoFragment, Observer { toast ->
+                toast?.handle()?.let {
+                    context?.showToast(it)
+                    (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
                 }
             })
         }
@@ -85,17 +91,6 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
             setAdapter(mAdapter)
             ViewCompat.setNestedScrollingEnabled(this, true)
         }
-    }
-
-    private fun displayData(data: List<SrcLeaderboard>) {
-        mAdapter?.clear()
-        if (data.isEmpty()) {
-            context?.showToast("No data available")
-            (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
-        } else {
-            mAdapter?.data = data
-        }
-        isDataShowing = data.isNotEmpty()
     }
 
     companion object {

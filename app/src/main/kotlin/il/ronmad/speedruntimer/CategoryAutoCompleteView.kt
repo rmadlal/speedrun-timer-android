@@ -10,6 +10,7 @@ import com.google.common.collect.Lists
 import il.ronmad.speedruntimer.web.Src
 import il.ronmad.speedruntimer.web.SrcGame
 import kotlinx.coroutines.*
+import java.io.IOException
 
 class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
 
@@ -19,41 +20,47 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
 
     private var setCategoriesJob: Job? = null
 
+    private var categoryNames: List<String> = emptyList()
     private val defaultCategories: List<String>
         get() = listOf("Any%", "100%", "Low%")
 
     internal fun setCategories(gameName: String) {
         setCategoriesJob = GlobalScope.launch(Dispatchers.Main) {
             val app = context?.app ?: return@launch
-            val game = Src(app).fetchGameData(gameName)
-            val categoryNames = if (game == SrcGame.EMPTY_GAME) defaultCategories
-            else try {
-                game.categories.flatMap { category ->
-                    if (category.subCategories.isEmpty())
-                        listOf(category.name)
-                    else {
-                        val subcategories = category.subCategories.map { srcVariable ->
-                            srcVariable.values.map { it.label }
-                        }
-                        try {
-                            Lists.cartesianProduct(subcategories).map {
-                                "${category.name} - ${it.joinToString(" ")}"
-                            }
-                        } catch (e: IllegalArgumentException) {
+            try {
+                val game = Src(app).fetchGameData(gameName)
+                categoryNames = if (game == SrcGame.EMPTY_GAME) defaultCategories
+                else {
+                    game.categories.flatMap { category ->
+                        if (category.subCategories.isEmpty())
                             listOf(category.name)
+                        else {
+                            val subcategories = category.subCategories.map { srcVariable ->
+                                srcVariable.values.map { it.label }
+                            }
+                            try {
+                                Lists.cartesianProduct(subcategories).map {
+                                    "${category.name} - ${it.joinToString(" ")}"
+                                }
+                            } catch (e: IllegalArgumentException) {
+                                listOf(category.name)
+                            }
                         }
                     }
                 }
+            } catch (e: IOException) {
+                categoryNames = defaultCategories
             } catch (e: OutOfMemoryError) {
-                defaultCategories
+                categoryNames = defaultCategories
+            } finally {
+                if (isActive) {
+                    setAdapter(ArrayAdapter(context,
+                            R.layout.autocomplete_dropdown_item, categoryNames))
+                    delay(200)  // Weird stuff happens without this.
+                    if (isShown) showDropDown()
+                }
+                setCategoriesJob = null
             }
-            if (isActive) {
-                setAdapter(ArrayAdapter(context,
-                        R.layout.autocomplete_dropdown_item, categoryNames))
-                delay(200)  // Weird stuff happens without this.
-                if (isShown) showDropDown()
-            }
-            setCategoriesJob = null
         }
     }
 

@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class SplitsIOViewModel : ViewModel() {
 
@@ -32,24 +33,43 @@ class SplitsIOViewModel : ViewModel() {
     private val scope = CoroutineScope(Dispatchers.Main + job)
 
     fun importRun(id: String) = scope.launch {
-        _progressBar.value = true
-        val run = SplitsIO().getRun(id)
-        _importedRun.postValue(run)
-        _toast.value = if (run == SplitsIO.Run.EMPTY_RUN) "Import failed"
-        else "Splits imported successfully"
-        _progressBar.value = false
+        try {
+            _progressBar.value = true
+            val run = SplitsIO().getRun(id)
+            _importedRun.postValue(run)
+            _toast.value = if (run == SplitsIO.Run.EMPTY_RUN) ToastMsg.IMPORT_FAIL()
+            else ToastMsg.IMPORT_SUCCESS()
+        } catch (e: IOException) {
+            _importedRun.postValue(SplitsIO.Run.EMPTY_RUN)
+            _toast.value = ToastMsg.IMPORT_FAIL()
+        } finally {
+            _progressBar.value = false
+        }
     }
 
     fun exportRun(run: SplitsIO.Run) = scope.launch {
-        val uri = SplitsIO().uploadRun(run)
-        _claimUri.postValue(uri)
-        if (uri.isEmpty()) {
-            _toast.value = "Upload failed"
+        try {
+            val uri = SplitsIO().uploadRun(run)
+            _claimUri.postValue(uri)
+            if (uri.isEmpty()) {
+                _toast.value = ToastMsg.EXPORT_FAIL()
+            }
+        } catch (e: IOException) {
+            _claimUri.postValue("")
+            _toast.value = ToastMsg.EXPORT_FAIL()
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         job.cancel()
+    }
+
+    enum class ToastMsg(private val message: String) {
+        IMPORT_SUCCESS("Splits imported successfully"),
+        IMPORT_FAIL("Import failed"),
+        EXPORT_FAIL("Upload failed");
+
+        operator fun invoke() = message
     }
 }

@@ -100,7 +100,7 @@ class Src(private val application: MyApplication) {
                         val variableObj = variableElement.asJsonObject
                         val id = variableObj.get("id").asString
                         val name = variableObj.get("name").asString
-                        val valuesObj = variableObj.get("values").asJsonObject.get("values").asJsonObject
+                        val valuesObj = variableObj.getAsJsonObject("values").getAsJsonObject("values")
                         val values = valuesObj.entrySet().map {
                             val label = it.value.asJsonObject.get("label").asString
                             SrcValue(it.key, label)
@@ -115,7 +115,7 @@ class Src(private val application: MyApplication) {
                         val categoryObj = categoryElement.asJsonObject
                         val name = categoryObj.get("name").asString
                         val subCategories = variablesDeserializer(
-                                categoryObj.get("variables").asJsonObject.get("data").asJsonArray)
+                                categoryObj.getAsJsonObject("variables").getAsJsonArray("data"))
                         val links = Gson().fromJson(categoryObj.get("links"), Array<SrcLink>::class.java)
                         val leaderboardLink = links.find { it.rel == "leaderboard" }?.uri
                         SrcCategory(name, subCategories, leaderboardLink)
@@ -123,47 +123,50 @@ class Src(private val application: MyApplication) {
         }
 
         val gamesDeserializer = JsonDeserializer<SrcGame> { json, _, _ ->
-            val gameArray = json.asJsonObject.get("data").asJsonArray
+            val gameArray = json.asJsonObject.getAsJsonArray("data")
             val gameObj = gameArray[0].asJsonObject
-            val name = gameObj.get("names").asJsonObject.get("international").asString
-            val categories = categoriesDeserializer(gameObj.get("categories").asJsonObject.get("data").asJsonArray)
+            val name = gameObj.getAsJsonObject("names").get("international").asString
+            val categories = categoriesDeserializer(gameObj.getAsJsonObject("categories").getAsJsonArray("data"))
             val links = Gson().fromJson(gameObj.get("links"), Array<SrcLink>::class.java)
             SrcGame(name, categories, links.toList())
         }
 
         val leaderboardDeserializer = JsonDeserializer<SrcLeaderboard> { json, _, _ ->
             val gson = Gson()
-            val leaderboardObj = json.asJsonObject.get("data").asJsonObject
+            val leaderboardObj = json.asJsonObject.getAsJsonObject("data")
             val weblink = leaderboardObj.get("weblink").asString
-            val lbRuns = leaderboardObj.get("runs").asJsonArray
+            val lbRuns = leaderboardObj.getAsJsonArray("runs")
                     .map {
                         val lbRun = it.asJsonObject
                         val place = lbRun.get("place").asInt
-                        val run = lbRun.get("run").asJsonObject
+                        val run = lbRun.getAsJsonObject("run")
 
-                        val videoLink = if (run.get("videos").isJsonNull) null
-                        else
-                            gson.fromJson(
-                                    run.get("videos").asJsonObject.get("links").asJsonArray[0],
+                        val videoLink = when {
+                            run.get("videos").isJsonNull -> null
+                            run.getAsJsonObject("videos").get("links") == null -> null
+                            run.getAsJsonObject("videos").get("links").isJsonNull -> null
+                            else -> gson.fromJson(
+                                    run.getAsJsonObject("videos").getAsJsonArray("links")[0],
                                     SrcLink::class.java)
+                        }
                         val players = gson.fromJson(run.get("players"),
                                 Array<SrcPlayer>::class.java).toList()
-                        val time = (run.get("times").asJsonObject
+                        val time = (run.getAsJsonObject("times")
                                 .get("primary_t").asFloat * 1000).roundToLong()
-                        val platformId = run.get("system").asJsonObject.get("platform").asString
+                        val platformId = run.getAsJsonObject("system").get("platform").asString
                         SrcRun(place, videoLink, players, time, platformId)
                     }
             SrcLeaderboard(weblink, lbRuns)
         }
 
         val userDeserializer = JsonDeserializer<SrcUser> { json, _, _ ->
-            val platformObj = json.asJsonObject.get("data").asJsonObject
-            val name = platformObj.get("names").asJsonObject.get("international").asString
+            val platformObj = json.asJsonObject.getAsJsonObject("data")
+            val name = platformObj.getAsJsonObject("names").get("international").asString
             SrcUser(name)
         }
 
         val platformDeserializer = JsonDeserializer<SrcPlatform> { json, _, _ ->
-            SrcPlatform(json.asJsonObject.get("data").asJsonObject.get("name").asString)
+            SrcPlatform(json.asJsonObject.getAsJsonObject("data").get("name").asString)
         }
 
         return GsonBuilder()
