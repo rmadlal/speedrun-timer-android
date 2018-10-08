@@ -5,11 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
-import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
+import android.widget.ExpandableListView
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.getColorCpt
 import il.ronmad.speedruntimer.getFormattedTime
@@ -20,7 +20,11 @@ import il.ronmad.speedruntimer.web.SrcLeaderboard
 import kotlinx.android.synthetic.main.game_info_item.view.*
 import kotlinx.android.synthetic.main.game_info_item_header.view.*
 
-class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableListAdapter() {
+class InfoListAdapter(
+        val context: Context?,
+        val game: Game,
+        private var initExpandedGroups: List<Int>
+) : BaseExpandableListAdapter() {
 
     var data: List<SrcLeaderboard> = listOf()
         set(value) {
@@ -35,8 +39,9 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
     override fun hasStableIds() = false
 
     override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
-        val itemHeader = convertView ?:
-        LayoutInflater.from(context).inflate(R.layout.game_info_item_header, parent, false)
+        val itemHeader = convertView
+                ?: LayoutInflater.from(context)
+                        .inflate(R.layout.game_info_item_header, parent, false)
 
         val leaderboard = getGroup(groupPosition)
         itemHeader.title.text = if (leaderboard.subcategories.isEmpty()) {
@@ -46,6 +51,11 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
         itemHeader.expandImg.setImageResource(
                 if (isExpanded) R.drawable.ic_expand_less_black_24dp
                 else R.drawable.ic_expand_more_black_24dp)
+
+        if (groupPosition in initExpandedGroups) {
+            (parent as? ExpandableListView)?.expandGroup(groupPosition)
+            initExpandedGroups -= groupPosition
+        }
 
         return itemHeader
     }
@@ -58,15 +68,14 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
 
     @SuppressLint("SetTextI18n")
     override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
-        val listItem = convertView ?:
-        LayoutInflater.from(context).inflate(R.layout.game_info_item, parent, false)
+        val listItem = convertView
+                ?: LayoutInflater.from(context).inflate(R.layout.game_info_item, parent, false)
 
         val leaderboard = getGroup(groupPosition)
         if (leaderboard.runs.isEmpty()) {
             listItem.numOfRunsText.text = context?.getString(R.string.empty_leaderboard)
             context?.let {
-                listItem.numOfRunsText.setTextColor(ContextCompat.getColor(it,
-                        android.R.color.secondary_text_light_nodisable))
+                listItem.numOfRunsText.setTextColor(it.getColorCpt(android.R.color.secondary_text_light_nodisable))
             }
             listItem.numOfRunsText.setTypeface(listItem.numOfRunsText.typeface, Typeface.ITALIC)
             listItem.wrText.visibility = View.GONE
@@ -87,7 +96,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
                     " by ${leaderboard.wrRunners} on ${leaderboard.wrPlatform}"
 
             listItem.placeText.visibility = View.GONE
-            val category = if(leaderboard.subcategories.isEmpty()) {
+            val category = if (leaderboard.subcategories.isEmpty()) {
                 game.getCategoryByName(leaderboard.categoryName)
             } else {
                 val extendedCategoryName = "${leaderboard.categoryName} - ${leaderboard.subcategories.joinToString(" ")}"
@@ -97,8 +106,7 @@ class InfoListAdapter(val context: Context?, val game: Game) : BaseExpandableLis
                 val pb = it.bestTime
                 if (pb > 0) {
                     val bopped = leaderboard.runs.find { run -> run.time >= pb }
-                    val place = bopped?.place ?:
-                    leaderboard.runs[leaderboard.runs.size - 1].place + 1
+                    val place = bopped?.place ?: leaderboard.runs[leaderboard.runs.size - 1].place+1
 
                     listItem.placeText.text = "Your PB would put you at ${place.toOrdinal()} place!"
                     listItem.placeText.visibility = View.VISIBLE

@@ -74,7 +74,8 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         try {
             checkNotNull(selectedCategory)
             TimerService.launchTimer(context, game.name, selectedCategory!!.name)
-        } catch (e: IllegalStateException) { /* selectedCategory was null */ }
+        } catch (e: IllegalStateException) { /* selectedCategory was null */
+        }
     }
 
     private fun checkEmptyList() {
@@ -209,7 +210,8 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
                             TAG_SPLITS_LIST_FRAGMENT)
                     .addToBackStack(null)
                     .commit()
-        } catch (e: IllegalStateException) { /* selectedCategory was null */ }
+        } catch (e: IllegalStateException) { /* selectedCategory was null */
+        }
     }
 
     private fun showBottomSheetDialog() {

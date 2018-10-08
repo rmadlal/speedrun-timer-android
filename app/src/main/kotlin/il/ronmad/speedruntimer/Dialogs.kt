@@ -29,7 +29,7 @@ object Dialogs {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         createButton.setOnClickListener {
                             if (!gameNameInput.isValidForGame(realm)) {
@@ -55,7 +55,7 @@ object Dialogs {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         createButton.setOnClickListener {
                             if (!categoryNameInput.isValidForCategory(game)) {
@@ -84,7 +84,7 @@ object Dialogs {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         createButton.setOnClickListener {
                             if (!splitNameInput.isValidForSplit(category)) {
@@ -112,7 +112,7 @@ object Dialogs {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         createButton.setOnClickListener {
                             val newName = gameNameInput.text.toString()
@@ -146,7 +146,7 @@ object Dialogs {
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val clearButton = getButton(DialogInterface.BUTTON_NEGATIVE)
                         val saveButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         clearButton.setOnClickListener {
@@ -194,7 +194,7 @@ object Dialogs {
                 .setNeutralButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val clearButton = getButton(DialogInterface.BUTTON_NEGATIVE)
                         val saveButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         clearButton.setOnClickListener {
@@ -268,8 +268,8 @@ object Dialogs {
                     if (checked.any { it }) callback()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
-                .setMultiChoiceItems(gameNames.toTypedArray(), checked) {
-                    _, i, b -> checked[i] = b
+                .setMultiChoiceItems(gameNames.toTypedArray(), checked) { _, i, b ->
+                    checked[i] = b
                 }
                 .create()
     }
@@ -293,7 +293,7 @@ object Dialogs {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
                 .apply {
-                    setOnShowListener { _ ->
+                    setOnShowListener {
                         val importButton = getButton(DialogInterface.BUTTON_POSITIVE)
                         importButton.setOnClickListener {
                             if (runIdInput.text.isNullOrEmpty()) {

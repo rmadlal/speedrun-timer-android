@@ -7,6 +7,7 @@ import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.EditText
+import android.widget.ExpandableListView
 import android.widget.Toast
 import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
@@ -14,7 +15,7 @@ import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.SplitsIO
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.Job
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -137,8 +138,8 @@ fun Int.toOrdinal(): String {
     return "$this$suffix"
 }
 
-val Context.app
-    get() = this.applicationContext as MyApplication
+val Context?.app
+    get() = this?.applicationContext as? MyApplication
 
 fun Context.getColorCpt(color: Int) = ContextCompat.getColor(this, color)
 
@@ -170,7 +171,7 @@ fun Context.tryLaunchGame(gameName: String): Boolean {
     if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
         return false
     }
-    app.installedApps[gameName.toLowerCase()]?.let {
+    app?.installedApps?.get(gameName.toLowerCase())?.let {
         showToast("Launching ${packageManager.getApplicationLabel(it)}...")
         startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
         return true
@@ -208,7 +209,7 @@ suspend inline fun Job.then(block: () -> Unit) {
 fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
                                  categoryName: String = this.categoryName): Category {
     return withRealm {
-        val game =  getGameByName(gameName) ?: addGame(gameName)
+        val game = getGameByName(gameName) ?: addGame(gameName)
         val category = game.getCategoryByName(categoryName) ?: game.addCategory(categoryName)
         category.apply {
             this@withRealm.executeTransaction { splits.deleteAllFromRealm() }
@@ -234,3 +235,6 @@ fun JsonReader.readSingleObjectValue(name: String): String {
     endObject()
     return value
 }
+
+fun ExpandableListView.getExpandedGroupPositions(): List<Int> =
+        (0 until count).filter { isGroupExpanded(it) }

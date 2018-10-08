@@ -33,6 +33,7 @@ open class Category : RealmObject(), HasPrimaryId {
 
     fun updateSplits(segmentTimes: List<Long>, isNewPB: Boolean) {
         splits.forEachIndexed { index, split ->
-            split.update(segmentTimes.getOrElse(index) { 0L }, isNewPB) }
+            split.update(segmentTimes.getOrElse(index) { 0L }, isNewPB)
+        }
     }
 }

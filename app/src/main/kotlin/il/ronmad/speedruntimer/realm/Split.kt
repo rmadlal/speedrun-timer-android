@@ -21,7 +21,9 @@ open class Split : RealmObject(), HasPrimaryId {
 
     @Expose
     var bestTime: Long = 0L
-        set(value) { field = if (value != 0L) value.coerceAtMost(pbTime) else pbTime }
+        set(value) {
+            field = if (value != 0L) value.coerceAtMost(pbTime) else pbTime
+        }
 
     @LinkingObjects("splits")
     val category: RealmResults<Category>? = null

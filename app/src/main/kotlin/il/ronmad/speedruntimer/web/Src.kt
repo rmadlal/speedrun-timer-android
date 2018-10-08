@@ -1,19 +1,18 @@
 package il.ronmad.speedruntimer.web
 
-import android.content.Context
 import com.google.common.collect.Lists
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
+import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.SRC_API
-import il.ronmad.speedruntimer.app
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
-import ru.gildor.coroutines.retrofit.Result
-import ru.gildor.coroutines.retrofit.awaitResult
 import kotlin.math.roundToLong
 
 interface SrcAPI {
@@ -56,19 +55,19 @@ data class SrcLeaderboard(val weblink: String, val runs: List<SrcRun>) {
         wrRunners = wrRun.players.map {
             if (it.rel == "guest") it.name!!
             else {
-                val userRes = srcApi.user(it.uri).awaitResult()
-                when (userRes) {
-                    is Result.Ok -> userRes.value.name
-                    else -> "[unknown]"
-                }
+                withContext(Dispatchers.IO) {
+                    srcApi.user(it.uri).execute()
+                }.body()?.let { user ->
+                    user.name
+                } ?: "[unknown]"
             }
         }.joinToString()
 
-        val platformRes = srcApi.platform(wrRun.platformId).awaitResult()
-        wrPlatform = when (platformRes) {
-            is Result.Ok -> platformRes.value.name
-            else -> "[unknown]"
-        }
+        wrPlatform = withContext(Dispatchers.IO) {
+            srcApi.platform(wrRun.platformId).execute()
+        }.body()?.let {
+            it.name
+        } ?: "[unknown]"
     }
 }
 
@@ -85,7 +84,7 @@ data class SrcVariable(val id: String, val name: String, val values: List<SrcVal
 
 data class SrcValue(val id: String, val label: String)
 
-class Src {
+class Src(private val application: MyApplication) {
 
     private val gson = setupGson()
     val api = setupApi()
@@ -183,40 +182,33 @@ class Src {
                 .create(SrcAPI::class.java)
     }
 
-    suspend fun fetchGameData(context: Context?, gameName: String): SrcGame {
-        val app = context?.app ?: return SrcGame.EMPTY_GAME
-        return app.srcGameCache.getOrElse(gameName) {
-            val gameRes = api.game(gameName).awaitResult()
-            when (gameRes) {
-                is Result.Ok -> {
-                    val game = gameRes.value
-                    if (game.name.toLowerCase() == gameName.toLowerCase()) {
-                        app.srcGameCache += gameName to game
-                        game
-                    } else SrcGame.EMPTY_GAME
-                }
-                else -> SrcGame.EMPTY_GAME
-            }
+    suspend fun fetchGameData(gameName: String): SrcGame {
+        return application.srcGameCache.getOrElse(gameName) {
+            withContext(Dispatchers.IO) {
+                api.game(gameName).execute()
+            }.body()?.let {
+                if (it.name.toLowerCase() == gameName.toLowerCase()) {
+                    application.srcGameCache += gameName to it
+                    it
+                } else SrcGame.EMPTY_GAME
+            } ?: SrcGame.EMPTY_GAME
         }
     }
 
-    suspend fun fetchLeaderboardsForGame(context: Context?, gameName: String): List<SrcLeaderboard> {
-        val game = fetchGameData(context, gameName)
+    suspend fun fetchLeaderboardsForGame(gameName: String): List<SrcLeaderboard> {
+        val game = fetchGameData(gameName)
         return if (game == SrcGame.EMPTY_GAME) emptyList()
         else try {
             game.categories.flatMap { category ->
                 if (category.leaderboardUrl == null) return@flatMap emptyList<SrcLeaderboard>()
                 if (category.subCategories.isEmpty()) {
-                    val leaderboardRes = api.leaderboard(category.leaderboardUrl).awaitResult()
-                    when (leaderboardRes) {
-                        is Result.Ok -> {
-                            val leaderboard = leaderboardRes.value
-                            leaderboard.categoryName = category.name
-                            leaderboard.initWrData(api)
-                            listOf(leaderboard)
-                        }
-                        else -> emptyList()
-                    }
+                    withContext(Dispatchers.IO) {
+                        api.leaderboard(category.leaderboardUrl).execute()
+                    }.body()?.run {
+                        categoryName = category.name
+                        initWrData(api)
+                        listOf(this)
+                    } ?: emptyList()
                 } else {
                     val pairs = category.subCategories.map { variable ->
                         variable.values.map { variable to it }
@@ -225,16 +217,12 @@ class Src {
                         val varQuery: Map<String, String> = varValPairList.map {
                             "var-${it.first.id}" to it.second.id
                         }.toMap()
-                        val leaderboardRes = api.leaderboard(category.leaderboardUrl, varQuery).awaitResult()
-                        when (leaderboardRes) {
-                            is Result.Ok -> {
-                                val leaderboard = leaderboardRes.value
-                                leaderboard.categoryName = category.name
-                                leaderboard.subcategories = varValPairList.map { it.second.label }
-                                leaderboard.initWrData(api)
-                                leaderboard
-                            }
-                            else -> null
+                        withContext(Dispatchers.IO) {
+                            api.leaderboard(category.leaderboardUrl, varQuery).execute()
+                        }.body()?.apply {
+                            categoryName = category.name
+                            subcategories = varValPairList.map { it.second.label }
+                            initWrData(api)
                         }
                     }
                 }

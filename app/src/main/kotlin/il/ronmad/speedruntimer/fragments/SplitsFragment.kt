@@ -1,5 +1,7 @@
 package il.ronmad.speedruntimer.fragments
 
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -12,10 +14,9 @@ import android.widget.AdapterView
 import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
 import il.ronmad.speedruntimer.realm.*
+import il.ronmad.speedruntimer.ui.SplitsIOViewModel
 import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.android.synthetic.main.fragment_splits.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 
 class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
@@ -23,6 +24,8 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     var mAdapter: SplitAdapter? = null
     private var mActionMode: ActionMode? = null
     private var mActionModeCallback: MyActionModeCallback? = null
+
+    private lateinit var splitsIOViewModel: SplitsIOViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,34 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        splitsIOViewModel = ViewModelProviders.of(this).get(SplitsIOViewModel::class.java)
+        splitsIOViewModel.apply {
+            importedRun.observe(this@SplitsFragment, Observer { run ->
+                run?.handle()?.let {
+                    if (it != SplitsIO.Run.EMPTY_RUN) {
+                        it.toRealmCategory(category.gameName, category.name)
+                        refresh()
+                    }
+                }
+            })
+            progressBar.observe(this@SplitsFragment, Observer { progress ->
+                progress?.let {
+                    splitsProgressBar?.visibility = if (it) View.VISIBLE else View.GONE
+                }
+            })
+            claimUri.observe(this@SplitsFragment, Observer { uri ->
+                uri?.handle()?.let {
+                    if (it.isNotEmpty())
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
+                }
+            })
+            toast.observe(this@SplitsFragment, Observer { toast ->
+                toast?.handle()?.let {
+                    context?.showToast(it)
+                }
+            })
+        }
+
         mActionBar?.apply {
             title = category.gameName
             subtitle = category.name
@@ -147,17 +178,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     private fun onImportSplitsioPressed() {
         val importSplitsDialog = Dialogs.importSplitsDialog(activity) { id ->
-            launch(UI) {
-                splitsProgressBar?.visibility = View.VISIBLE
-                val gameName = category.gameName
-                val categoryName = category.name
-                SplitsIO().getRun(id)?.let {
-                    it.toRealmCategory(gameName, categoryName)
-                    refresh()
-                    context?.showToast("Splits imported successfully")
-                } ?: context?.showToast("Import failed")
-                splitsProgressBar?.visibility = View.GONE
-            }
+            splitsIOViewModel.importRun(id)
         }
         if (category.splits.isNotEmpty()) {
             AlertDialog.Builder(activity)
@@ -176,14 +197,8 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             context?.showToast("There must be at least one split.")
             return
         }
-        launch(UI) {
-            context?.showToast("Uploading...")
-            SplitsIO().uploadRun(category.toRun())?.let { claimUri ->
-                context?.let {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(claimUri)))
-                }
-            } ?: context?.showToast("Upload failed")
-        }
+        context?.showToast("Uploading...")
+        splitsIOViewModel.exportRun(category.toRun())
     }
 
     private fun setupActionMode() {
@@ -247,7 +262,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 mAdapter?.comparison = when (position) {
                     // Current Comparison
-                    0 ->  activity.getComparison()
+                    0 -> activity.getComparison()
                     // Personal Best
                     1 -> Comparison.PERSONAL_BEST
                     // Best Segments

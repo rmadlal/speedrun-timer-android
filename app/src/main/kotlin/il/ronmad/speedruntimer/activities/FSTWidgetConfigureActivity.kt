@@ -84,7 +84,7 @@ class FSTWidgetConfigureActivity : Activity() {
                 games.map { it.name }
         )
         appwidget_spinner_game.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) { }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 appwidget_spinner_category.adapter = ArrayAdapter(this@FSTWidgetConfigureActivity,
@@ -113,7 +113,6 @@ class FSTWidgetConfigureActivity : Activity() {
                     .putString(PREF_PREFIX_KEY + appWidgetId + PREF_CATEGORY_KEY, categoryName)
                     .apply()
         }
-
 
 
         // Read the prefix from the SharedPreferences object for this widget.

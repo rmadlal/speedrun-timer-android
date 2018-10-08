@@ -74,11 +74,12 @@ fun Game.removeCategories(toRemove: Collection<Long>) = realm.executeTransaction
 }
 
 fun Game.getPosition(): Point =
-        this.timerPosition ?:
-        run {
+        this.timerPosition ?: run {
             realm.executeTransaction {
-                this.timerPosition = realm.createObject(realm.getNextId<Point>()) }
-            this.timerPosition!! }
+                this.timerPosition = realm.createObject(realm.getNextId<Point>())
+            }
+            this.timerPosition!!
+        }
 
 fun Category.getGame() = this.game!!.first()!!
 
@@ -112,10 +113,10 @@ fun Category.splitExists(splitName: String) =
         this.splits.where().equalTo("name", splitName, Case.INSENSITIVE).count() > 0
 
 fun Category.clearSplits(clearPBTimes: Boolean = true, clearBestTimes: Boolean = true) =
-        realm.executeTransaction { _ ->
-            this.splits.forEach {
-                if (clearPBTimes) it.pbTime = 0L
-                if (clearBestTimes) it.bestTime = 0L
+        realm.executeTransaction {
+            this.splits.forEach { split ->
+                if (clearPBTimes) split.pbTime = 0L
+                if (clearBestTimes) split.bestTime = 0L
             }
         }
 

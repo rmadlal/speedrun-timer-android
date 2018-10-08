@@ -9,7 +9,6 @@ import android.support.v4.view.ViewPager
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import il.ronmad.speedruntimer.ARG_GAME_NAME
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.SmartFragmentStatePagerAdapter
@@ -75,18 +74,11 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         return false
     }
 
-    override fun onFabAddPressed() { /* Handled in CategoryListFragment */ }
+    override fun onFabAddPressed() { /* Handled in CategoryListFragment */
+    }
 
     private fun setupViewPager() {
         viewPagerAdapter = object : SmartFragmentStatePagerAdapter(childFragmentManager) {
-            override fun instantiateItem(container: ViewGroup, position: Int): Fragment {
-                return super.instantiateItem(container, position).also {
-                    if (it is GameInfoFragment && viewPager.currentItem == TAB_INFO) {
-                        it.refreshData()
-                    }
-                }
-            }
-
             override fun getItem(position: Int): Fragment {
                 return when (position) {
                     TAB_CATEGORIES -> CategoryListFragment.newInstance(game.name)

@@ -21,8 +21,9 @@ import il.ronmad.speedruntimer.realm.gameExists
 import io.realm.Realm
 import io.realm.exceptions.RealmException
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
-        launch(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             setupInstalledAppsLists()
                     .then {
                         setupSnackbars()
@@ -135,16 +136,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupInstalledAppsLists() = launch {
+    private fun setupInstalledAppsLists() = GlobalScope.launch(Dispatchers.IO) {
         val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 .filter {
                     it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
                 }
-        app.installedApps = allInstalledApps
+        app?.installedApps = allInstalledApps
                 .map { packageManager.getApplicationLabel(it).toString().toLowerCase() to it }
                 .toMap()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            app.installedGames = allInstalledApps
+            app?.installedGames = allInstalledApps
                     .asSequence()
                     .filter { it.category == ApplicationInfo.CATEGORY_GAME }
                     .map { packageManager.getApplicationLabel(it).toString() }
@@ -203,7 +204,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getAvailableInstalledGames(): List<String> {
-        return app.installedGames.filter { !realm.gameExists(it) }
+        return app?.installedGames?.filter { !realm.gameExists(it) }.orEmpty()
     }
 
     private fun addInstalledGames() {

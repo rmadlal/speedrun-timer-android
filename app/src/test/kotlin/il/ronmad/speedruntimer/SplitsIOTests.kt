@@ -1,10 +1,11 @@
 package il.ronmad.speedruntimer
 
 import il.ronmad.speedruntimer.web.SplitsIO
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.fail
 
 class SplitsIOTests {
@@ -41,11 +42,12 @@ class SplitsIOTests {
     @Test
     fun testGetAsnoobWR() {
         runBlocking {
-            SplitsIO().getRun("2z69")?.let {
-                assertEquals("Ori and the Blind Forest Definitive Edition", it.gameName)
-                assertEquals("All Skills no OOB", it.categoryName)
-                assertEquals(190359L, it.segments[0].pbDuration)
-            } ?: fail("request failed")
+            with(SplitsIO().getRun("2z69")) {
+                assertNotEquals(SplitsIO.Run.EMPTY_RUN, this)
+                assertEquals("Ori and the Blind Forest Definitive Edition", gameName)
+                assertEquals("All Skills no OOB", categoryName)
+                assertEquals(190359L, segments[0].pbDuration)
+            }
         }
     }
 
@@ -59,7 +61,10 @@ class SplitsIOTests {
                 ))
 
         runBlocking {
-            SplitsIO().uploadRun(run)?.let(::println) ?: fail("upload failed")
+            with(SplitsIO().uploadRun(run)) {
+                assertNotEquals("", this)
+                println(this)
+            }
         }
     }
 }

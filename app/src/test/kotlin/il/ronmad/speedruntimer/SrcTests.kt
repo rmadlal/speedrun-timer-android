@@ -1,15 +1,8 @@
 package il.ronmad.speedruntimer
 
-import com.google.common.collect.Lists
-import il.ronmad.speedruntimer.web.Src
-import kotlinx.coroutines.experimental.runBlocking
-import org.junit.Test
-import ru.gildor.coroutines.retrofit.Result
-import ru.gildor.coroutines.retrofit.awaitResult
-import kotlin.test.*
-
 class SrcTests {
 
+/*
     @Test
     @Throws(Exception::class)
     fun testGame140() {
@@ -90,8 +83,7 @@ class SrcTests {
                                     api.leaderboard(url, it.toMap())
                                 }
                             }
-                        }
-                        else emptyList()
+                        } else emptyList()
                     }
                     leaderboards.forEach {
                         val res = it.awaitResult()
@@ -119,4 +111,5 @@ class SrcTests {
             }
         }
     }
+*/
 }

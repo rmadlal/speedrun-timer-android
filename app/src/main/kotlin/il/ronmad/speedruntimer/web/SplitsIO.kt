@@ -7,6 +7,8 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import il.ronmad.speedruntimer.BuildConfig
 import il.ronmad.speedruntimer.readSingleObjectValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -14,9 +16,6 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
-import ru.gildor.coroutines.retrofit.Result
-import ru.gildor.coroutines.retrofit.awaitResponse
-import ru.gildor.coroutines.retrofit.awaitResult
 
 const val BASE_URL = "https://splits.io/api/v4/"
 
@@ -43,7 +42,8 @@ class SplitsIO {
         val runUploadRequestAdapter = object : TypeAdapter<UploadRequest>() {
             // https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
 
-            override fun write(out: JsonWriter?, value: UploadRequest?) { /* Irrelevant */ }
+            override fun write(out: JsonWriter?, value: UploadRequest?) { /* Irrelevant */
+            }
 
             override fun read(`in`: JsonReader?): UploadRequest {
                 return `in`!!.run {
@@ -83,6 +83,7 @@ class SplitsIO {
 
         val runAdapter = object : TypeAdapter<Run>() {
 
+            @Suppress("Reformat")
             override fun write(out: JsonWriter?, run: Run?) {
                 run ?: return
                 out?.run {
@@ -182,27 +183,32 @@ class SplitsIO {
                 .create(SplitsIOAPI::class.java)
     }
 
-    suspend fun getRun(id: String): Run? {
-        val runRequest = api.getRun(id).awaitResult()
-        return (runRequest as? Result.Ok)?.value
+    suspend fun getRun(id: String): Run {
+        return withContext(Dispatchers.IO) {
+            api.getRun(id).execute()
+        }.body() ?: Run.EMPTY_RUN
     }
 
     /**
      * https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
      * @return Claim URI for the uploaded run, or empty String if failed.
      */
-    suspend fun uploadRun(run: Run): String? {
-        val response1 = api.requestUploadRun().awaitResult()
-        return (response1 as? Result.Ok)?.value?.let { uploadRequest ->
+    suspend fun uploadRun(run: Run): String {
+        return withContext(Dispatchers.IO) {
+            api.requestUploadRun().execute()
+        }.body()?.let { uploadRequest ->
             val requestFile = RequestBody.create(
                     MediaType.parse("application/octet-stream"),
                     serializeRun(run))
             val partMap: Map<String, RequestBody> = uploadRequest.fields.mapValues {
                 RequestBody.create(null, it.value)
             } + ("file" to requestFile)
-            val response2 = api.uploadRun(uploadRequest.uploadUri, partMap).awaitResponse()
-            if (response2.isSuccessful) uploadRequest.claimUri else null
-        }
+            withContext(Dispatchers.IO) {
+                api.uploadRun(uploadRequest.uploadUri, partMap).execute()
+            }.body()?.let {
+                uploadRequest.claimUri
+            }
+        }.orEmpty()
     }
 
     fun serializeRun(run: Run): String = gson.toJson(run)
@@ -212,7 +218,12 @@ class SplitsIO {
     class Run(val gameName: String,
               val categoryName: String,
               val attemptsTotal: Int,
-              val segments: List<Segment>)
+              val segments: List<Segment>) {
+
+        companion object {
+            val EMPTY_RUN = Run("", "", 0, emptyList())
+        }
+    }
 
     class Segment(val segmentName: String,
                   val pbDuration: Long,

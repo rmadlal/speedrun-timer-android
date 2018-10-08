@@ -46,7 +46,6 @@
 # Coroutines
 -keep class kotlinx.coroutines.**
 -keep class kotlin.coroutines.**
--keep class ru.gildor.coroutines.**
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
@@ -76,3 +75,6 @@
 
 # ColorPicker
 -keep class com.jaredrummler.**
+
+# Lifecycle
+-dontnote android.arch.lifecycle.**
