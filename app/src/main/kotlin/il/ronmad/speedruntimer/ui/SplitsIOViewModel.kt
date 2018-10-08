@@ -5,11 +5,10 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Transformations
 import android.arch.lifecycle.ViewModel
 import il.ronmad.speedruntimer.ui.util.Event
+import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.SplitsIO
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import il.ronmad.speedruntimer.web.Success
+import kotlinx.coroutines.*
 import java.io.IOException
 
 class SplitsIOViewModel : ViewModel() {
@@ -22,8 +21,8 @@ class SplitsIOViewModel : ViewModel() {
     val progressBar: LiveData<Boolean>
         get() = _progressBar
 
-    private val _toast = MutableLiveData<String>()
-    val toast: LiveData<Event<String>> = Transformations.map(_toast) { Event(it) }
+    private val _toast = MutableLiveData<SplitsIOToast>()
+    val toast: LiveData<Event<SplitsIOToast>> = Transformations.map(_toast) { Event(it) }
 
     // Export
     private val _claimUri = MutableLiveData<String>()
@@ -35,13 +34,16 @@ class SplitsIOViewModel : ViewModel() {
     fun importRun(id: String) = scope.launch {
         try {
             _progressBar.value = true
-            val run = SplitsIO().getRun(id)
-            _importedRun.postValue(run)
-            _toast.value = if (run == SplitsIO.Run.EMPTY_RUN) ToastMsg.IMPORT_FAIL()
-            else ToastMsg.IMPORT_SUCCESS()
+            when (val result = SplitsIO().getRun(id)) {
+                is Success -> {
+                    _importedRun.postValue(result.value)
+                    _toast.value = ToastImportSuccess
+                }
+                is Failure -> _toast.value = ToastImportFail
+            }
         } catch (e: IOException) {
-            _importedRun.postValue(SplitsIO.Run.EMPTY_RUN)
-            _toast.value = ToastMsg.IMPORT_FAIL()
+            delay(1000)
+            _toast.value = ToastIOError
         } finally {
             _progressBar.value = false
         }
@@ -49,14 +51,13 @@ class SplitsIOViewModel : ViewModel() {
 
     fun exportRun(run: SplitsIO.Run) = scope.launch {
         try {
-            val uri = SplitsIO().uploadRun(run)
-            _claimUri.postValue(uri)
-            if (uri.isEmpty()) {
-                _toast.value = ToastMsg.EXPORT_FAIL()
+            when (val result = SplitsIO().uploadRun(run)) {
+                is Success -> _claimUri.postValue(result.value)
+                is Failure -> _toast.value = ToastExportFail
             }
         } catch (e: IOException) {
-            _claimUri.postValue("")
-            _toast.value = ToastMsg.EXPORT_FAIL()
+            delay(1000)
+            _toast.value = ToastIOError
         }
     }
 
@@ -64,12 +65,10 @@ class SplitsIOViewModel : ViewModel() {
         super.onCleared()
         job.cancel()
     }
-
-    enum class ToastMsg(private val message: String) {
-        IMPORT_SUCCESS("Splits imported successfully"),
-        IMPORT_FAIL("Import failed"),
-        EXPORT_FAIL("Upload failed");
-
-        operator fun invoke() = message
-    }
 }
+
+sealed class SplitsIOToast(val message: String)
+object ToastImportSuccess : SplitsIOToast("Splits imported successfully")
+object ToastImportFail : SplitsIOToast("Import failed")
+object ToastExportFail : SplitsIOToast("Upload failed")
+object ToastIOError : SplitsIOToast("Connection error")

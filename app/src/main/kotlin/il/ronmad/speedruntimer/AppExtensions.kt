@@ -9,10 +9,13 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ExpandableListView
 import android.widget.Toast
+import com.google.gson.JsonArray
 import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
+import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.SplitsIO
+import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.coroutines.Job
@@ -238,3 +241,7 @@ fun JsonReader.readSingleObjectValue(name: String): String {
 
 fun ExpandableListView.getExpandedGroupPositions(): List<Int> =
         (0 until count).filter { isGroupExpanded(it) }
+
+fun JsonArray.isEmpty() = size() == 0
+
+inline fun <reified T> T?.successOrFailure() = this?.let { Success(it) } ?: Failure<T>()

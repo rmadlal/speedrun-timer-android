@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import il.ronmad.speedruntimer.BuildConfig
 import il.ronmad.speedruntimer.readSingleObjectValue
+import il.ronmad.speedruntimer.successOrFailure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType
@@ -183,17 +184,14 @@ class SplitsIO {
                 .create(SplitsIOAPI::class.java)
     }
 
-    suspend fun getRun(id: String): Run {
+    suspend fun getRun(id: String): Result<Run> {
         return withContext(Dispatchers.IO) {
             api.getRun(id).execute()
-        }.body() ?: Run.EMPTY_RUN
+        }.body().successOrFailure()
     }
 
-    /**
-     * https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
-     * @return Claim URI for the uploaded run, or empty String if failed.
-     */
-    suspend fun uploadRun(run: Run): String {
+    // https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
+    suspend fun uploadRun(run: Run): Result<String> {
         return withContext(Dispatchers.IO) {
             api.requestUploadRun().execute()
         }.body()?.let { uploadRequest ->
@@ -208,7 +206,7 @@ class SplitsIO {
             }.body()?.let {
                 uploadRequest.claimUri
             }
-        }.orEmpty()
+        }.successOrFailure()
     }
 
     fun serializeRun(run: Run): String = gson.toJson(run)

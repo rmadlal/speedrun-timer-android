@@ -6,12 +6,11 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Transformations
 import il.ronmad.speedruntimer.ui.util.Event
+import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.Src
 import il.ronmad.speedruntimer.web.SrcLeaderboard
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import il.ronmad.speedruntimer.web.Success
+import kotlinx.coroutines.*
 import java.io.IOException
 
 class GameInfoViewModel(application: Application) : AndroidViewModel(application) {
@@ -24,8 +23,8 @@ class GameInfoViewModel(application: Application) : AndroidViewModel(application
     val refreshSpinner: LiveData<Boolean>
         get() = _refreshSpinner
 
-    private val _toast = MutableLiveData<String>()
-    val toast: LiveData<Event<String>> = Transformations.map(_toast) { Event(it) }
+    private val _toast = MutableLiveData<GameInfoToast>()
+    val toast: LiveData<Event<GameInfoToast>> = Transformations.map(_toast) { Event(it) }
 
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.Main + job)
@@ -33,14 +32,18 @@ class GameInfoViewModel(application: Application) : AndroidViewModel(application
     fun refreshInfo(gameName: String) = scope.launch {
         try {
             _refreshSpinner.value = true
-            val data = Src(getApplication()).fetchLeaderboardsForGame(gameName)
-            _leaderboards.postValue(data)
-            if (data.isEmpty()) {
-                _toast.value = ToastMsg.FETCH_FAIL()
+            when (val result = Src(getApplication()).fetchLeaderboardsForGame(gameName)) {
+                is Success -> {
+                    _leaderboards.postValue(result.value)
+                    if (result.value.isEmpty()) {
+                        _toast.value = ToastFetchEmpty
+                    }
+                }
+                is Failure -> _toast.value = ToastFetchEmpty
             }
         } catch (e: IOException) {
-            _leaderboards.postValue(emptyList())
-            _toast.value = ToastMsg.FETCH_FAIL()
+            delay(1000)
+            _toast.value = ToastFetchError
         } finally {
             _refreshSpinner.value = false
         }
@@ -50,10 +53,8 @@ class GameInfoViewModel(application: Application) : AndroidViewModel(application
         super.onCleared()
         job.cancel()
     }
-
-    enum class ToastMsg(private val message: String) {
-        FETCH_FAIL("No data available");
-
-        operator fun invoke() = message
-    }
 }
+
+sealed class GameInfoToast(val message: String)
+object ToastFetchEmpty : GameInfoToast("No info available for this game")
+object ToastFetchError : GameInfoToast("Connection error")

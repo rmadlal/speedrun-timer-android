@@ -7,6 +7,8 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
 import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.SRC_API
+import il.ronmad.speedruntimer.isEmpty
+import il.ronmad.speedruntimer.successOrFailure
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Call
@@ -124,6 +126,8 @@ class Src(private val application: MyApplication) {
 
         val gamesDeserializer = JsonDeserializer<SrcGame> { json, _, _ ->
             val gameArray = json.asJsonObject.getAsJsonArray("data")
+            if (gameArray.isEmpty())
+                return@JsonDeserializer SrcGame.EMPTY_GAME
             val gameObj = gameArray[0].asJsonObject
             val name = gameObj.getAsJsonObject("names").get("international").asString
             val categories = categoriesDeserializer(gameObj.getAsJsonObject("categories").getAsJsonArray("data"))
@@ -145,6 +149,7 @@ class Src(private val application: MyApplication) {
                             run.get("videos").isJsonNull -> null
                             run.getAsJsonObject("videos").get("links") == null -> null
                             run.getAsJsonObject("videos").get("links").isJsonNull -> null
+                            run.getAsJsonObject("videos").getAsJsonArray("links").isEmpty() -> null
                             else -> gson.fromJson(
                                     run.getAsJsonObject("videos").getAsJsonArray("links")[0],
                                     SrcLink::class.java)
@@ -185,53 +190,52 @@ class Src(private val application: MyApplication) {
                 .create(SrcAPI::class.java)
     }
 
-    suspend fun fetchGameData(gameName: String): SrcGame {
+    suspend fun fetchGameData(gameName: String): Result<SrcGame> {
         return application.srcGameCache.getOrElse(gameName) {
             withContext(Dispatchers.IO) {
                 api.game(gameName).execute()
-            }.body()?.let {
-                if (it.name.toLowerCase() == gameName.toLowerCase()) {
-                    application.srcGameCache += gameName to it
-                    it
-                } else SrcGame.EMPTY_GAME
-            } ?: SrcGame.EMPTY_GAME
-        }
+            }.body()?.takeIf { it.name.toLowerCase() == gameName.toLowerCase() }
+                    ?.also { application.srcGameCache += gameName to it }
+        }.successOrFailure()
     }
 
-    suspend fun fetchLeaderboardsForGame(gameName: String): List<SrcLeaderboard> {
-        val game = fetchGameData(gameName)
-        return if (game == SrcGame.EMPTY_GAME) emptyList()
-        else try {
-            game.categories.flatMap { category ->
-                if (category.leaderboardUrl == null) return@flatMap emptyList<SrcLeaderboard>()
-                if (category.subCategories.isEmpty()) {
-                    withContext(Dispatchers.IO) {
-                        api.leaderboard(category.leaderboardUrl).execute()
-                    }.body()?.run {
-                        categoryName = category.name
-                        initWrData(api)
-                        listOf(this)
-                    } ?: emptyList()
-                } else {
-                    val pairs = category.subCategories.map { variable ->
-                        variable.values.map { variable to it }
-                    }
-                    Lists.cartesianProduct(pairs).mapNotNull { varValPairList ->
-                        val varQuery: Map<String, String> = varValPairList.map {
-                            "var-${it.first.id}" to it.second.id
-                        }.toMap()
-                        withContext(Dispatchers.IO) {
-                            api.leaderboard(category.leaderboardUrl, varQuery).execute()
-                        }.body()?.apply {
-                            categoryName = category.name
-                            subcategories = varValPairList.map { it.second.label }
-                            initWrData(api)
+    suspend fun fetchLeaderboardsForGame(gameName: String): Result<List<SrcLeaderboard>> {
+        return when (val game = fetchGameData(gameName)) {
+            is Success -> {
+                try {
+                    game.value.categories.flatMap { category ->
+                        if (category.leaderboardUrl == null) return@flatMap emptyList<SrcLeaderboard>()
+                        if (category.subCategories.isEmpty()) {
+                            withContext(Dispatchers.IO) {
+                                api.leaderboard(category.leaderboardUrl).execute()
+                            }.body()?.run {
+                                categoryName = category.name
+                                initWrData(api)
+                                listOf(this)
+                            } ?: emptyList()
+                        } else {
+                            val pairs = category.subCategories.map { variable ->
+                                variable.values.map { variable to it }
+                            }
+                            Lists.cartesianProduct(pairs).mapNotNull { varValPairList ->
+                                val varQuery: Map<String, String> = varValPairList.map {
+                                    "var-${it.first.id}" to it.second.id
+                                }.toMap()
+                                withContext(Dispatchers.IO) {
+                                    api.leaderboard(category.leaderboardUrl, varQuery).execute()
+                                }.body()?.apply {
+                                    categoryName = category.name
+                                    subcategories = varValPairList.map { it.second.label }
+                                    initWrData(api)
+                                }
+                            }
                         }
-                    }
+                    }.successOrFailure()
+                } catch (e: OutOfMemoryError) {
+                    Failure<List<SrcLeaderboard>>()
                 }
             }
-        } catch (e: OutOfMemoryError) {
-            emptyList<SrcLeaderboard>()
+            is Failure -> Failure()
         }
     }
 }

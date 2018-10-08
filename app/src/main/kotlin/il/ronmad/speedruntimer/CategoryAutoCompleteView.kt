@@ -7,8 +7,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
 import com.google.common.collect.Lists
+import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.Src
-import il.ronmad.speedruntimer.web.SrcGame
+import il.ronmad.speedruntimer.web.Success
 import kotlinx.coroutines.*
 import java.io.IOException
 
@@ -28,25 +29,26 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
         setCategoriesJob = GlobalScope.launch(Dispatchers.Main) {
             val app = context?.app ?: return@launch
             try {
-                val game = Src(app).fetchGameData(gameName)
-                categoryNames = if (game == SrcGame.EMPTY_GAME) defaultCategories
-                else {
-                    game.categories.flatMap { category ->
-                        if (category.subCategories.isEmpty())
-                            listOf(category.name)
-                        else {
-                            val subcategories = category.subCategories.map { srcVariable ->
-                                srcVariable.values.map { it.label }
-                            }
-                            try {
-                                Lists.cartesianProduct(subcategories).map {
-                                    "${category.name} - ${it.joinToString(" ")}"
-                                }
-                            } catch (e: IllegalArgumentException) {
+                categoryNames = when (val game = Src(app).fetchGameData(gameName)) {
+                    is Success -> {
+                        game.value.categories.flatMap { category ->
+                            if (category.subCategories.isEmpty())
                                 listOf(category.name)
+                            else {
+                                val subcategories = category.subCategories.map { srcVariable ->
+                                    srcVariable.values.map { it.label }
+                                }
+                                try {
+                                    Lists.cartesianProduct(subcategories).map {
+                                        "${category.name} - ${it.joinToString(" ")}"
+                                    }
+                                } catch (e: IllegalArgumentException) {
+                                    listOf(category.name)
+                                }
                             }
                         }
                     }
+                    is Failure -> defaultCategories
                 }
             } catch (e: IOException) {
                 categoryNames = defaultCategories

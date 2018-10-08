@@ -15,7 +15,6 @@ import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.ui.SplitsIOViewModel
-import il.ronmad.speedruntimer.web.SplitsIO
 import kotlinx.android.synthetic.main.fragment_splits.*
 
 class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
@@ -42,10 +41,8 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         splitsIOViewModel.apply {
             importedRun.observe(this@SplitsFragment, Observer { run ->
                 run?.handle()?.let {
-                    if (it != SplitsIO.Run.EMPTY_RUN) {
-                        it.toRealmCategory(category.gameName, category.name)
-                        refresh()
-                    }
+                    it.toRealmCategory(category.gameName, category.name)
+                    refresh()
                 }
             })
             progressBar.observe(this@SplitsFragment, Observer { progress ->
@@ -55,13 +52,12 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             })
             claimUri.observe(this@SplitsFragment, Observer { uri ->
                 uri?.handle()?.let {
-                    if (it.isNotEmpty())
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
                 }
             })
             toast.observe(this@SplitsFragment, Observer { toast ->
                 toast?.handle()?.let {
-                    context?.showToast(it)
+                    context?.showToast(it.message)
                 }
             })
         }

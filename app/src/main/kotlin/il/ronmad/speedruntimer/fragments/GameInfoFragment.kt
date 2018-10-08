@@ -12,6 +12,8 @@ import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.getGameByName
 import il.ronmad.speedruntimer.showToast
 import il.ronmad.speedruntimer.ui.GameInfoViewModel
+import il.ronmad.speedruntimer.ui.ToastFetchEmpty
+import il.ronmad.speedruntimer.ui.ToastFetchError
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.fragment_game.*
@@ -58,8 +60,11 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
             })
             toast.observe(this@GameInfoFragment, Observer { toast ->
                 toast?.handle()?.let {
-                    context?.showToast(it)
-                    (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
+                    context?.showToast(it.message)
+                    when (it) {
+                        is ToastFetchEmpty, is ToastFetchError ->
+                            (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
+                    }
                 }
             })
         }
