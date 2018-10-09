@@ -65,16 +65,16 @@ data class SrcLeaderboard(val weblink: String, val runs: List<SrcRun>) {
             }
         }.joinToString()
 
-        wrPlatform = withContext(Dispatchers.IO) {
-            srcApi.platform(wrRun.platformId).execute()
-        }.body()?.let {
-            it.name
+        wrPlatform = wrRun.platformId?.let { platformId ->
+            withContext(Dispatchers.IO) {
+                srcApi.platform(platformId).execute()
+            }.body()?.let { it.name }
         } ?: "[unknown]"
     }
 }
 
 data class SrcRun(val place: Int, val videoLink: SrcLink?, val players: List<SrcPlayer>,
-                  val time: Long, val platformId: String)
+                  val time: Long, val platformId: String?)
 
 data class SrcPlayer(val rel: String, val name: String?, val uri: String)
 
@@ -158,7 +158,8 @@ class Src(private val application: MyApplication) {
                                 Array<SrcPlayer>::class.java).toList()
                         val time = (run.getAsJsonObject("times")
                                 .get("primary_t").asFloat * 1000).roundToLong()
-                        val platformId = run.getAsJsonObject("system").get("platform").asString
+                        val platform = run.getAsJsonObject("system").get("platform")
+                        val platformId = if (platform.isJsonNull) null else platform.asString
                         SrcRun(place, videoLink, players, time, platformId)
                     }
             SrcLeaderboard(weblink, lbRuns)
