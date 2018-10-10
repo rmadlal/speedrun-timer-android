@@ -1,115 +1,63 @@
 package il.ronmad.speedruntimer
 
+import il.ronmad.speedruntimer.web.Failure
+import il.ronmad.speedruntimer.web.Src
+import il.ronmad.speedruntimer.web.Success
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.fail
+
 class SrcTests {
 
-/*
     @Test
-    @Throws(Exception::class)
     fun testGame140() {
         runBlocking {
-            val api = Src().api
-            val game140Res = api.game("140").awaitResult()
-            when (game140Res) {
-                is Result.Ok -> {
-                    val game = game140Res.value
-                    assertEquals("140", game.name)
-
-                    assertEquals("Any%", game.categories[0].name)
-
-                    assertTrue(game.categories[0].subCategories.isEmpty())
+            when (val game140Res = Src().fetchGameData("140")) {
+                is Success -> {
+                    with(game140Res.value) {
+                        assertEquals("140", name)
+                        assertEquals("Any%", categories[0].name)
+                        assertTrue(categories[0].subCategories.isEmpty())
+                    }
                 }
-                is Result.Error -> {
-                    game140Res.exception.printStackTrace()
-                    fail()
-                }
-                is Result.Exception -> {
-                    game140Res.exception.printStackTrace()
-                    fail()
-                }
+                is Failure -> fail()
             }
         }
     }
 
     @Test
-    @Throws(Exception::class)
     fun testGameThoth() {
         runBlocking {
-            val api = Src().api
-            val gameThothRes = api.game("Thoth").awaitResult()
-            when (gameThothRes) {
-                is Result.Ok -> {
-                    val game = gameThothRes.value
-                    assertEquals("THOTH", game.name)
-
-                    assertEquals("Standard", game.categories[0].name)
-
-                    assertEquals("Mode", game.categories[0].subCategories[0].name)
-
-                    assertEquals("Solo", game.categories[0].subCategories[0].values[0].label)
+            when (val gameThothRes = Src().fetchGameData("Thoth")) {
+                is Success -> {
+                    with(gameThothRes.value) {
+                        assertEquals("THOTH", name)
+                        assertEquals("Standard", categories[0].name)
+                        assertEquals("Mode", categories[0].subCategories[0].name)
+                        assertEquals("Solo", categories[0].subCategories[0].values[0].label)
+                    }
                 }
-                is Result.Error -> {
-                    gameThothRes.exception.printStackTrace()
-                    fail()
-                }
-                is Result.Exception -> {
-                    gameThothRes.exception.printStackTrace()
-                    fail()
-                }
+                is Failure -> fail()
             }
         }
     }
 
     @Test
-    @Throws(Exception::class)
     fun testLeaderboards() {
         runBlocking {
-            val api = Src().api
-            val gameRes = api.game("Thoth").awaitResult()
-            when (gameRes) {
-                is Result.Ok -> {
-                    val game = gameRes.value
-                    val leaderboards = game.categories.flatMap { category ->
-                        if (category.leaderboardUrl != null) {
-                            val url = category.leaderboardUrl!!
-                            if (category.subCategories.isEmpty()) {
-                                listOf(api.leaderboard(url))
-                            } else {
-                                val pairs = category.subCategories.map { variable ->
-                                    variable.values.map {
-                                        "var-${variable.id}" to it.id
-                                    }
-                                }
-                                Lists.cartesianProduct(pairs).map {
-                                    api.leaderboard(url, it.toMap())
-                                }
-                            }
-                        } else emptyList()
-                    }
-                    leaderboards.forEach {
-                        val res = it.awaitResult()
-                        when (res) {
-                            is Result.Ok -> println(res.value.runs.size)
-                            is Result.Error -> {
-                                res.exception.printStackTrace()
-                                fail()
-                            }
-                            is Result.Exception -> {
-                                res.exception.printStackTrace()
-                                fail()
-                            }
-                        }
+            when (val leaderboardRes = Src().fetchLeaderboardsForGame("Thoth")) {
+                is Success -> {
+                    with(leaderboardRes.value) {
+                        assertEquals(3, size)
+                        assertEquals(13, get(0).runs.size)
+                        assertEquals("Procedural", get(1).categoryName)
+                        assertEquals(776992, get(2).runs[0].time)
                     }
                 }
-                is Result.Error -> {
-                    gameRes.exception.printStackTrace()
-                    fail()
-                }
-                is Result.Exception -> {
-                    gameRes.exception.printStackTrace()
-                    fail()
-                }
+                is Failure -> fail()
             }
         }
     }
-*/
 }

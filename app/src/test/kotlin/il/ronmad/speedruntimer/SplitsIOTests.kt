@@ -4,7 +4,6 @@ import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.SplitsIO
 import il.ronmad.speedruntimer.web.Success
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -21,22 +20,22 @@ class SplitsIOTests {
                 ))
 
         val expectedJson = """{"_schemaVersion":"v1.0.0","timer":{"shortname":"fst","longname":"Floating Speedrun Timer","version":"v${BuildConfig.VERSION_NAME}"},"attempts":{"total":14},"game":{"longname":"TestGame"},"category":{"longname":"TestCategory"},"segments":[{"name":"Test1","endedAt":{"realtimeMS":10000},"bestDuration":{"realtimeMS":9000}},{"name":"Test2","endedAt":{"realtimeMS":35000},"bestDuration":{"realtimeMS":20000}},{"name":"Test3","endedAt":{"realtimeMS":40000},"bestDuration":{"realtimeMS":4500}},{"name":"Test4","endedAt":{"realtimeMS":140000},"bestDuration":{"realtimeMS":85000}}]}"""
-        Assert.assertEquals(expectedJson, SplitsIO().serializeRun(run))
+        assertEquals(expectedJson, SplitsIO().serializeRun(run))
     }
 
     @Test
     fun testDeserializeRun() {
         val json = """{"_schemaVersion":"v1.0.0","timer":{"shortname":"fst","longname":"Floating Speedrun Timer","version":"v${BuildConfig.VERSION_NAME}"},"attempts":{"total":28},"game":{"longname":"Ori"},"category":{"longname":"100%"},"segments":[{"name":"Yes","endedAt":{"realtimeMS":59000},"bestDuration":{"realtimeMS":55000}},{"name":"Dude","endedAt":{"realtimeMS":131755},"bestDuration":{"realtimeMS":65000}}]}"""
         with(SplitsIO().deserializeRun(json)) {
-            Assert.assertEquals("Ori", gameName)
-            Assert.assertEquals("100%", categoryName)
-            Assert.assertEquals("Yes", segments[0].segmentName)
-            Assert.assertEquals(59000L, segments[0].pbDuration)
-            Assert.assertEquals(55000L, segments[0].bestDuration)
-            Assert.assertEquals("Dude", segments[1].segmentName)
-            Assert.assertEquals(131755L - 59000L, segments[1].pbDuration)
-            Assert.assertEquals(65000L, segments[1].bestDuration)
-            Assert.assertEquals(28, attemptsTotal)
+            assertEquals("Ori", gameName)
+            assertEquals("100%", categoryName)
+            assertEquals("Yes", segments[0].segmentName)
+            assertEquals(59000L, segments[0].pbDuration)
+            assertEquals(55000L, segments[0].bestDuration)
+            assertEquals("Dude", segments[1].segmentName)
+            assertEquals(131755L - 59000L, segments[1].pbDuration)
+            assertEquals(65000L, segments[1].bestDuration)
+            assertEquals(28, attemptsTotal)
         }
     }
 

@@ -7,7 +7,6 @@ import il.ronmad.speedruntimer.realm.Category
 import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.Point
 import il.ronmad.speedruntimer.realm.Split
-import il.ronmad.speedruntimer.web.SrcGame
 import io.realm.FieldAttribute
 import io.realm.Realm
 import io.realm.RealmConfiguration
@@ -16,8 +15,6 @@ import io.realm.RealmSchema
 const val REALM_SCHEMA_VERSION = 4L
 
 class MyApplication : Application() {
-
-    var srcGameCache: Map<String, SrcGame> = emptyMap()
 
     var installedApps: Map<String, ApplicationInfo> = mapOf()
     var installedGames: List<String> = listOf()

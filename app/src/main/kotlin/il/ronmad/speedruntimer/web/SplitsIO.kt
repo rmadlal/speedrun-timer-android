@@ -30,11 +30,13 @@ interface SplitsIOAPI {
 
     @Multipart
     @POST
-    fun uploadRun(@Url claimUri: String,
-                  @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>): Call<ResponseBody>
+    fun uploadRun(
+            @Url claimUri: String,
+            @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>
+    ): Call<ResponseBody>
 }
 
-class SplitsIO {
+class SplitsIO private constructor() {
 
     private val gson = setupGson()
     private val api = setupApi()
@@ -213,21 +215,29 @@ class SplitsIO {
 
     fun deserializeRun(json: String): Run = gson.fromJson(json, Run::class.java)
 
-    class Run(val gameName: String,
-              val categoryName: String,
-              val attemptsTotal: Int,
-              val segments: List<Segment>) {
+    class Run(
+            val gameName: String,
+            val categoryName: String,
+            val attemptsTotal: Int,
+            val segments: List<Segment>
+    )
 
-        companion object {
-            val EMPTY_RUN = Run("", "", 0, emptyList())
-        }
+    class Segment(
+            val segmentName: String,
+            val pbDuration: Long,
+            val bestDuration: Long
+    )
+
+    class UploadRequest(
+            val claimUri: String,
+            val uploadUri: String,
+            val fields: Map<String, String>
+    )
+
+    companion object {
+
+        val instance by lazy { SplitsIO() }
+
+        operator fun invoke() = instance
     }
-
-    class Segment(val segmentName: String,
-                  val pbDuration: Long,
-                  val bestDuration: Long)
-
-    class UploadRequest(val claimUri: String,
-                        val uploadUri: String,
-                        val fields: Map<String, String>)
 }

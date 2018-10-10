@@ -63,7 +63,9 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
                     context?.showToast(it.message)
                     when (it) {
                         is ToastFetchEmpty, is ToastFetchError ->
-                            (parentFragment as? GameFragment)?.viewPager?.currentItem = 0
+                            (parentFragment as? GameFragment)?.viewPager?.apply {
+                                currentItem = GameFragment.TAB_CATEGORIES
+                            }
                     }
                 }
             })

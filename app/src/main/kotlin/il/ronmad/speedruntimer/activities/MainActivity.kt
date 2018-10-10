@@ -21,9 +21,7 @@ import il.ronmad.speedruntimer.realm.gameExists
 import io.realm.Realm
 import io.realm.exceptions.RealmException
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,11 +47,13 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
+        val isRealmEmpty = realm.isEmpty    // Must be done here. realm access from other threads crashes.
         GlobalScope.launch(Dispatchers.Main) {
-            setupInstalledAppsLists()
-                    .then {
-                        setupSnackbars()
-                    }
+            launch(Dispatchers.IO) {
+                setupInstalledAppsLists()
+            }.then {
+                setupSnackbars(isRealmEmpty)
+            }
         }
 
         if (savedInstanceState == null) {
@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupInstalledAppsLists() = GlobalScope.launch(Dispatchers.IO) {
+    private fun setupInstalledAppsLists() {
         val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 .filter {
                     it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
@@ -154,10 +154,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun setupSnackbars() {
+    private fun setupSnackbars(isRealmEmpty: Boolean) {
         var toShowRateSnackbar = false
         rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false)
-        if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty) {
+        if (!rateSnackbarShown && launchCounter == 0 && !isRealmEmpty) {
             val savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0)
             launchCounter = (savedLaunchCounter + 1).coerceAtMost(4)
             toShowRateSnackbar = launchCounter == 3

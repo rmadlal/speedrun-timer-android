@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
-import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.SRC_API
 import il.ronmad.speedruntimer.isEmpty
 import il.ronmad.speedruntimer.successOrFailure
@@ -19,12 +18,16 @@ import kotlin.math.roundToLong
 
 interface SrcAPI {
     @GET("games")
-    fun game(@Query("name") name: String,
-             @Query("embed") embed: String = "categories.variables"): Call<SrcGame>
+    fun game(
+            @Query("name") name: String,
+            @Query("embed") embed: String = "categories.variables"
+    ): Call<SrcGame>
 
     @GET()
-    fun leaderboard(@Url url: String,
-                    @QueryMap variables: Map<String, String> = emptyMap()): Call<SrcLeaderboard>
+    fun leaderboard(
+            @Url url: String,
+            @QueryMap variables: Map<String, String> = emptyMap()
+    ): Call<SrcLeaderboard>
 
     @GET
     fun user(@Url url: String): Call<SrcUser>
@@ -33,14 +36,23 @@ interface SrcAPI {
     fun platform(@Path("id") id: String): Call<SrcPlatform>
 }
 
-data class SrcGame(val name: String, val categories: List<SrcCategory>, val links: List<SrcLink>) {
+data class SrcGame(
+        val name: String,
+        val categories: List<SrcCategory>,
+        val links: List<SrcLink>
+) {
+
     companion object {
+
         val EMPTY_GAME = SrcGame("", emptyList(), emptyList())
     }
 }
 
-data class SrcCategory(val name: String, val subCategories: List<SrcVariable>,
-                       val leaderboardUrl: String?)
+data class SrcCategory(
+        val name: String,
+        val subCategories: List<SrcVariable>,
+        val leaderboardUrl: String?
+)
 
 data class SrcLink(val rel: String?, val uri: String)
 
@@ -73,8 +85,12 @@ data class SrcLeaderboard(val weblink: String, val runs: List<SrcRun>) {
     }
 }
 
-data class SrcRun(val place: Int, val videoLink: SrcLink?, val players: List<SrcPlayer>,
-                  val time: Long, val platformId: String?)
+data class SrcRun(
+        val place: Int,
+        val videoLink: SrcLink?,
+        val players: List<SrcPlayer>,
+        val time: Long, val platformId: String?
+)
 
 data class SrcPlayer(val rel: String, val name: String?, val uri: String)
 
@@ -86,10 +102,14 @@ data class SrcVariable(val id: String, val name: String, val values: List<SrcVal
 
 data class SrcValue(val id: String, val label: String)
 
-class Src(private val application: MyApplication) {
+class Src private constructor() {
+
+    // If application was not passed, there will be no caching.
 
     private val gson = setupGson()
-    val api = setupApi()
+    private val api = setupApi()
+
+    private var gameCache: Map<String, SrcGame> = emptyMap()
 
     private fun setupGson(): Gson {
         fun variablesDeserializer(json: JsonArray): List<SrcVariable> {
@@ -139,29 +159,28 @@ class Src(private val application: MyApplication) {
             val gson = Gson()
             val leaderboardObj = json.asJsonObject.getAsJsonObject("data")
             val weblink = leaderboardObj.get("weblink").asString
-            val lbRuns = leaderboardObj.getAsJsonArray("runs")
-                    .map {
-                        val lbRun = it.asJsonObject
-                        val place = lbRun.get("place").asInt
-                        val run = lbRun.getAsJsonObject("run")
+            val lbRuns = leaderboardObj.getAsJsonArray("runs").map {
+                val lbRun = it.asJsonObject
+                val place = lbRun.get("place").asInt
+                val run = lbRun.getAsJsonObject("run")
 
-                        val videoLink = when {
-                            run.get("videos").isJsonNull -> null
-                            run.getAsJsonObject("videos").get("links") == null -> null
-                            run.getAsJsonObject("videos").get("links").isJsonNull -> null
-                            run.getAsJsonObject("videos").getAsJsonArray("links").isEmpty() -> null
-                            else -> gson.fromJson(
-                                    run.getAsJsonObject("videos").getAsJsonArray("links")[0],
-                                    SrcLink::class.java)
-                        }
-                        val players = gson.fromJson(run.get("players"),
-                                Array<SrcPlayer>::class.java).toList()
-                        val time = (run.getAsJsonObject("times")
-                                .get("primary_t").asFloat * 1000).roundToLong()
-                        val platform = run.getAsJsonObject("system").get("platform")
-                        val platformId = if (platform.isJsonNull) null else platform.asString
-                        SrcRun(place, videoLink, players, time, platformId)
-                    }
+                val videoLink = when {
+                    run.get("videos").isJsonNull -> null
+                    run.getAsJsonObject("videos").get("links") == null -> null
+                    run.getAsJsonObject("videos").get("links").isJsonNull -> null
+                    run.getAsJsonObject("videos").getAsJsonArray("links").isEmpty() -> null
+                    else -> gson.fromJson(
+                            run.getAsJsonObject("videos").getAsJsonArray("links")[0],
+                            SrcLink::class.java)
+                }
+                val players = gson.fromJson(run.get("players"),
+                        Array<SrcPlayer>::class.java).toList()
+                val time = (run.getAsJsonObject("times")
+                        .get("primary_t").asFloat * 1000).roundToLong()
+                val platform = run.getAsJsonObject("system").get("platform")
+                val platformId = if (platform.isJsonNull) null else platform.asString
+                SrcRun(place, videoLink, players, time, platformId)
+            }
             SrcLeaderboard(weblink, lbRuns)
         }
 
@@ -192,11 +211,11 @@ class Src(private val application: MyApplication) {
     }
 
     suspend fun fetchGameData(gameName: String): Result<SrcGame> {
-        return application.srcGameCache.getOrElse(gameName) {
+        return gameCache.getOrElse(gameName) {
             withContext(Dispatchers.IO) {
                 api.game(gameName).execute()
             }.body()?.takeIf { it.name.toLowerCase() == gameName.toLowerCase() }
-                    ?.also { application.srcGameCache += gameName to it }
+                    ?.also { gameCache += gameName to it }
         }.successOrFailure()
     }
 
@@ -238,5 +257,12 @@ class Src(private val application: MyApplication) {
             }
             is Failure -> Failure()
         }
+    }
+
+    companion object {
+
+        val instance by lazy { Src() }
+
+        operator fun invoke() = instance
     }
 }

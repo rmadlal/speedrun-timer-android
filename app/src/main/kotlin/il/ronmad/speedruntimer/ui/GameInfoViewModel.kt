@@ -1,10 +1,9 @@
 package il.ronmad.speedruntimer.ui
 
-import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Transformations
+import android.arch.lifecycle.ViewModel
 import il.ronmad.speedruntimer.ui.util.Event
 import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.Src
@@ -13,7 +12,7 @@ import il.ronmad.speedruntimer.web.Success
 import kotlinx.coroutines.*
 import java.io.IOException
 
-class GameInfoViewModel(application: Application) : AndroidViewModel(application) {
+class GameInfoViewModel : ViewModel() {
 
     private val _leaderboards = MutableLiveData<List<SrcLeaderboard>>()
     val leaderboards: LiveData<List<SrcLeaderboard>>
@@ -32,7 +31,7 @@ class GameInfoViewModel(application: Application) : AndroidViewModel(application
     fun refreshInfo(gameName: String) = scope.launch {
         try {
             _refreshSpinner.value = true
-            when (val result = Src(getApplication()).fetchLeaderboardsForGame(gameName)) {
+            when (val result = Src().fetchLeaderboardsForGame(gameName)) {
                 is Success -> {
                     _leaderboards.postValue(result.value)
                     if (result.value.isEmpty()) {

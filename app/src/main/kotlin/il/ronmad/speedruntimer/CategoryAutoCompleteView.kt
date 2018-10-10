@@ -27,9 +27,8 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
 
     internal fun setCategories(gameName: String) {
         setCategoriesJob = GlobalScope.launch(Dispatchers.Main) {
-            val app = context?.app ?: return@launch
             try {
-                categoryNames = when (val game = Src(app).fetchGameData(gameName)) {
+                categoryNames = when (val game = Src().fetchGameData(gameName)) {
                     is Success -> {
                         game.value.categories.flatMap { category ->
                             if (category.subCategories.isEmpty())
