@@ -2,6 +2,7 @@ package il.ronmad.speedruntimer
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.util.Log
 import il.ronmad.speedruntimer.realm.Category
 import il.ronmad.speedruntimer.realm.Game
@@ -16,12 +17,23 @@ const val REALM_SCHEMA_VERSION = 4L
 
 class MyApplication : Application() {
 
-    var installedApps: Map<String, ApplicationInfo> = mapOf()
-    var installedGames: List<String> = listOf()
+    var installedAppsMap: Map<String, ApplicationInfo> = emptyMap()
 
     override fun onCreate() {
         super.onCreate()
         initRealm()
+    }
+
+    fun setupInstalledAppsMap() {
+        if (installedAppsMap.isNotEmpty())
+            return
+        installedAppsMap = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+                .filter {
+                    it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
+                }
+                .associateBy {
+                    packageManager.getApplicationLabel(it).toString().toLowerCase()
+                }
     }
 
     private fun initRealm() {

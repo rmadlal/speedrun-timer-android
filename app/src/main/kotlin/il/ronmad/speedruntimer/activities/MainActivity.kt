@@ -1,10 +1,11 @@
 package il.ronmad.speedruntimer.activities
 
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,10 +19,10 @@ import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.fragments.GamesListFragment
 import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.gameExists
+import il.ronmad.speedruntimer.ui.InstalledAppsViewModel
 import io.realm.Realm
 import io.realm.exceptions.RealmException
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,6 +31,9 @@ class MainActivity : AppCompatActivity() {
 
     private var rateSnackbarShown: Boolean = false
     private var addGamesSnackbarShown: Boolean = false
+
+    private lateinit var viewModel: InstalledAppsViewModel
+    private var installedGames: List<String> = emptyList()
 
 
     // defintetly new and improved, not at all ripped off. and withoutt typos
@@ -47,13 +51,15 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
-        val isRealmEmpty = realm.isEmpty    // Must be done here. realm access from other threads crashes.
-        GlobalScope.launch(Dispatchers.Main) {
-            launch(Dispatchers.IO) {
-                setupInstalledAppsLists()
-            }.then {
-                setupSnackbars(isRealmEmpty)
-            }
+        viewModel = ViewModelProviders.of(this).get(InstalledAppsViewModel::class.java)
+        viewModel.apply {
+            setupDone.observe(this@MainActivity, Observer { done ->
+                done?.handle()?.let {
+                    setupInstalledGamesList()
+                    setupSnackbars()
+                }
+            })
+            setupInstalledAppsMap()
         }
 
         if (savedInstanceState == null) {
@@ -136,28 +142,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupInstalledAppsLists() {
-        val allInstalledApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-                .filter {
-                    it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
-                }
-        app?.installedApps = allInstalledApps
-                .map { packageManager.getApplicationLabel(it).toString().toLowerCase() to it }
-                .toMap()
+    private fun setupInstalledGamesList() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            app?.installedGames = allInstalledApps
-                    .asSequence()
+            installedGames = app?.installedAppsMap.orEmpty().values
                     .filter { it.category == ApplicationInfo.CATEGORY_GAME }
                     .map { packageManager.getApplicationLabel(it).toString() }
-                    .toList()
         }
     }
 
-
-    private fun setupSnackbars(isRealmEmpty: Boolean) {
+    // Uses realm
+    private fun setupSnackbars() {
         var toShowRateSnackbar = false
         rateSnackbarShown = sharedPrefs.getBoolean(getString(R.string.key_rate_snackbar_shown), false)
-        if (!rateSnackbarShown && launchCounter == 0 && !isRealmEmpty) {
+        if (!rateSnackbarShown && launchCounter == 0 && !realm.isEmpty) {
             val savedLaunchCounter = sharedPrefs.getInt(getString(R.string.key_launch_counter), 0)
             launchCounter = (savedLaunchCounter + 1).coerceAtMost(4)
             toShowRateSnackbar = launchCounter == 3
@@ -203,10 +200,10 @@ class MainActivity : AppCompatActivity() {
         snackbar.show()
     }
 
-    private fun getAvailableInstalledGames(): List<String> {
-        return app?.installedGames?.filter { !realm.gameExists(it) }.orEmpty()
-    }
+    // Uses realm
+    private fun getAvailableInstalledGames() = installedGames.filter { !realm.gameExists(it) }
 
+    // Uses realm
     private fun addInstalledGames() {
         val gameNames = getAvailableInstalledGames()
         if (gameNames.isEmpty()) {

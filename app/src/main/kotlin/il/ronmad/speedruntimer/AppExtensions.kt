@@ -174,7 +174,9 @@ fun Context.tryLaunchGame(gameName: String): Boolean {
     if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
         return false
     }
-    app?.installedApps?.get(gameName.toLowerCase())?.let {
+    val app = this.app ?: return false
+    app.setupInstalledAppsMap()
+    app.installedAppsMap[gameName.toLowerCase()]?.let {
         showToast("Launching ${packageManager.getApplicationLabel(it)}...")
         startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
         return true
