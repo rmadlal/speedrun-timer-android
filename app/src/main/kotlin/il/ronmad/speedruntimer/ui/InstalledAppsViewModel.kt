@@ -7,10 +7,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Transformations
 import il.ronmad.speedruntimer.MyApplication
 import il.ronmad.speedruntimer.ui.util.Event
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 /**
  * Getting the list of apps that are installed on the system takes time (PackageManager is slow),
@@ -27,10 +24,12 @@ class InstalledAppsViewModel(application: Application) : AndroidViewModel(applic
     val setupDone: LiveData<Event<Boolean>> = Transformations.map(_setupDone) { Event(it) }
 
     private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
+    private val scope = CoroutineScope(Dispatchers.Main + job)
 
     fun setupInstalledAppsMap() = scope.launch {
-        getApplication<MyApplication>().setupInstalledAppsMap()
+        withContext(Dispatchers.Default) {
+            getApplication<MyApplication>().setupInstalledAppsMap()
+        }
         _setupDone.postValue(true)
     }
 

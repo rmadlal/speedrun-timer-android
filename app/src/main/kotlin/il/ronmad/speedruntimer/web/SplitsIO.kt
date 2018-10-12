@@ -7,7 +7,7 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import il.ronmad.speedruntimer.BuildConfig
 import il.ronmad.speedruntimer.readSingleObjectValue
-import il.ronmad.speedruntimer.successOrFailure
+import il.ronmad.speedruntimer.toResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType
@@ -56,7 +56,8 @@ class SplitsIO private constructor() {
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "uris" -> claimUri = readSingleObjectValue("claim_uri")
+                            "uris" ->
+                                claimUri = readSingleObjectValue<String>("claim_uri").orEmpty()
                             "presigned_request" -> {
                                 beginObject()
                                 while (hasNext()) {
@@ -134,9 +135,12 @@ class SplitsIO private constructor() {
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "attempts" -> attemptsTotal = readSingleObjectValue("total").toInt()
-                            "game" -> gameName = readSingleObjectValue("longname")
-                            "category" -> categoryName = readSingleObjectValue("longname")
+                            "attempts" ->
+                                attemptsTotal = readSingleObjectValue<Int>("total") ?: 0
+                            "game" ->
+                                gameName = readSingleObjectValue<String>("longname").orEmpty()
+                            "category" ->
+                                categoryName = readSingleObjectValue<String>("longname").orEmpty()
                             "segments" -> {
                                 var prevSplitTime = 0L
                                 beginArray()
@@ -149,11 +153,14 @@ class SplitsIO private constructor() {
                                         when (nextName()) {
                                             "name" -> segmentName = nextString()
                                             "endedAt" -> {
-                                                val endedAt = readSingleObjectValue("realtimeMS").toLong()
+                                                val endedAt = readSingleObjectValue<Long>("realtimeMS")
+                                                        ?: 0L
                                                 pbDuration = endedAt - prevSplitTime
                                                 prevSplitTime = endedAt
                                             }
-                                            "bestDuration" -> bestDuration = readSingleObjectValue("realtimeMS").toLong()
+                                            "bestDuration" ->
+                                                bestDuration = readSingleObjectValue<Long>("realtimeMS")
+                                                        ?: 0L
                                             else -> skipValue()
                                         }
                                     }
@@ -189,7 +196,7 @@ class SplitsIO private constructor() {
     suspend fun getRun(id: String): Result<Run> {
         return withContext(Dispatchers.IO) {
             api.getRun(id).execute()
-        }.body().successOrFailure()
+        }.body().toResult()
     }
 
     // https://github.com/glacials/splits-io/blob/master/docs/api.md#uploading
@@ -203,12 +210,11 @@ class SplitsIO private constructor() {
             val partMap: Map<String, RequestBody> = uploadRequest.fields.mapValues {
                 RequestBody.create(null, it.value)
             } + ("file" to requestFile)
-            withContext(Dispatchers.IO) {
+            val uploadResponse = withContext(Dispatchers.IO) {
                 api.uploadRun(uploadRequest.uploadUri, partMap).execute()
-            }.body()?.let {
-                uploadRequest.claimUri
             }
-        }.successOrFailure()
+            if (uploadResponse.isSuccessful) uploadRequest.claimUri else null
+        }.toResult()
     }
 
     fun serializeRun(run: Run): String = gson.toJson(run)

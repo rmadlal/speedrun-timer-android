@@ -7,7 +7,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
 import il.ronmad.speedruntimer.SRC_API
 import il.ronmad.speedruntimer.isEmpty
-import il.ronmad.speedruntimer.successOrFailure
+import il.ronmad.speedruntimer.toResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Call
@@ -216,7 +216,7 @@ class Src private constructor() {
                 api.game(gameName).execute()
             }.body()?.takeIf { it.name.toLowerCase() == gameName.toLowerCase() }
                     ?.also { gameCache += gameName to it }
-        }.successOrFailure()
+        }.toResult()
     }
 
     suspend fun fetchLeaderboardsForGame(gameName: String): Result<List<SrcLeaderboard>> {
@@ -250,7 +250,7 @@ class Src private constructor() {
                                 }
                             }
                         }
-                    }.successOrFailure()
+                    }.toResult()
                 } catch (e: OutOfMemoryError) {
                     Failure<List<SrcLeaderboard>>()
                 }

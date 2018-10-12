@@ -18,7 +18,9 @@ import il.ronmad.speedruntimer.web.SplitsIO
 import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -169,13 +171,15 @@ fun Context.minimizeApp() {
     startActivity(homeIntent)
 }
 
-fun Context.tryLaunchGame(gameName: String): Boolean {
+suspend fun Context.tryLaunchGame(gameName: String): Boolean {
     val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
     if (!sharedPrefs.getBoolean(getString(R.string.key_pref_launch_games), true)) {
         return false
     }
     val app = this.app ?: return false
-    app.setupInstalledAppsMap()
+    withContext(Dispatchers.Default) {
+        app.setupInstalledAppsMap()
+    }
     app.installedAppsMap[gameName.toLowerCase()]?.let {
         showToast("Launching ${packageManager.getApplicationLabel(it)}...")
         startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
@@ -211,13 +215,19 @@ suspend inline fun Job.then(block: () -> Unit) {
     block()
 }
 
-fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
-                                 categoryName: String = this.categoryName): Category {
+/**
+ * Converts Run to Category, adding it to Realm.
+ * This overwrites the category's splits if they exist.
+ */
+fun SplitsIO.Run.toRealmCategory(
+        gameName: String = this.gameName,
+        categoryName: String = this.categoryName
+): Category {
     return withRealm {
         val game = getGameByName(gameName) ?: addGame(gameName)
         val category = game.getCategoryByName(categoryName) ?: game.addCategory(categoryName)
         category.apply {
-            this@withRealm.executeTransaction { splits.deleteAllFromRealm() }
+            executeTransaction { splits.deleteAllFromRealm() }
             segments.forEach {
                 addSplit(it.segmentName)
                         .updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
@@ -228,12 +238,15 @@ fun SplitsIO.Run.toRealmCategory(gameName: String = this.gameName,
     }
 }
 
-fun JsonReader.readSingleObjectValue(name: String): String {
-    var value = ""
+/**
+ * Convenience method for reading a Json Object from which only one field is needed.
+ */
+inline fun <reified T> JsonReader.readSingleObjectValue(name: String): T? {
+    var value: T? = null
     beginObject()
     while (hasNext()) {
         when (nextName()) {
-            name -> value = nextString()
+            name -> value = nextValue()
             else -> skipValue()
         }
     }
@@ -241,9 +254,24 @@ fun JsonReader.readSingleObjectValue(name: String): String {
     return value
 }
 
+inline fun <reified T> JsonReader.nextValue(): T? {
+    return when (T::class) {
+        String::class -> nextString() as T
+        Boolean::class -> nextBoolean() as T
+        Unit::class -> nextNull() as T
+        Double::class -> nextDouble() as T
+        Long::class -> nextLong() as T
+        Int::class -> nextInt() as T
+        else -> null
+    }
+}
+
 fun ExpandableListView.getExpandedGroupPositions(): List<Int> =
         (0 until count).filter { isGroupExpanded(it) }
 
 fun JsonArray.isEmpty() = size() == 0
 
-inline fun <reified T> T?.successOrFailure() = this?.let { Success(it) } ?: Failure<T>()
+/**
+ * Wraps the receiver in a Success if not null, or Failure otherwise
+ */
+inline fun <reified T> T?.toResult() = this?.let { Success(it) } ?: Failure<T>()

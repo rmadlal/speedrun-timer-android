@@ -20,6 +20,9 @@ import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.android.synthetic.main.timer_overlay.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class TimerService : Service() {
 
@@ -457,14 +460,16 @@ class TimerService : Service() {
         var gameName = ""
         var categoryName = ""
 
-        fun launchTimer(context: Context?,
-                        gameName: String,
-                        categoryName: String,
-                        minimizeIfNoGameLaunch: Boolean = true) {
-            context ?: return
+        fun launchTimer(
+                context: Context?,
+                gameName: String,
+                categoryName: String,
+                minimizeIfNoGameLaunch: Boolean = true
+        ) = GlobalScope.launch(Dispatchers.Main) {
+            context ?: return@launch
             if (TimerService.IS_ACTIVE) {
                 context.showToast(context.getString(R.string.toast_close_active_timer))
-                return
+                return@launch
             }
             if (!context.tryLaunchGame(gameName)) {
                 if (minimizeIfNoGameLaunch)

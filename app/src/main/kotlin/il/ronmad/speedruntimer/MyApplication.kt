@@ -24,6 +24,7 @@ class MyApplication : Application() {
         initRealm()
     }
 
+    // This is slow. Should call from a background thread.
     fun setupInstalledAppsMap() {
         if (installedAppsMap.isNotEmpty())
             return
