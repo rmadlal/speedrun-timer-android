@@ -56,8 +56,7 @@ class SplitsIO private constructor() {
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "uris" ->
-                                claimUri = readSingleObjectValue<String>("claim_uri").orEmpty()
+                            "uris" -> claimUri = readSingleObjectValue("claim_uri")
                             "presigned_request" -> {
                                 beginObject()
                                 while (hasNext()) {
@@ -135,12 +134,9 @@ class SplitsIO private constructor() {
                     beginObject()
                     while (hasNext()) {
                         when (nextName()) {
-                            "attempts" ->
-                                attemptsTotal = readSingleObjectValue<Int>("total") ?: 0
-                            "game" ->
-                                gameName = readSingleObjectValue<String>("longname").orEmpty()
-                            "category" ->
-                                categoryName = readSingleObjectValue<String>("longname").orEmpty()
+                            "attempts" -> attemptsTotal = readSingleObjectValue("total")
+                            "game" -> gameName = readSingleObjectValue("longname")
+                            "category" -> categoryName = readSingleObjectValue("longname")
                             "segments" -> {
                                 var prevSplitTime = 0L
                                 beginArray()
@@ -153,14 +149,12 @@ class SplitsIO private constructor() {
                                         when (nextName()) {
                                             "name" -> segmentName = nextString()
                                             "endedAt" -> {
-                                                val endedAt = readSingleObjectValue<Long>("realtimeMS")
-                                                        ?: 0L
+                                                val endedAt: Long = readSingleObjectValue("realtimeMS")
                                                 pbDuration = endedAt - prevSplitTime
                                                 prevSplitTime = endedAt
                                             }
                                             "bestDuration" ->
-                                                bestDuration = readSingleObjectValue<Long>("realtimeMS")
-                                                        ?: 0L
+                                                bestDuration = readSingleObjectValue("realtimeMS")
                                             else -> skipValue()
                                         }
                                     }

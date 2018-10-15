@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.Failure
+import il.ronmad.speedruntimer.web.Result
 import il.ronmad.speedruntimer.web.SplitsIO
 import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
@@ -240,8 +241,9 @@ fun SplitsIO.Run.toRealmCategory(
 
 /**
  * Convenience method for reading a Json Object from which only one field is needed.
+ * @throws IllegalArgumentException if the object does not contain property [name]
  */
-inline fun <reified T> JsonReader.readSingleObjectValue(name: String): T? {
+inline fun <reified T> JsonReader.readSingleObjectValue(name: String): T {
     var value: T? = null
     beginObject()
     while (hasNext()) {
@@ -251,10 +253,13 @@ inline fun <reified T> JsonReader.readSingleObjectValue(name: String): T? {
         }
     }
     endObject()
-    return value
+    return value ?: throw IllegalArgumentException("Property $name not found in object")
 }
 
-inline fun <reified T> JsonReader.nextValue(): T? {
+/**
+ * @throws IllegalArgumentException if the passed type is not supported by a next*() method
+ */
+inline fun <reified T> JsonReader.nextValue(): T {
     return when (T::class) {
         String::class -> nextString() as T
         Boolean::class -> nextBoolean() as T
@@ -262,7 +267,7 @@ inline fun <reified T> JsonReader.nextValue(): T? {
         Double::class -> nextDouble() as T
         Long::class -> nextLong() as T
         Int::class -> nextInt() as T
-        else -> null
+        else -> throw IllegalArgumentException("Invalid type")
     }
 }
 
@@ -274,4 +279,4 @@ fun JsonArray.isEmpty() = size() == 0
 /**
  * Wraps the receiver in a Success if not null, or Failure otherwise
  */
-inline fun <reified T> T?.toResult() = this?.let { Success(it) } ?: Failure<T>()
+fun <T> T?.toResult(): Result<T> = this?.let { Success(it) } ?: Failure()
