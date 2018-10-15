@@ -1,9 +1,9 @@
 package il.ronmad.speedruntimer.fragments
 
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.support.v4.view.ViewCompat
+import androidx.core.view.ViewCompat
 import il.ronmad.speedruntimer.ARG_GAME_NAME
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.InfoListAdapter

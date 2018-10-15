@@ -3,7 +3,7 @@ package il.ronmad.speedruntimer
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Build
-import android.support.v7.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.view.View
 import android.view.WindowManager
 import il.ronmad.speedruntimer.adapters.SplitPositionSpinnerAdapter

@@ -1,6 +1,6 @@
 package il.ronmad.speedruntimer.adapters
 
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.BaseRecyclerViewAdapter.BaseViewHolder

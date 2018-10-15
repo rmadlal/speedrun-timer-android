@@ -1,12 +1,12 @@
 package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
-import android.support.v7.app.ActionBar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.ActionBar
+import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import il.ronmad.speedruntimer.activities.MainActivity
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*

@@ -2,7 +2,7 @@ package il.ronmad.speedruntimer.activities
 
 import android.os.Bundle
 import android.preference.*
-import android.support.v4.app.NavUtils
+import androidx.core.app.NavUtils
 import android.view.MenuItem
 import com.jaredrummler.android.colorpicker.ColorPreference
 import il.ronmad.speedruntimer.CountdownPreference
@@ -134,7 +134,7 @@ class SettingsActivity : AppCompatPreferenceActivity() {
                             prefs.getString(preference.key,
                                     if (preference.key == preference.context.getString(R.string.key_pref_timer_size))
                                         preference.entryValues[1].toString()
-                                    else preference.entryValues[0].toString()))
+                                    else preference.entryValues[0].toString())!!)
                 is CheckBoxPreference ->
                     sBindPreferenceSummaryToValueListener(preference,
                             prefs.getBoolean(preference.key, true))

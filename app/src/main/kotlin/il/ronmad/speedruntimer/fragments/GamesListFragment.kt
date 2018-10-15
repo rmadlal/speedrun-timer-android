@@ -1,11 +1,11 @@
 package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
-import android.support.v4.view.ViewCompat
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
 import android.view.ActionMode
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import il.ronmad.speedruntimer.Dialogs
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.TAG_GAME_FRAGMENT

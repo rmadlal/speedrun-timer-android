@@ -7,8 +7,8 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
 import android.preference.PreferenceManager
-import android.support.v4.app.NotificationCompat
-import android.support.v7.app.AlertDialog
+import androidx.core.app.NotificationCompat
+import androidx.appcompat.app.AlertDialog
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
