@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (TimerService.IS_ACTIVE) {
-            Dialogs.closeTimerOnResumeDialog(this) {
+            Dialogs.showCloseTimerOnResumeDialog(this) {
                 sendBroadcast(Intent(getString(R.string.action_close_timer)))
-            }.show()
+            }
         }
     }
 
@@ -209,11 +209,11 @@ class MainActivity : AppCompatActivity() {
         if (gameNames.isEmpty()) {
             showToast(getString(R.string.no_games_to_add))
         } else {
-            Dialogs.addInstalledGamesDialog(this, realm, gameNames) {
+            Dialogs.showAddInstalledGamesDialog(this, realm, gameNames) {
                 (supportFragmentManager.findFragmentByTag(TAG_GAMES_LIST_FRAGMENT) as? GamesListFragment)
                         ?.refreshList()
                 Snackbar.make(fabAdd, "Games added", Snackbar.LENGTH_SHORT).show()
-            }.show()
+            }
         }
     }
 

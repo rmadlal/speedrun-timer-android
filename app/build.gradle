@@ -59,6 +59,8 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.google.guava:guava:26.0-android"
     implementation "com.github.mukeshsolanki:MarkdownView-Android:1.0.6"
+    implementation 'com.afollestad.material-dialogs:core:2.0.0-beta4'
+    implementation 'com.afollestad.material-dialogs:input:2.0.0-beta4'
     testImplementation "junit:junit:4.12"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
@@ -68,4 +70,5 @@ dependencies {
 }
 repositories {
     jcenter()
+    maven { url "https://dl.bintray.com/drummer-aidan/maven/" }
 }

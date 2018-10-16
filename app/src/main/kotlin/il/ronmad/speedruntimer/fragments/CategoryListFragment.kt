@@ -87,9 +87,9 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     game.getCategoryById(id)?.let {
-                        Dialogs.editCategoryDialog(activity, it) { name, pbTime, runCount ->
+                        Dialogs.showEditCategoryDialog(activity, it) { name, pbTime, runCount ->
                             actionEditCategory(it, name, pbTime, runCount)
-                        }.show()
+                        }
                     }
                 }
             }
@@ -130,9 +130,9 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     override fun onFabAddPressed() {
-        Dialogs.newCategoryDialog(activity, game) {
+        Dialogs.showNewCategoryDialog(activity, game) {
             addCategory(it)
-        }.show()
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -227,15 +227,15 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         if (toRemove.isEmpty()) return
         game.getCategories(toRemove).singleOrNull()?.let {
             if (it.bestTime > 0) {
-                Dialogs.deleteCategoryDialog(activity, it) {
+                Dialogs.showDeleteCategoryDialog(activity, it) {
                     removeCategories(toRemove)
-                }.show()
+                }
             } else {
                 removeCategories(toRemove)
             }
-        } ?: Dialogs.deleteCategoriesDialog(activity) {
+        } ?: Dialogs.showDeleteCategoriesDialog(activity) {
             removeCategories(toRemove)
-        }.show()
+        }
     }
 
     private fun actionEditCategory(category: Category, newName: String, newBestTime: Long, newRunCount: Int) {

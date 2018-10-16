@@ -32,6 +32,15 @@
     <string name="undo">Undo</string>
     <string name="rate">Rate</string>
     <string name="add">Add</string>
+    <string name="dialog_timer_active">Timer is active. Close anyway?</string>
+    <string name="dialog_close_timer_on_resume">Timer must be closed in order to use the app.</string>
+    <string name="dialog_delete_categories">Delete selected categories?</string>
+    <string name="dialog_delete_categories_msg">Your PBs and splits will be lost.</string>
+    <string name="dialog_delete_games">Delete selected games?</string>
+    <string name="dialog_delete_games_msg">All categories, PBs and splits associated with the games will be lost.</string>
+    <string name="dialog_import_splits">Import Splits from splits.io</string>
+    <string name="dialog_import_splits_overwrite">All existing data will be overwritten and lost. Import anyway?</string>
+    <string name="dialog_clear_splits">PB and Best Segments will be lost. Are you sure?</string>
     <string name="do_import">Import</string>
     <string name="rate_snackbar">If you like this app, please rate it in the Play Store.</string>
     <string name="add_games_snackbar">Games detected on device. Add them?</string>

@@ -4,11 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.preference.PreferenceManager
-import androidx.core.content.ContextCompat
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.ExpandableListView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.gson.JsonArray
 import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
@@ -20,7 +22,6 @@ import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
@@ -59,14 +60,30 @@ fun EditText.isValidForSplit(category: Category): Boolean {
     return when {
         this.text.isNullOrBlank() -> {
             this.error = "Split name must not be empty"
+            requestFocus()
             false
         }
         category.splitExists(this.text.toString()) -> {
             this.error = "This split already exists"
+            requestFocus()
             false
         }
         else -> true
     }
+}
+
+inline fun EditText.onTextChanged(crossinline listener: (CharSequence?) -> Unit) {
+    addTextChangedListener(object : TextWatcher {
+        override fun afterTextChanged(s: Editable?) {
+        }
+
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            listener(s)
+        }
+    })
 }
 
 fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
@@ -80,10 +97,12 @@ fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
     return intArrayOf(hours, minutes, seconds, millis)
 }
 
-fun Long.getFormattedTime(withMillis: Boolean = true,
-                          forceMinutes: Boolean = false,
-                          plusSign: Boolean = false,
-                          dashIfZero: Boolean = false): String {
+fun Long.getFormattedTime(
+        withMillis: Boolean = true,
+        forceMinutes: Boolean = false,
+        plusSign: Boolean = false,
+        dashIfZero: Boolean = false
+): String {
     if (dashIfZero && this == 0L) return "-"
     val (hours, minutes, seconds, millis) = getTimeUnits(true)
     val formattedTime = when {
@@ -208,13 +227,8 @@ private fun getComparison(context: Context): Comparison {
     }
 }
 
-inline fun <T> Iterable<T>.sumBy(selector: (T) -> Long) =
+inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long) =
         fold(0L) { acc, curr -> acc + selector(curr) }
-
-suspend inline fun Job.then(block: () -> Unit) {
-    join()
-    block()
-}
 
 /**
  * Converts Run to Category, adding it to Realm.

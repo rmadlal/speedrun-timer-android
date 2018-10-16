@@ -7,14 +7,14 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
 import android.preference.PreferenceManager
-import androidx.core.app.NotificationCompat
-import androidx.appcompat.app.AlertDialog
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
+import androidx.core.app.NotificationCompat
+import com.afollestad.materialdialogs.MaterialDialog
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
@@ -103,7 +103,7 @@ class TimerService : Service() {
     fun closeTimer() {
         if (Chronometer.started) {
             sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-            Dialogs.timerActiveDialog(this) { stopSelf() }.show()
+            Dialogs.showTimerActiveDialog(this) { stopSelf() }
         } else {
             stopSelf()
         }
@@ -297,25 +297,17 @@ class TimerService : Service() {
                 category.bestTime == 0L -> timerReset(time, updateData = updateData)
                 !updateData -> timerReset(updateData = false)
                 else -> {
-                    val resetDialog = AlertDialog.Builder(this)
-                            .setTitle(if (category.bestTime == 0L)
-                                "New personal best!"
-                            else
-                                "New personal best! (${(time - category.bestTime).getFormattedTime()})")
-                            .setMessage("Save it?")
-                            .setPositiveButton(R.string.save_reset) { _, _ ->
-                                timerReset(time)
-                            }
-                            .setNegativeButton(R.string.reset) { _, _ ->
-                                timerReset()
-                            }
-                            .setNeutralButton(android.R.string.cancel, null)
-                            .create()
-                    resetDialog.window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    else
-                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
-                    resetDialog.show()
+                    MaterialDialog(this).show {
+                        title(text = if (category.bestTime == 0L) "New personal best!"
+                        else "New personal best! (${(time - category.bestTime).getFormattedTime()})")
+                        message(text = "Save it?")
+                        positiveButton(R.string.save_reset) { timerReset(time) }
+                        negativeButton(R.string.reset) { timerReset() }
+                        window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                        else
+                            WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+                    }
                 }
             }
             true

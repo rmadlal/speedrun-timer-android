@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.*
 import android.widget.AdapterView
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -110,9 +109,9 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     override fun onFabAddPressed() {
-        Dialogs.newSplitDialog(activity, category) { name, position ->
+        Dialogs.showNewSplitDialog(activity, category) { name, position ->
             addSplit(name, position)
-        }.show()
+        }
     }
 
     private fun refresh() {
@@ -127,11 +126,13 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         mActionMode?.finish()
     }
 
-    private fun editSplit(split: Split,
-                          newName: String,
-                          newPBTime: Long,
-                          newBestTime: Long,
-                          newPosition: Int) {
+    private fun editSplit(
+            split: Split,
+            newName: String,
+            newPBTime: Long,
+            newBestTime: Long,
+            newPosition: Int
+    ) {
         split.updateData(newName, newPBTime, newBestTime)
         val position = split.getPosition()
         mAdapter?.onItemEdited(position)
@@ -162,30 +163,24 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun onClearSplitsPressed() {
-        AlertDialog.Builder(activity)
-                .setTitle("Clear splits")
-                .setMessage("PB and Best Segments will be lost. Are you sure?")
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    clearSplits()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
+        Dialogs.showClearSplitsDialog(activity) {
+            clearSplits()
+        }
     }
 
     private fun onImportSplitsioPressed() {
-        val importSplitsDialog = Dialogs.importSplitsDialog(activity) { id ->
-            splitsIOViewModel.importRun(id)
+        val importSplitsDialog = {
+            Dialogs.showImportSplitsDialog(activity) { id ->
+                splitsIOViewModel.importRun(id)
+            }
         }
         if (category.splits.isNotEmpty()) {
-            AlertDialog.Builder(activity)
-                    .setTitle("Import Splits from splits.io")
-                    .setMessage("All existing data will be overwritten and lost. Import anyway?")
-                    .setPositiveButton(android.R.string.ok) { _, _ -> importSplitsDialog.show() }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
+            Dialogs.showImportSplitsOverwriteDialog(activity) {
+                importSplitsDialog()
+            }
             return
         }
-        importSplitsDialog.show()
+        importSplitsDialog()
     }
 
     private fun onExportSplitsioPressed() {
@@ -202,23 +197,18 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     category.getSplitById(id)?.let {
-                        Dialogs.editSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
+                        Dialogs.showEditSplitDialog(activity, it) { name, newPBTime, newBestTime, newPosition ->
                             editSplit(it, name, newPBTime, newBestTime, newPosition)
-                        }.show()
+                        }
                     }
                 }
             }
             onDeletePressed = {
                 mAdapter?.let {
                     if (it.selectedItems.isNotEmpty()) {
-                        AlertDialog.Builder(activity)
-                                .setTitle("Remove splits")
-                                .setMessage("Are you sure?")
-                                .setPositiveButton(android.R.string.ok) { _, _ ->
-                                    removeSplits(it.selectedItems)
-                                }
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show()
+                        Dialogs.showRemoveSplitsDialog(activity) {
+                            removeSplits(it.selectedItems)
+                        }
                     }
                 }
 

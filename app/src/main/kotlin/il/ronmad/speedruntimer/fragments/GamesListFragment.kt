@@ -36,9 +36,9 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     override fun onFabAddPressed() {
-        Dialogs.newGameDialog(activity, realm) {
+        Dialogs.showNewGameDialog(activity, realm) {
             addGame(it)
-        }.show()
+        }
     }
 
     fun refreshList() {
@@ -77,18 +77,18 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
             onEditPressed = {
                 mAdapter?.selectedItems?.singleOrNull()?.let { id ->
                     realm.getGameById(id)?.let { game ->
-                        Dialogs.editGameDialog(activity, realm, game) {
+                        Dialogs.showEditGameDialog(activity, game) {
                             editGameName(game, it)
-                        }.show()
+                        }
                     }
                 }
             }
             onDeletePressed = {
                 mAdapter?.let {
                     if (it.selectedItems.isNotEmpty()) {
-                        Dialogs.deleteGamesDialog(activity) {
+                        Dialogs.showDeleteGamesDialog(activity) {
                             removeGames(it.selectedItems)
-                        }.show()
+                        }
                     }
                 }
             }

@@ -1,7 +1,7 @@
 package il.ronmad.speedruntimer.realm
 
 import il.ronmad.speedruntimer.Comparison
-import il.ronmad.speedruntimer.sumBy
+import il.ronmad.speedruntimer.sumByLong
 import il.ronmad.speedruntimer.web.SplitsIO
 import io.realm.Case
 import io.realm.Realm
@@ -124,9 +124,9 @@ fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction
     this.getSplits(toRemove).deleteAllFromRealm()
 }
 
-fun Category.setPBFromSplits() = updateData(bestTime = splits.sumBy { it.pbTime })
+fun Category.setPBFromSplits() = updateData(bestTime = splits.sumByLong { it.pbTime })
 
-fun Category.calculateSob() = splits.sumBy { it.bestTime }
+fun Category.calculateSob() = splits.sumByLong { it.bestTime }
 
 fun Category.toRun(): SplitsIO.Run =
         SplitsIO.Run(gameName,
@@ -136,9 +136,11 @@ fun Category.toRun(): SplitsIO.Run =
 
 fun Split.getCategory() = this.category!!.first()!!
 
-fun Split.updateData(name: String = this.name,
-                     pbTime: Long = this.pbTime,
-                     bestTime: Long = this.bestTime) = realm.executeTransaction {
+fun Split.updateData(
+        name: String = this.name,
+        pbTime: Long = this.pbTime,
+        bestTime: Long = this.bestTime
+) = realm.executeTransaction {
     this.name = name
     this.pbTime = pbTime
     this.bestTime = bestTime
@@ -148,9 +150,9 @@ fun Split.calculateSplitTime(comparison: Comparison = Comparison.PERSONAL_BEST):
     val splits = this.getCategory().splits
     return when (comparison) {
         Comparison.PERSONAL_BEST ->
-            splits.subList(0, splits.indexOf(this)).sumBy { it.pbTime } + this.pbTime
+            splits.subList(0, splits.indexOf(this)).sumByLong { it.pbTime } + this.pbTime
         Comparison.BEST_SEGMENTS ->
-            splits.subList(0, splits.indexOf(this)).sumBy { it.bestTime } + this.bestTime
+            splits.subList(0, splits.indexOf(this)).sumByLong { it.bestTime } + this.bestTime
     }
 }
 
@@ -180,6 +182,6 @@ inline fun <reified T : RealmObject> Realm.getNextId() =
 
 inline fun <R> withRealm(block: Realm.() -> R): R {
     Realm.getDefaultInstance().use {
-        return block(it)
+        return it.block()
     }
 }
