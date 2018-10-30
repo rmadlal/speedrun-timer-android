@@ -73,7 +73,10 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (TimerService.IS_ACTIVE) {
             Dialogs.showCloseTimerOnResumeDialog(this) {
-                sendBroadcast(Intent(getString(R.string.action_close_timer)))
+                val closeTimerIntent = Intent(getString(R.string.action_close_timer)).also {
+                    it.putExtra(getString(R.string.extra_close_timer_from_onresume), true)
+                }
+                sendBroadcast(closeTimerIntent)
             }
         }
     }

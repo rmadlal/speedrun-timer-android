@@ -216,15 +216,23 @@ object Dialogs {
         }
     }
 
-    internal fun showTimerActiveDialog(context: Context, callback: () -> Unit) {
+    internal fun showTimerActiveDialog(context: Context, fromOnResume: Boolean, callback: () -> Unit) {
         MaterialDialog(context).show {
             message(R.string.dialog_timer_active)
             positiveButton(R.string.close) { callback() }
-            negativeButton(android.R.string.cancel) { context.minimizeApp() }
+            negativeButton(android.R.string.cancel) {
+                if (fromOnResume) {
+                    context.minimizeApp()
+                }
+            }
             window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+            if (fromOnResume) {
+                cancelable(false)
+                cancelOnTouchOutside(false)
+            }
         }
     }
 

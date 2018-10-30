@@ -100,10 +100,10 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
-    fun closeTimer() {
+    fun closeTimer(fromOnResume: Boolean) {
         if (Chronometer.started) {
             sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-            Dialogs.showTimerActiveDialog(this) { stopSelf() }
+            Dialogs.showTimerActiveDialog(this, fromOnResume) { stopSelf() }
         } else {
             stopSelf()
         }
@@ -139,7 +139,8 @@ class TimerService : Service() {
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 when (intent.action) {
-                    getString(R.string.action_close_timer) -> closeTimer()
+                    getString(R.string.action_close_timer) ->
+                        closeTimer(intent.getBooleanExtra(getString(R.string.extra_close_timer_from_onresume), true))
                 }
             }
         }
@@ -165,7 +166,9 @@ class TimerService : Service() {
                     R.drawable.ic_stat_close,
                         getString(R.string.close_timer),
                         PendingIntent.getBroadcast(this, 0,
-                                Intent(getString(R.string.action_close_timer)),
+                                Intent(getString(R.string.action_close_timer)).also {
+                                    it.putExtra(getString(R.string.extra_close_timer_from_onresume), false)
+                                },
                                 PendingIntent.FLAG_UPDATE_CURRENT))
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)

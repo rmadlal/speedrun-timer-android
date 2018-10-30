@@ -92,6 +92,7 @@
     <string name="action_start_timer">il.ronmad.speedruntimer.action.START_TIMER</string>
     <string name="extra_game">il.ronmad.speedruntimer.extra.GAME</string>
     <string name="extra_category">il.ronmad.speedruntimer.extra.CATEGORY_NAME</string>
+    <string name="extra_close_timer_from_onresume">il.ronmad.speedruntimer.extra.CLOSE_FROM_ONRESUME</string>
 
     <integer name="notification_id">1234</integer>
     <string name="notification_channel_id">il.ronmad.speedruntimer.NOTIFICATION_CHANNEL</string>
