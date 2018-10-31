@@ -9,6 +9,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.ExpandableListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.gson.JsonArray
@@ -21,18 +22,19 @@ import il.ronmad.speedruntimer.web.SplitsIO
 import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_time_layout.view.*
+import kotlinx.android.synthetic.main.timer_overlay.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
-        this.text.isNullOrBlank() -> {
-            this.error = "Title must not be empty"
+        text.isNullOrBlank() -> {
+            error = "Title must not be empty"
             requestFocus()
             false
         }
-        realm.gameExists(this.text.toString()) -> {
-            this.error = "This game already exists"
+        realm.gameExists(text.toString()) -> {
+            error = "This game already exists"
             requestFocus()
             false
         }
@@ -42,13 +44,13 @@ fun EditText.isValidForGame(realm: Realm): Boolean {
 
 fun EditText.isValidForCategory(game: Game): Boolean {
     return when {
-        this.text.isNullOrBlank() -> {
-            this.error = "Category must not be empty"
+        text.isNullOrBlank() -> {
+            error = "Category must not be empty"
             requestFocus()
             false
         }
-        game.categoryExists(this.text.toString()) -> {
-            this.error = "This category already exists"
+        game.categoryExists(text.toString()) -> {
+            error = "This category already exists"
             requestFocus()
             false
         }
@@ -58,13 +60,13 @@ fun EditText.isValidForCategory(game: Game): Boolean {
 
 fun EditText.isValidForSplit(category: Category): Boolean {
     return when {
-        this.text.isNullOrBlank() -> {
-            this.error = "Split name must not be empty"
+        text.isNullOrBlank() -> {
+            error = "Split name must not be empty"
             requestFocus()
             false
         }
-        category.splitExists(this.text.toString()) -> {
-            this.error = "This split already exists"
+        category.splitExists(text.toString()) -> {
+            error = "This split already exists"
             requestFocus()
             false
         }
@@ -124,7 +126,7 @@ fun Long.getFormattedTime(
 }
 
 fun View.setEditTextsFromTime(time: Long) {
-    requireTimeViewsNotNull(this)
+    requireHasTimeViews()
     val (hours, minutes, seconds, millis) = time.getTimeUnits()
     this.hours.setText(if (hours > 0) hours.toString() else "")
     this.minutes.setText(if (minutes > 0) minutes.toString() else "")
@@ -133,23 +135,23 @@ fun View.setEditTextsFromTime(time: Long) {
 }
 
 fun View.getTimeFromEditTexts(): Long {
-    requireTimeViewsNotNull(this)
+    requireHasTimeViews()
     val hoursStr = this.hours.text.toString()
     val minutesStr = this.minutes.text.toString()
     val secondsStr = this.seconds.text.toString()
     val millisStr = this.milliseconds.text.toString()
-    val hours = if (hoursStr.isNotEmpty()) Integer.parseInt(hoursStr) else 0
-    val minutes = if (minutesStr.isNotEmpty()) Integer.parseInt(minutesStr) else 0
-    val seconds = if (secondsStr.isNotEmpty()) Integer.parseInt(secondsStr) else 0
-    val millis = if (millisStr.isNotEmpty()) Integer.parseInt(millisStr) else 0
+    val hours = if (hoursStr.isNotEmpty()) hoursStr.toInt() else 0
+    val minutes = if (minutesStr.isNotEmpty()) minutesStr.toInt() else 0
+    val seconds = if (secondsStr.isNotEmpty()) secondsStr.toInt() else 0
+    val millis = if (millisStr.isNotEmpty()) millisStr.toInt() else 0
     return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
 }
 
-private fun requireTimeViewsNotNull(view: View) {
-    requireNotNull(view.hours)
-    requireNotNull(view.minutes)
-    requireNotNull(view.seconds)
-    requireNotNull(view.milliseconds)
+private fun View.requireHasTimeViews() {
+    requireNotNull(hours)
+    requireNotNull(minutes)
+    requireNotNull(seconds)
+    requireNotNull(milliseconds)
 }
 
 fun Int.toOrdinal(): String {
@@ -174,20 +176,22 @@ fun Context.pixelToDp(pixels: Float): Int {
 }
 
 fun Context.startTimerService(gameName: String, categoryName: String) {
-    val serviceIntent = Intent(this, TimerService::class.java)
-    serviceIntent.putExtra(this.getString(R.string.extra_game), gameName)
-    serviceIntent.putExtra(this.getString(R.string.extra_category), categoryName)
+    val serviceIntent = Intent(this, TimerService::class.java).also {
+        it.putExtra(getString(R.string.extra_game), gameName)
+        it.putExtra(getString(R.string.extra_category), categoryName)
+    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        this.startForegroundService(serviceIntent)
+        startForegroundService(serviceIntent)
     } else {
-        this.startService(serviceIntent)
+        startService(serviceIntent)
     }
 }
 
 fun Context.minimizeApp() {
-    val homeIntent = Intent(Intent.ACTION_MAIN)
-    homeIntent.addCategory(Intent.CATEGORY_HOME)
-    homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    val homeIntent = Intent(Intent.ACTION_MAIN).also {
+        it.addCategory(Intent.CATEGORY_HOME)
+        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    }
     startActivity(homeIntent)
 }
 
@@ -294,3 +298,22 @@ fun JsonArray.isEmpty() = size() == 0
  * Wraps the receiver in a Success if not null, or Failure otherwise
  */
 fun <T> T?.toResult(): Result<T> = this?.let { Success(it) } ?: Failure()
+
+val View.chronoViewSet: Set<TextView>
+    get() {
+        require(id == R.id.timer_overlay)
+        return setOf(
+                chronoMinus,
+                chronoHr2,
+                chronoHr1,
+                chronoHrMinColon,
+                chronoMin2,
+                chronoMin1,
+                chronoMinSecColon,
+                chronoSec2,
+                chronoSec1,
+                chronoDot,
+                chronoMilli2,
+                chronoMilli1
+        )
+    }

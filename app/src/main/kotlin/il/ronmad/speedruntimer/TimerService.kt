@@ -12,7 +12,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import il.ronmad.speedruntimer.activities.MainActivity
@@ -42,7 +41,6 @@ class TimerService : Service() {
     private lateinit var receiver: BroadcastReceiver
 
     lateinit var mView: View
-    private var chronoViews: Set<TextView> = emptySet()
     private lateinit var mWindowManager: WindowManager
     private lateinit var mWindowParams: WindowManager.LayoutParams
     private var moved = false
@@ -119,19 +117,21 @@ class TimerService : Service() {
 
     private fun setupChronometerPrefs() {
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        Chronometer.colorNeutral = prefs.getInt(getString(R.string.key_pref_color_neutral),
-                getColorCpt(R.color.colorTimerNeutralDefault))
-        Chronometer.colorAhead = prefs.getInt(getString(R.string.key_pref_color_ahead),
-                getColorCpt(R.color.colorTimerAheadDefault))
-        Chronometer.colorBehind = prefs.getInt(getString(R.string.key_pref_color_behind),
-                getColorCpt(R.color.colorTimerBehindDefault))
-        Chronometer.colorPB = prefs.getInt(getString(R.string.key_pref_color_pb),
-                getColorCpt(R.color.colorTimerPBDefault))
-        Chronometer.colorBestSegment = prefs.getInt(getString(R.string.key_pref_color_best_segment),
-                getColorCpt(R.color.colorTimerBestSegmentDefault))
-        Chronometer.countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
-        Chronometer.showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
-        Chronometer.alwaysMinutes = prefs.getBoolean(getString(R.string.key_pref_timer_always_minutes), true)
+        Chronometer.apply {
+            colorNeutral = prefs.getInt(getString(R.string.key_pref_color_neutral),
+                    getColorCpt(R.color.colorTimerNeutralDefault))
+            colorAhead = prefs.getInt(getString(R.string.key_pref_color_ahead),
+                    getColorCpt(R.color.colorTimerAheadDefault))
+            colorBehind = prefs.getInt(getString(R.string.key_pref_color_behind),
+                    getColorCpt(R.color.colorTimerBehindDefault))
+            colorPB = prefs.getInt(getString(R.string.key_pref_color_pb),
+                    getColorCpt(R.color.colorTimerPBDefault))
+            colorBestSegment = prefs.getInt(getString(R.string.key_pref_color_best_segment),
+                    getColorCpt(R.color.colorTimerBestSegmentDefault))
+            countdown = prefs.getLong(getString(R.string.key_pref_timer_countdown), 0L)
+            showMillis = prefs.getBoolean(getString(R.string.key_pref_timer_show_millis), true)
+            alwaysMinutes = prefs.getBoolean(getString(R.string.key_pref_timer_always_minutes), true)
+        }
         comparison = getComparison()
     }
 
@@ -188,32 +188,21 @@ class TimerService : Service() {
         val notificationChannel = NotificationChannel(
                 getString(R.string.notification_channel_id),
                 getString(R.string.app_name),
-                NotificationManager.IMPORTANCE_LOW)
-        notificationChannel.enableVibration(false)
-        notificationChannel.enableLights(false)
+                NotificationManager.IMPORTANCE_LOW
+        ).also {
+            it.enableVibration(false)
+            it.enableLights(false)
+        }
         notificationManager.createNotificationChannel(notificationChannel)
     }
 
     private fun setupLayoutComponents() {
         setTheme(R.style.AppTheme)
         mView = View.inflate(this, R.layout.timer_overlay, null)
-        chronoViews = setOf(
-                mView.chronoMinus,
-                mView.chronoHr2,
-                mView.chronoHr1,
-                mView.hrMinColon,
-                mView.chronoMin2,
-                mView.chronoMin1,
-                mView.minSecColon,
-                mView.chronoSec2,
-                mView.chronoSec1,
-                mView.dot,
-                mView.chronoMilli2,
-                mView.chronoMilli1)
 
         setupDisplayPrefs()
 
-        chronometer = Chronometer(mView, chronoViews)
+        chronometer = Chronometer(mView)
 
         mView.isLongClickable = true
         mView.setOnTouchListener(object : View.OnTouchListener {
@@ -333,25 +322,21 @@ class TimerService : Service() {
         val millisSize = size * 0.75f
         val deltaSize = size * 0.375f
         val splitSize = size * 0.5f
-        mView.chronoMinus.textSize = size
-        mView.chronoHr2.textSize = size
-        mView.chronoHr1.textSize = size
-        mView.hrMinColon.textSize = size
-        mView.chronoMin2.textSize = size
-        mView.chronoMin1.textSize = size
-        mView.minSecColon.textSize = size
-        mView.chronoSec2.textSize = size
-        mView.chronoSec1.textSize = size
-        mView.dot.textSize = millisSize
-        mView.chronoMilli2.textSize = millisSize
-        mView.chronoMilli1.textSize = millisSize
-        mView.delta.textSize = deltaSize
-        mView.currentSplit.textSize = splitSize
+        mView.apply {
+            chronoViewSet.forEach {
+                it.textSize = size
+            }
+            chronoDot.textSize = millisSize
+            chronoMilli2.textSize = millisSize
+            chronoMilli1.textSize = millisSize
+            delta.textSize = deltaSize
+            currentSplit.textSize = splitSize
+        }
     }
 
     private fun setupFont() {
         val digital7Font = Typeface.createFromAsset(assets, "fonts/digital-7.ttf")
-        chronoViews.forEach { it.typeface = digital7Font }
+        mView.chronoViewSet.forEach { it.typeface = digital7Font }
     }
 
     private fun setupView() {

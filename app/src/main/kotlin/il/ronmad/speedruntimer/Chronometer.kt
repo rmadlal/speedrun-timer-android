@@ -4,12 +4,10 @@ import android.os.Handler
 import android.os.Message
 import android.os.SystemClock
 import android.view.View
-import android.widget.TextView
 import kotlinx.android.synthetic.main.timer_overlay.view.*
-
 import java.lang.ref.WeakReference
 
-class Chronometer(private val chronoView: View, private val chronoViewSet: Set<TextView>) {
+class Chronometer(private val chronoView: View) {
 
     private var base = 0L
 
@@ -19,7 +17,7 @@ class Chronometer(private val chronoView: View, private val chronoViewSet: Set<T
     private var timerColor = colorNeutral
         set(value) {
             if (value == field) return
-            chronoViewSet.forEach { it.setTextColor(value) }
+            chronoView.chronoViewSet.forEach { it.setTextColor(value) }
             field = value
         }
 
@@ -28,11 +26,13 @@ class Chronometer(private val chronoView: View, private val chronoViewSet: Set<T
 
     init {
         if (!showMillis) {
-            chronoView.chronoMilli1.visibility = View.GONE
-            chronoView.chronoMilli2.visibility = View.GONE
-            chronoView.dot.visibility = View.GONE
+            chronoView.apply {
+                chronoMilli1.visibility = View.GONE
+                chronoMilli2.visibility = View.GONE
+                chronoDot.visibility = View.GONE
+            }
         }
-        chronoViewSet.forEach { it.setTextColor(colorNeutral) }
+        chronoView.chronoViewSet.forEach { it.setTextColor(colorNeutral) }
         chronoHandler = ChronoHandler(this)
         init()
     }
@@ -75,46 +75,50 @@ class Chronometer(private val chronoView: View, private val chronoViewSet: Set<T
 
     private fun updateTime() {
         val (hours, minutes, seconds, millis) = timeElapsed.getTimeUnits(true)
-        chronoView.chronoHr2.text = (hours / 10).toString()
-        chronoView.chronoHr1.text = (hours % 10).toString()
-        chronoView.chronoMin2.text = (minutes / 10).toString()
-        chronoView.chronoMin1.text = (minutes % 10).toString()
-        chronoView.chronoSec2.text = (seconds / 10).toString()
-        chronoView.chronoSec1.text = (seconds % 10).toString()
-        chronoView.chronoMilli2.text = (millis / 10).toString()
-        chronoView.chronoMilli1.text = (millis % 10).toString()
+        chronoView.apply {
+            chronoHr2.text = (hours / 10).toString()
+            chronoHr1.text = (hours % 10).toString()
+            chronoMin2.text = (minutes / 10).toString()
+            chronoMin1.text = (minutes % 10).toString()
+            chronoSec2.text = (seconds / 10).toString()
+            chronoSec1.text = (seconds % 10).toString()
+            chronoMilli2.text = (millis / 10).toString()
+            chronoMilli1.text = (millis % 10).toString()
+        }
     }
 
     private fun updateVisibility() {
         val (hours, minutes, seconds, _) = timeElapsed.getTimeUnits(true)
-        chronoView.chronoMinus.visibility = if (timeElapsed < 0) View.VISIBLE else View.GONE
-        when {
-            hours > 0 -> {
-                chronoView.chronoHr2.visibility = if (hours / 10 > 0) View.VISIBLE else View.GONE
-                chronoView.chronoHr1.visibility = View.VISIBLE
-                chronoView.hrMinColon.visibility = View.VISIBLE
-                chronoView.chronoMin2.visibility = View.VISIBLE
-                chronoView.chronoMin1.visibility = View.VISIBLE
-                chronoView.minSecColon.visibility = View.VISIBLE
-                chronoView.chronoSec2.visibility = View.VISIBLE
-            }
-            minutes > 0 -> {
-                chronoView.chronoHr2.visibility = View.GONE
-                chronoView.chronoHr1.visibility = View.GONE
-                chronoView.hrMinColon.visibility = View.GONE
-                chronoView.chronoMin2.visibility = if (minutes / 10 > 0) View.VISIBLE else View.GONE
-                chronoView.chronoMin1.visibility = View.VISIBLE
-                chronoView.minSecColon.visibility = View.VISIBLE
-                chronoView.chronoSec2.visibility = View.VISIBLE
-            }
-            else -> {
-                chronoView.chronoHr2.visibility = View.GONE
-                chronoView.chronoHr1.visibility = View.GONE
-                chronoView.hrMinColon.visibility = View.GONE
-                chronoView.chronoMin2.visibility = View.GONE
-                chronoView.chronoMin1.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
-                chronoView.minSecColon.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
-                chronoView.chronoSec2.visibility = if (alwaysMinutes || seconds / 10 > 0) View.VISIBLE else View.GONE
+        chronoView.apply {
+            chronoMinus.visibility = if (timeElapsed < 0) View.VISIBLE else View.GONE
+            when {
+                hours > 0 -> {
+                    chronoHr2.visibility = if (hours / 10 > 0) View.VISIBLE else View.GONE
+                    chronoHr1.visibility = View.VISIBLE
+                    chronoHrMinColon.visibility = View.VISIBLE
+                    chronoMin2.visibility = View.VISIBLE
+                    chronoMin1.visibility = View.VISIBLE
+                    chronoMinSecColon.visibility = View.VISIBLE
+                    chronoSec2.visibility = View.VISIBLE
+                }
+                minutes > 0 -> {
+                    chronoHr2.visibility = View.GONE
+                    chronoHr1.visibility = View.GONE
+                    chronoHrMinColon.visibility = View.GONE
+                    chronoMin2.visibility = if (minutes / 10 > 0) View.VISIBLE else View.GONE
+                    chronoMin1.visibility = View.VISIBLE
+                    chronoMinSecColon.visibility = View.VISIBLE
+                    chronoSec2.visibility = View.VISIBLE
+                }
+                else -> {
+                    chronoHr2.visibility = View.GONE
+                    chronoHr1.visibility = View.GONE
+                    chronoHrMinColon.visibility = View.GONE
+                    chronoMin2.visibility = View.GONE
+                    chronoMin1.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
+                    chronoMinSecColon.visibility = if (alwaysMinutes) View.VISIBLE else View.GONE
+                    chronoSec2.visibility = if (alwaysMinutes || seconds / 10 > 0) View.VISIBLE else View.GONE
+                }
             }
         }
     }
@@ -136,15 +140,14 @@ class Chronometer(private val chronoView: View, private val chronoViewSet: Set<T
         }
     }
 
-    private class ChronoHandler internal constructor(instance: Chronometer) : Handler() {
+    private class ChronoHandler(instance: Chronometer) : Handler() {
 
         private val instance: WeakReference<Chronometer> = WeakReference(instance)
 
         override fun handleMessage(m: Message) {
-            val chronometer = instance.get()
-            chronometer?.let {
+            instance.get()?.let { chronometer ->
                 if (running) {
-                    it.update()
+                    chronometer.update()
                     sendMessageDelayed(Message.obtain(this, TICK_WHAT), 15)
                 }
             }

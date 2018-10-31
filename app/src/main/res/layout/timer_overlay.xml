@@ -35,14 +35,14 @@
         android:text="@string/chrono_rest"
         android:textSize="32sp"
         app:layout_constraintStart_toEndOf="@id/chronoHr2"
-        app:layout_constraintEnd_toStartOf="@+id/hrMinColon"
+        app:layout_constraintEnd_toStartOf="@+id/chronoHrMinColon"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
         tools:text="0"
         />
 
     <TextView
-        android:id="@+id/hrMinColon"
+        android:id="@+id/chronoHrMinColon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=":"
@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:text="@string/chrono_rest"
         android:textSize="32sp"
-        app:layout_constraintStart_toEndOf="@id/hrMinColon"
+        app:layout_constraintStart_toEndOf="@id/chronoHrMinColon"
         app:layout_constraintEnd_toStartOf="@+id/chronoMin1"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
@@ -73,14 +73,14 @@
         android:text="@string/chrono_rest"
         android:textSize="32sp"
         app:layout_constraintStart_toEndOf="@id/chronoMin2"
-        app:layout_constraintEnd_toStartOf="@+id/minSecColon"
+        app:layout_constraintEnd_toStartOf="@+id/chronoMinSecColon"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
         tools:text="0"
         />
 
     <TextView
-        android:id="@+id/minSecColon"
+        android:id="@+id/chronoMinSecColon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=":"
@@ -97,7 +97,7 @@
         android:layout_height="wrap_content"
         android:text="@string/chrono_rest"
         android:textSize="32sp"
-        app:layout_constraintStart_toEndOf="@id/minSecColon"
+        app:layout_constraintStart_toEndOf="@id/chronoMinSecColon"
         app:layout_constraintEnd_toStartOf="@+id/chronoSec1"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         android:visibility="gone"
@@ -111,14 +111,14 @@
         android:text="@string/chrono_rest"
         android:textSize="32sp"
         app:layout_constraintStart_toEndOf="@id/chronoSec2"
-        app:layout_constraintEnd_toStartOf="@+id/dot"
+        app:layout_constraintEnd_toStartOf="@+id/chronoDot"
         app:layout_constraintBottom_toTopOf="@+id/currentSplit"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoHr2"
         tools:text="7"
         />
 
     <TextView
-        android:id="@+id/dot"
+        android:id="@+id/chronoDot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="."
@@ -133,7 +133,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24sp"
-        app:layout_constraintStart_toEndOf="@id/dot"
+        app:layout_constraintStart_toEndOf="@id/chronoDot"
         app:layout_constraintEnd_toStartOf="@+id/chronoMilli1"
         app:layout_constraintBaseline_toBaselineOf="@id/chronoSec1"
         tools:text="1" />
