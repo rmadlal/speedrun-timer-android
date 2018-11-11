@@ -11,8 +11,8 @@ android {
         applicationId "il.ronmad.speedruntimer"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 53
-        versionName '4.23'
+        versionCode 54
+        versionName '4.24'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -46,8 +46,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.core:core:$androidx_version"
-    implementation "androidx.appcompat:appcompat:$androidx_version"
+    implementation "androidx.core:core:1.0.1"
+    implementation "androidx.appcompat:appcompat:1.0.2"
     implementation "com.google.android.material:material:$androidx_version"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
     implementation "com.google.code.gson:gson:2.8.5"
@@ -59,8 +59,8 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.google.guava:guava:26.0-android"
     implementation "com.github.mukeshsolanki:MarkdownView-Android:1.0.6"
-    implementation 'com.afollestad.material-dialogs:core:2.0.0-beta4'
-    implementation 'com.afollestad.material-dialogs:input:2.0.0-beta4'
+    implementation 'com.afollestad.material-dialogs:core:2.0.0-beta5'
+    implementation 'com.afollestad.material-dialogs:input:2.0.0-beta5'
     testImplementation "junit:junit:4.12"
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"

@@ -1,91 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<il.ronmad.speedruntimer.MyHorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/dialog_padding"
-    android:paddingRight="@dimen/dialog_padding"
+    android:paddingStart="@dimen/dialog_padding"
+    android:paddingEnd="@dimen/dialog_padding"
     tools:context=".activities.MainActivity">
 
-    <EditText
-        android:id="@+id/hours"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:hint="@string/hr_hint"
-        android:inputType="number"
-        android:maxLines="1"
-        android:maxLength="2"
-        android:nextFocusDown="@+id/minutes"
-        android:selectAllOnFocus="true"
-        tools:ignore="Autofill" />
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/hrMinColon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=":"
-        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        tools:ignore="HardcodedText" />
+        <EditText
+            android:id="@+id/hours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:hint="@string/hr_hint"
+            android:inputType="number"
+            android:maxLines="1"
+            android:maxLength="2"
+            android:nextFocusDown="@+id/minutes"
+            android:selectAllOnFocus="true"
+            tools:ignore="Autofill" />
 
-    <EditText
-        android:id="@+id/minutes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:hint="@string/mins_hint"
-        android:inputType="number"
-        android:maxLines="1"
-        android:maxLength="2"
-        android:nextFocusDown="@+id/seconds"
-        android:selectAllOnFocus="true"
-        tools:ignore="Autofill" />
+        <TextView
+            android:id="@+id/hrMinColon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/minSecColon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=":"
-        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        tools:ignore="HardcodedText" />
+        <EditText
+            android:id="@+id/minutes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:hint="@string/mins_hint"
+            android:inputType="number"
+            android:maxLines="1"
+            android:maxLength="2"
+            android:nextFocusDown="@+id/seconds"
+            android:selectAllOnFocus="true"
+            tools:ignore="Autofill" />
 
-    <EditText
-        android:id="@+id/seconds"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:hint="@string/secs_hint"
-        android:inputType="number"
-        android:maxLines="1"
-        android:maxLength="2"
-        android:nextFocusDown="@+id/milliseconds"
-        android:selectAllOnFocus="true"
-        tools:ignore="Autofill" />
+        <TextView
+            android:id="@+id/minSecColon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/secMillDot"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="."
-        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        tools:ignore="HardcodedText" />
+        <EditText
+            android:id="@+id/seconds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:hint="@string/secs_hint"
+            android:inputType="number"
+            android:maxLines="1"
+            android:maxLength="2"
+            android:nextFocusDown="@+id/milliseconds"
+            android:selectAllOnFocus="true"
+            tools:ignore="Autofill" />
 
-    <EditText
-        android:id="@+id/milliseconds"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:hint="@string/millis_hint"
-        android:inputType="number"
-        android:maxLines="1"
-        android:maxLength="3"
-        android:selectAllOnFocus="true"
-        tools:ignore="Autofill" />
+        <TextView
+            android:id="@+id/secMillDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="."
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            tools:ignore="HardcodedText" />
 
-</LinearLayout>
+        <EditText
+            android:id="@+id/milliseconds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:hint="@string/millis_hint"
+            android:inputType="number"
+            android:maxLines="1"
+            android:maxLength="3"
+            android:selectAllOnFocus="true"
+            tools:ignore="Autofill" />
+
+        <Button
+            android:id="@+id/clearTimeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/time_clear"
+            android:textColor="@color/colorAccent"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <!-- To ensure it scrolls far enough -->
+        <Space
+            android:layout_width="16dp"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</il.ronmad.speedruntimer.MyHorizontalScrollView>

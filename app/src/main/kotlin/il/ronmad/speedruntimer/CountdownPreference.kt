@@ -3,12 +3,11 @@ package il.ronmad.speedruntimer
 import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.res.TypedArray
-import android.os.Bundle
 import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
+import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
 class CountdownPreference : DialogPreference {
 
@@ -25,22 +24,19 @@ class CountdownPreference : DialogPreference {
 
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
         super.onPrepareDialogBuilder(builder)
-        view = View.inflate(context, R.layout.edit_time_layout, null)
-        view.setEditTextsFromTime(countdown)
+        view = View.inflate(context, R.layout.edit_time_layout, null).apply {
+            setEditTextsFromTime(countdown)
+            clearTimeButton.setOnClickListener {
+                setEditTextsFromTime(0L)
+            }
+        }
         builder.setView(view)
                 .setPositiveButton(R.string.save) { _, _ ->
                     countdown = view.getTimeFromEditTexts()
                     persistLong(countdown)
                     summary = "Timer starts at ${(-countdown).getFormattedTime()}"
                 }
-                .setNegativeButton(R.string.pb_clear, this)
-                .setNeutralButton(android.R.string.cancel, this)
-    }
-
-    override fun showDialog(state: Bundle?) {
-        super.showDialog(state)
-        (dialog as AlertDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
-                .setOnClickListener { view.setEditTextsFromTime(0L) }
+                .setNegativeButton(android.R.string.cancel, null)
     }
 
     override fun onGetDefaultValue(a: TypedArray?, index: Int) = a?.getInt(index, 0)?.toLong()

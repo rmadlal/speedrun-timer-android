@@ -57,8 +57,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/pbSegmentTimeText"
         app:layout_constraintTop_toTopOf="@id/pbSegmentTimeText"
-        app:layout_constraintBottom_toBottomOf="@id/pbSegmentTimeText"
-        app:layout_constraintVertical_bias="0.6" />
+        app:layout_constraintBottom_toBottomOf="@id/pbSegmentTimeText" />
 
     <TextView
         android:id="@+id/bestSegmentTimeText"
@@ -82,8 +81,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/bestSegmentTimeText"
         app:layout_constraintTop_toTopOf="@id/bestSegmentTimeText"
-        app:layout_constraintBottom_toBottomOf="@id/bestSegmentTimeText"
-        app:layout_constraintVertical_bias="0.6" />
+        app:layout_constraintBottom_toBottomOf="@id/bestSegmentTimeText" />
 
     <TextView
         android:id="@+id/editPositionText"

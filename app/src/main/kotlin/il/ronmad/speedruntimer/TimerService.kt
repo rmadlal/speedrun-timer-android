@@ -14,6 +14,8 @@ import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.checkbox.checkBoxPrompt
+import com.afollestad.materialdialogs.checkbox.isCheckPromptChecked
 import il.ronmad.speedruntimer.activities.MainActivity
 import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
@@ -178,9 +180,9 @@ class TimerService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupNotificationChannel()
         }
-        val notification = notificationBuilder.build()
-        notificationManager.notify(R.integer.notification_id, notification)
-        return notification
+        return notificationBuilder.build().also { notification ->
+            notificationManager.notify(R.integer.notification_id, notification)
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -214,6 +216,7 @@ class TimerService : Service() {
 
             var touchTime: Long = 0
             var startTime = System.currentTimeMillis()
+            var prevTapTime: Long = 0
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 if (System.currentTimeMillis() - startTime <= 300) {
@@ -235,6 +238,11 @@ class TimerService : Service() {
                         if (moved)
                             category.getGame().getPosition().set(mWindowParams.x, mWindowParams.y)
                         if (moved || System.currentTimeMillis() - touchTime >= 250) return false
+                        // Prevent accidental double-clicking
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - prevTapTime < 400) return false
+                        prevTapTime = currentTime
+
                         val splitTime = chronometer.timeElapsed
                         if (Chronometer.running) {
                             if (splitTime < 0) return false
@@ -290,11 +298,15 @@ class TimerService : Service() {
                 !updateData -> timerReset(updateData = false)
                 else -> {
                     MaterialDialog(this).show {
-                        title(text = if (category.bestTime == 0L) "New personal best!"
-                        else "New personal best! (${(time - category.bestTime).getFormattedTime()})")
-                        message(text = "Save it?")
-                        positiveButton(R.string.save_reset) { timerReset(time) }
-                        negativeButton(R.string.reset) { timerReset() }
+                        title(text = "New personal best!")
+                        val format = "%-16s%s"
+                        message(text = format.format("Previous PB:", category.bestTime.getFormattedTime()) +
+                                "\n" + format.format("Improvement:", (time - category.bestTime).getFormattedTime()))
+                        checkBoxPrompt(text = if (hasSplits) "Save splits" else "Save", isCheckedDefault = true) {}
+                        positiveButton(R.string.reset) {
+                            timerReset(time, updateData = isCheckPromptChecked())
+                        }
+                        negativeButton(android.R.string.cancel)
                         window?.setType(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                         else

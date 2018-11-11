@@ -3,16 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_import_splitsio"
-        android:title="@string/menu_import_splitsio"
-        android:icon="@drawable/ic_file_download_black_24dp"
+        android:id="@+id/menu_export_splitsio"
+        android:title="@string/menu_export_splitsio"
+        android:icon="@drawable/ic_file_upload_black_24dp"
         android:orderInCategory="1"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/menu_export_splitsio"
-        android:title="@string/menu_export_splitsio"
-        android:icon="@drawable/ic_file_upload_black_24dp"
+        android:id="@+id/menu_import_splitsio"
+        android:title="@string/menu_import_splitsio"
+        android:icon="@drawable/ic_file_download_black_24dp"
         android:orderInCategory="2"
         app:showAsAction="ifRoom" />
 

@@ -1,11 +1,9 @@
 package il.ronmad.speedruntimer
 
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
-import androidx.appcompat.app.AlertDialog
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.WhichButton
 import com.afollestad.materialdialogs.actions.setActionButtonEnabled
@@ -20,6 +18,7 @@ import il.ronmad.speedruntimer.realm.*
 import io.realm.Realm
 import kotlinx.android.synthetic.main.edit_category_dialog.view.*
 import kotlinx.android.synthetic.main.edit_split_dialog.view.*
+import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.android.synthetic.main.new_category_dialog.view.*
 import kotlinx.android.synthetic.main.new_split_dialog.view.*
 
@@ -29,54 +28,52 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "New game")
             input(hintRes = R.string.hint_game_title)
-            positiveButton(R.string.create) { dialog ->
-                dialog.getInputField()?.let {
-                    if (it.isValidForGame(realm)) {
-                        callback(it.text.toString())
-                        dialog.dismiss()
+            positiveButton(R.string.create) {
+                getInputField()?.run {
+                    if (isValidForGame(realm)) {
+                        callback(text.toString())
+                        dismiss()
                     }
                 }
             }
+            negativeButton(android.R.string.cancel) { dismiss() }
             noAutoDismiss()
         }
     }
 
     internal fun showNewCategoryDialog(context: Context, game: Game, callback: (String) -> Unit) {
         val dialogView = View.inflate(context, R.layout.new_category_dialog, null)
-        val categoryNameInput = dialogView.newCategoryInput
-        categoryNameInput.setCategories(game.name)
-        AlertDialog.Builder(context)
-                .setTitle("New category")
-                .setView(dialogView)
-                .setPositiveButton(R.string.create, null)
-                .setNegativeButton(android.R.string.cancel, null)
-                .create()
-                .apply {
-                    setOnShowListener {
-                        val createButton = getButton(DialogInterface.BUTTON_POSITIVE)
-                        createButton.isEnabled = false
-                        categoryNameInput.onTextChanged { text ->
-                            createButton.isEnabled = !text.isNullOrBlank()
-                        }
-                        createButton.setOnClickListener {
-                            if (categoryNameInput.isValidForCategory(game)) {
-                                callback(categoryNameInput.text.toString())
-                                dismiss()
-                            }
-                        }
+        MaterialDialog(context).show {
+            title(text = "New category")
+            customView(view = dialogView).apply {
+                getCustomView()?.run {
+                    newCategoryInput.setCategories(game.name)
+                    newCategoryInput.onTextChanged {
+                        setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
                     }
                 }
-                .show()
+            }
+            positiveButton(R.string.create) {
+                getCustomView()?.run {
+                    if (newCategoryInput.isValidForCategory(game)) {
+                        callback(newCategoryInput.text.toString())
+                        dismiss()
+                    }
+                }
+            }
+            negativeButton(android.R.string.cancel) { dismiss() }
+            setActionButtonEnabled(WhichButton.POSITIVE, false)
+            noAutoDismiss()
+        }
     }
 
     fun showNewSplitDialog(context: Context, category: Category, callback: (String, Int) -> Unit) {
         MaterialDialog(context).show {
             title(text = "New split")
-            customView(R.layout.new_split_dialog).also { dialog ->
-                dialog.setActionButtonEnabled(WhichButton.POSITIVE, false)
-                dialog.getCustomView()?.run {
+            customView(R.layout.new_split_dialog).apply {
+                getCustomView()?.run {
                     newSplitInput.onTextChanged {
-                        dialog.setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
+                        setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
                     }
                     positionSpinner.apply {
                         adapter = SplitPositionSpinnerAdapter(context,
@@ -85,15 +82,17 @@ object Dialogs {
                     }
                 }
             }
-            positiveButton(R.string.create) { dialog ->
-                dialog.getCustomView()?.run {
+            positiveButton(R.string.create) {
+                getCustomView()?.run {
                     if (newSplitInput.isValidForSplit(category)) {
                         val position = positionSpinner.selectedItem as Int - 1
                         callback(newSplitInput.text.toString(), position)
-                        dialog.dismiss()
+                        dismiss()
                     }
                 }
             }
+            negativeButton(android.R.string.cancel) { dismiss() }
+            setActionButtonEnabled(WhichButton.POSITIVE, false)
             noAutoDismiss()
         }
     }
@@ -102,18 +101,19 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "Edit name")
             input(hintRes = R.string.hint_game_title, prefill = game.name)
-            positiveButton(R.string.save) { dialog ->
-                dialog.getInputField()?.let {
-                    if (it.text.toString() == game.name) {
-                        dialog.dismiss()
-                        return@let
+            positiveButton(R.string.save) {
+                getInputField()?.run {
+                    if (text.toString() == game.name) {
+                        dismiss()
+                        return@run
                     }
-                    if (it.isValidForGame(game.realm)) {
-                        callback(it.text.toString())
-                        dialog.dismiss()
+                    if (isValidForGame(game.realm)) {
+                        callback(text.toString())
+                        dismiss()
                     }
                 }
             }
+            negativeButton(android.R.string.cancel) { dismiss() }
             noAutoDismiss()
         }
     }
@@ -125,40 +125,38 @@ object Dialogs {
     ) {
         MaterialDialog(context).show {
             title(text = "Edit category")
-            customView(R.layout.edit_category_dialog).also { dialog ->
-                dialog.getCustomView()?.run {
+            customView(R.layout.edit_category_dialog).apply {
+                getCustomView()?.run {
                     categoryName.apply {
                         setText(category.name)
                         setSelection(text.length)
                         onTextChanged {
-                            dialog.setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
+                            setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
                         }
                     }
                     if (category.bestTime > 0) {
-                        setEditTextsFromTime(category.bestTime)
+                        editTime.setEditTextsFromTime(category.bestTime)
                     }
                     runCount.setText(category.runCount.toString())
+                    editTime.clearTimeButton.setOnClickListener {
+                        editTime.setEditTextsFromTime(0L)
+                    }
                 }
             }
-            positiveButton(R.string.save) { dialog ->
-                dialog.getCustomView()?.run {
+            positiveButton(R.string.save) {
+                getCustomView()?.run {
                     val newName = categoryName.text.toString()
                     if (newName == category.name
                             || categoryName.isValidForCategory(category.getGame())) {
-                        val newTime = getTimeFromEditTexts()
+                        val newTime = editTime.getTimeFromEditTexts()
                         val newRunCountStr = runCount.text.toString()
                         val newRunCount = if (newRunCountStr.isEmpty()) 0 else Integer.parseInt(newRunCountStr)
                         callback(newName, newTime, newRunCount)
-                        dialog.dismiss()
+                        dismiss()
                     }
                 }
             }
-            negativeButton(R.string.pb_clear) { dialog ->
-                dialog.getCustomView()?.run {
-                    setEditTextsFromTime(0L)
-                    runCount.setText("0")
-                }
-            }
+            negativeButton(android.R.string.cancel) { dismiss() }
             noAutoDismiss()
         }
     }
@@ -170,8 +168,8 @@ object Dialogs {
     ) {
         MaterialDialog(context).show {
             title(text = "Edit split")
-            customView(R.layout.edit_split_dialog).also { dialog ->
-                dialog.getCustomView()?.run {
+            customView(R.layout.edit_split_dialog).apply {
+                getCustomView()?.run {
                     editPositionSpinner.apply {
                         adapter = SplitPositionSpinnerAdapter(context,
                                 split.getCategory().splits.size)
@@ -181,7 +179,7 @@ object Dialogs {
                         setText(split.name)
                         setSelection(text.length)
                         onTextChanged {
-                            dialog.setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
+                            setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
                         }
                     }
                     if (split.pbTime > 0) {
@@ -190,10 +188,16 @@ object Dialogs {
                     if (split.bestTime > 0) {
                         editTimeBest.setEditTextsFromTime(split.bestTime)
                     }
+                    editTimePB.clearTimeButton.setOnClickListener {
+                        editTimePB.setEditTextsFromTime(0L)
+                    }
+                    editTimeBest.clearTimeButton.setOnClickListener {
+                        editTimeBest.setEditTextsFromTime(0L)
+                    }
                 }
             }
-            positiveButton(R.string.save) { dialog ->
-                dialog.getCustomView()?.run {
+            positiveButton(R.string.save) {
+                getCustomView()?.run {
                     val newName = nameInput.text.toString()
                     if (newName == split.name
                             || nameInput.isValidForSplit(split.getCategory())) {
@@ -201,17 +205,12 @@ object Dialogs {
                         val newBestSegmentTime = editTimeBest.getTimeFromEditTexts()
                         val position = editPositionSpinner.selectedItem as Int - 1
                         callback(newName, newPBSegmentTime, newBestSegmentTime, position)
-                        dialog.dismiss()
+                        dismiss()
                     }
                 }
 
             }
-            negativeButton(R.string.pb_clear) { dialog ->
-                dialog.getCustomView()?.run {
-                    editTimePB.setEditTextsFromTime(0L)
-                    editTimeBest.setEditTextsFromTime(0L)
-                }
-            }
+            negativeButton(android.R.string.cancel) { dismiss() }
             noAutoDismiss()
         }
     }
@@ -282,6 +281,7 @@ object Dialogs {
                 if (indices.any { isItemChecked(it) }) callback()
             }
             positiveButton(R.string.add)
+            negativeButton(android.R.string.cancel)
         }
     }
 
@@ -294,24 +294,32 @@ object Dialogs {
         }
     }
 
-    internal fun showImportSplitsDialog(context: Context, callback: (String) -> Unit) {
-        MaterialDialog(context).show {
-            title(R.string.dialog_import_splits)
+    internal fun showImportSplitsDialog(
+            context: Context,
+            overwrite: Boolean,
+            callback: (String) -> Unit
+    ) {
+        fun MaterialDialog.doImportMode() {
+            message(R.string.dialog_import_splits_msg)
             input(hintRes = R.string.hint_run_id)
-            positiveButton(R.string.do_import) { dialog ->
-                dialog.getInputField()?.let {
-                    callback(it.text.toString())
-                }
+            positiveButton(R.string.do_import) {
+                getInputField()?.run { callback(text.toString()) }
+                dismiss()
             }
         }
-    }
-
-    internal fun showImportSplitsOverwriteDialog(context: Context, callback: () -> Unit) {
         MaterialDialog(context).show {
             title(R.string.dialog_import_splits)
-            message(R.string.dialog_import_splits_overwrite)
-            positiveButton(android.R.string.ok) { callback() }
-            negativeButton(android.R.string.cancel)
+            if (overwrite) {
+                message(R.string.dialog_import_splits_overwrite)
+                positiveButton(android.R.string.ok) {
+                    clearPositiveListeners()
+                    doImportMode()
+                }
+            } else {
+                doImportMode()
+            }
+            negativeButton(android.R.string.cancel) { dismiss() }
+            noAutoDismiss()
         }
     }
 

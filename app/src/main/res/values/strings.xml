@@ -21,6 +21,7 @@
     <string name="mins_hint">Mins</string>
     <string name="secs_hint">Secs</string>
     <string name="millis_hint">Millis</string>
+    <string name="time_clear">Clear</string>
     <string name="sob_text">Sum of best segments:</string>
     <string name="save_reset">Save &amp; reset</string>
     <string name="reset">Reset</string>
@@ -39,6 +40,7 @@
     <string name="dialog_delete_games">Delete selected games?</string>
     <string name="dialog_delete_games_msg">All categories, PBs and splits associated with the games will be lost.</string>
     <string name="dialog_import_splits">Import Splits from splits.io</string>
+    <string name="dialog_import_splits_msg">Enter a splits.io Run ID below.</string>
     <string name="dialog_import_splits_overwrite">All existing data will be overwritten and lost. Import anyway?</string>
     <string name="dialog_clear_splits">PB and Best Segments will be lost. Are you sure?</string>
     <string name="do_import">Import</string>
@@ -68,8 +70,8 @@
     <string name="splits_header_split_time">Split Time</string>
     <string name="split_name_text">Name:</string>
     <string name="split_name_hint">Split Name</string>
-    <string name="pb_seg_text">PB Seg.:</string>
-    <string name="best_seg_text">Best Seg.:</string>
+    <string name="pb_seg_text">PB:</string>
+    <string name="best_seg_text">Best:</string>
     <string name="bottom_sheet_view_splits">View &amp; edit splits</string>
     <string name="bottom_sheet_view_launch">Launch timer</string>
     <string name="appwidget_text">FST</string>

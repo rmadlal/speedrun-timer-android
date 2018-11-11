@@ -90,12 +90,12 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                     activity.onBackPressed()
                     true
                 }
-                R.id.menu_import_splitsio -> {
-                    onImportSplitsioPressed()
-                    true
-                }
                 R.id.menu_export_splitsio -> {
                     onExportSplitsioPressed()
+                    true
+                }
+                R.id.menu_import_splitsio -> {
+                    onImportSplitsioPressed()
                     true
                 }
                 R.id.menu_clear_splits -> {
@@ -168,21 +168,6 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         }
     }
 
-    private fun onImportSplitsioPressed() {
-        val importSplitsDialog = {
-            Dialogs.showImportSplitsDialog(activity) { id ->
-                splitsIOViewModel.importRun(id)
-            }
-        }
-        if (category.splits.isNotEmpty()) {
-            Dialogs.showImportSplitsOverwriteDialog(activity) {
-                importSplitsDialog()
-            }
-            return
-        }
-        importSplitsDialog()
-    }
-
     private fun onExportSplitsioPressed() {
         if (category.splits.isEmpty()) {
             context?.showToast("There must be at least one split.")
@@ -190,6 +175,12 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         }
         context?.showToast("Uploading...")
         splitsIOViewModel.exportRun(category.toRun())
+    }
+
+    private fun onImportSplitsioPressed() {
+        Dialogs.showImportSplitsDialog(activity, category.splits.isNotEmpty()) { id ->
+            splitsIOViewModel.importRun(id)
+        }
     }
 
     private fun setupActionMode() {
