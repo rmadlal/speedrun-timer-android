@@ -31,7 +31,7 @@ class FSTWidgetConfigureActivity : Activity() {
 
         // Set the result to CANCELED.  This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
-        setResult(Activity.RESULT_CANCELED)
+        setResult(RESULT_CANCELED)
 
         setContentView(R.layout.fstwidget_configure)
 
@@ -56,7 +56,7 @@ class FSTWidgetConfigureActivity : Activity() {
             // Make sure we pass back the original appWidgetId
             val resultValue = Intent()
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId)
-            setResult(Activity.RESULT_OK, resultValue)
+            setResult(RESULT_OK, resultValue)
             finish()
         }
 
@@ -119,8 +119,8 @@ class FSTWidgetConfigureActivity : Activity() {
         // If there is no preference saved, get the default from a resource
         internal fun loadWidgetPref(context: Context, appWidgetId: Int): Pair<String, String> {
             val prefs = context.getSharedPreferences(PREFS_NAME, 0)
-            return prefs.getString(PREF_PREFIX_KEY + appWidgetId + PREF_GAME_KEY, "") to
-                    prefs.getString(PREF_PREFIX_KEY + appWidgetId + PREF_CATEGORY_KEY, "")
+            return prefs.getString(PREF_PREFIX_KEY + appWidgetId + PREF_GAME_KEY, "")!! to
+                    prefs.getString(PREF_PREFIX_KEY + appWidgetId + PREF_CATEGORY_KEY, "")!!
         }
 
         internal fun deleteWidgetPref(context: Context, appWidgetId: Int) {

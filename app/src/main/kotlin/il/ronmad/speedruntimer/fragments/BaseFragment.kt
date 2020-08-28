@@ -18,7 +18,7 @@ abstract class BaseFragment(private val layoutResId: Int) : Fragment() {
     protected val activity: MainActivity
         get() = getActivity() as MainActivity
 
-    protected var mActionBar: ActionBar? = null
+    protected val mActionBar: ActionBar?
         get() = activity.supportActionBar
 
     protected val fabAdd: FloatingActionButton

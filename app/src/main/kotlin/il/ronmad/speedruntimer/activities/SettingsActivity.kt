@@ -9,6 +9,7 @@ import il.ronmad.speedruntimer.CountdownPreference
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.getFormattedTime
 
+// TODO: androidx.preferences
 class SettingsActivity : AppCompatPreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

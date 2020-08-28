@@ -6,6 +6,7 @@ import android.content.*
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
+import android.os.IBinder
 import android.preference.PreferenceManager
 import android.util.DisplayMetrics
 import android.view.Gravity
@@ -24,6 +25,7 @@ import kotlinx.android.synthetic.main.timer_overlay.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlin.math.pow
 
 class TimerService : Service() {
 
@@ -33,7 +35,7 @@ class TimerService : Service() {
     private lateinit var chronometer: Chronometer
     private lateinit var category: Category
     private var splitsIter: MutableListIterator<Split>? = null
-    private var segmentTimes: List<Long> = emptyList()
+    private val segmentTimes: MutableList<Long> = mutableListOf()
     private var currentSplitStartTime = 0L
     private var hasSplits = false
     private var comparison: Comparison = Comparison.PERSONAL_BEST
@@ -49,7 +51,7 @@ class TimerService : Service() {
 
     private var startedProperly = false
 
-    override fun onBind(intent: Intent?) = null
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -62,8 +64,8 @@ class TimerService : Service() {
         IS_ACTIVE = true
 
         intent?.let {
-            gameName = it.getStringExtra(getString(R.string.extra_game))
-            categoryName = it.getStringExtra(getString(R.string.extra_category))
+            gameName = it.getStringExtra(getString(R.string.extra_game)).orEmpty()
+            categoryName = it.getStringExtra(getString(R.string.extra_category)).orEmpty()
         }
         if (gameName.isEmpty() || categoryName.isEmpty()) {
             stopSelf()
@@ -269,11 +271,11 @@ class TimerService : Service() {
                         currentSplitStartTime = splitTime.coerceAtLeast(0L)
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        var targetX = initialX - (event.rawX - initialTouchX).toInt()
-                        var targetY = initialY - (event.rawY - initialTouchY).toInt()
-                        targetX = Math.max(0, Math.min(targetX, metrics.widthPixels - v.width))
-                        targetY = Math.max(0, Math.min(targetY, metrics.heightPixels - v.height))
-                        if (moved || Math.pow((targetX - initialX).toDouble(), 2.0) + Math.pow((targetY - initialY).toDouble(), 2.0) >= 30 * 30) {
+                        val targetX = (initialX - (event.rawX - initialTouchX).toInt())
+                                .coerceIn(0, metrics.widthPixels - v.width)
+                        val targetY = (initialY - (event.rawY - initialTouchY).toInt())
+                                .coerceIn(0, metrics.heightPixels - v.height)
+                        if (moved || (targetX - initialX).toDouble().pow(2.0) + (targetY - initialY).toDouble().pow(2.0) >= 30 * 30) {
                             moved = true
                             mWindowParams.x = targetX
                             mWindowParams.y = targetY
@@ -374,8 +376,8 @@ class TimerService : Service() {
         val (x, y) = category.getGame().getPosition()
         val metrics = DisplayMetrics()
         mWindowManager.defaultDisplay.getMetrics(metrics)
-        mWindowParams.x = Math.max(0, Math.min(x, metrics.widthPixels - mWindowParams.width))
-        mWindowParams.y = Math.max(0, Math.min(y, metrics.heightPixels - mWindowParams.height))
+        mWindowParams.x = x.coerceIn(0, metrics.widthPixels - mWindowParams.width)
+        mWindowParams.y = y.coerceIn(0, metrics.heightPixels - mWindowParams.height)
         mWindowManager.updateViewLayout(mView, mWindowParams)
     }
 
@@ -396,7 +398,7 @@ class TimerService : Service() {
     }
 
     private fun resetSplits() {
-        segmentTimes = emptyList()
+        segmentTimes.clear()
         splitsIter = null
         mView.delta.visibility = View.GONE
         mView.currentSplit.visibility = View.GONE
@@ -459,7 +461,7 @@ class TimerService : Service() {
                 minimizeIfNoGameLaunch: Boolean = true
         ) = GlobalScope.launch(Dispatchers.Main) {
             context ?: return@launch
-            if (TimerService.IS_ACTIVE) {
+            if (IS_ACTIVE) {
                 context.showToast(context.getString(R.string.toast_close_active_timer))
                 return@launch
             }

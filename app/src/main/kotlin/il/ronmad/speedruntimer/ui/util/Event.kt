@@ -2,8 +2,7 @@ package il.ronmad.speedruntimer.ui.util
 
 class Event<out T>(private val data: T) {
 
-    var wasHandled = false
-        private set
+    private var wasHandled = false
 
     fun handle(): T? {
         return if (wasHandled) null
@@ -13,6 +12,7 @@ class Event<out T>(private val data: T) {
         }
     }
 
+    // TODO: unused
     fun release() {
         wasHandled = false
     }

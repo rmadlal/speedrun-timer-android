@@ -12,6 +12,7 @@ import io.realm.FieldAttribute
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import io.realm.RealmSchema
+import java.util.*
 
 const val REALM_SCHEMA_VERSION = 4L
 
@@ -33,7 +34,7 @@ class MyApplication : Application() {
                     it.flags and ApplicationInfo.FLAG_SYSTEM == 0 && it.packageName != packageName
                 }
                 .associateBy {
-                    packageManager.getApplicationLabel(it).toString().toLowerCase()
+                    packageManager.getApplicationLabel(it).toString().toLowerCase(Locale.US)
                 }
     }
 

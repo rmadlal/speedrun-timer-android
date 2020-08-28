@@ -6,8 +6,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.AdapterView
 import androidx.core.view.ViewCompat
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import il.ronmad.speedruntimer.*
@@ -36,25 +35,25 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        splitsIOViewModel = ViewModelProviders.of(this).get(SplitsIOViewModel::class.java)
+        splitsIOViewModel = ViewModelProvider(this).get(SplitsIOViewModel::class.java)
         splitsIOViewModel.apply {
-            importedRun.observe(this@SplitsFragment, Observer { run ->
+            importedRun.observe(viewLifecycleOwner, { run ->
                 run?.handle()?.let {
                     it.toRealmCategory(category.gameName, category.name)
                     refresh()
                 }
             })
-            progressBar.observe(this@SplitsFragment, Observer { progress ->
+            progressBar.observe(viewLifecycleOwner, { progress ->
                 progress?.let {
                     splitsProgressBar?.visibility = if (it) View.VISIBLE else View.GONE
                 }
             })
-            claimUri.observe(this@SplitsFragment, Observer { uri ->
+            claimUri.observe(viewLifecycleOwner, { uri ->
                 uri?.handle()?.let {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
                 }
             })
-            toast.observe(this@SplitsFragment, Observer { toast ->
+            toast.observe(viewLifecycleOwner, { toast ->
                 toast?.handle()?.let {
                     context?.showToast(it.message)
                 }
@@ -79,33 +78,30 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
         mActionBar?.subtitle = null
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.splits_actions, menu)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.splits_actions, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        item?.let {
-            return when (it.itemId) {
-                android.R.id.home -> {
-                    activity.onBackPressed()
-                    true
-                }
-                R.id.menu_export_splitsio -> {
-                    onExportSplitsioPressed()
-                    true
-                }
-                R.id.menu_import_splitsio -> {
-                    onImportSplitsioPressed()
-                    true
-                }
-                R.id.menu_clear_splits -> {
-                    onClearSplitsPressed()
-                    true
-                }
-                else -> false
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                activity.onBackPressed()
+                true
             }
+            R.id.menu_export_splitsio -> {
+                onExportSplitsioPressed()
+                true
+            }
+            R.id.menu_import_splitsio -> {
+                onImportSplitsioPressed()
+                true
+            }
+            R.id.menu_clear_splits -> {
+                onClearSplitsPressed()
+                true
+            }
+            else -> false
         }
-        return false
     }
 
     override fun onFabAddPressed() {

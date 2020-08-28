@@ -12,7 +12,7 @@ import il.ronmad.speedruntimer.web.Success
 import kotlinx.coroutines.*
 import java.io.IOException
 
-class GameInfoViewModel : ViewModel() {
+class GameInfoViewModel : ViewModel(), CoroutineScope by MainScope() {
 
     private val _leaderboards = MutableLiveData<List<SrcLeaderboard>>()
     val leaderboards: LiveData<List<SrcLeaderboard>>
@@ -25,10 +25,7 @@ class GameInfoViewModel : ViewModel() {
     private val _toast = MutableLiveData<GameInfoToast>()
     val toast: LiveData<Event<GameInfoToast>> = Transformations.map(_toast) { Event(it) }
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
-
-    fun refreshInfo(gameName: String) = scope.launch {
+    fun refreshInfo(gameName: String) = launch {
         try {
             _refreshSpinner.value = true
             when (val result = Src().fetchLeaderboardsForGame(gameName)) {
@@ -50,7 +47,7 @@ class GameInfoViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        job.cancel()
+        cancel()
     }
 }
 

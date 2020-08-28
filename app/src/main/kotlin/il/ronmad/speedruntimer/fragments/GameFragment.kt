@@ -61,17 +61,14 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
         (activity.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags = 0
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        item?.let {
-            return when (it.itemId) {
-                android.R.id.home -> {
-                    activity.onBackPressed()
-                    true
-                }
-                else -> false
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                activity.onBackPressed()
+                true
             }
+            else -> false
         }
-        return false
     }
 
     override fun onFabAddPressed() { /* Handled in CategoryListFragment */

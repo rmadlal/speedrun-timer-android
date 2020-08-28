@@ -8,32 +8,31 @@ import com.google.gson.JsonDeserializer
 import il.ronmad.speedruntimer.SRC_API
 import il.ronmad.speedruntimer.isEmpty
 import il.ronmad.speedruntimer.toResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
+import java.util.*
 import kotlin.math.roundToLong
 
 interface SrcAPI {
     @GET("games")
-    fun game(
+    suspend fun game(
             @Query("name") name: String,
             @Query("embed") embed: String = "categories.variables"
-    ): Call<SrcGame>
-
-    @GET()
-    fun leaderboard(
-            @Url url: String,
-            @QueryMap variables: Map<String, String> = emptyMap()
-    ): Call<SrcLeaderboard>
+    ): Response<SrcGame>
 
     @GET
-    fun user(@Url url: String): Call<SrcUser>
+    suspend fun leaderboard(
+            @Url url: String,
+            @QueryMap variables: Map<String, String> = emptyMap()
+    ): Response<SrcLeaderboard>
+
+    @GET
+    suspend fun user(@Url url: String): Response<SrcUser>
 
     @GET("platforms/{id}")
-    fun platform(@Path("id") id: String): Call<SrcPlatform>
+    suspend fun platform(@Path("id") id: String): Response<SrcPlatform>
 }
 
 data class SrcGame(
@@ -66,21 +65,16 @@ data class SrcLeaderboard(val weblink: String, val runs: List<SrcRun>) {
     suspend fun initWrData(srcApi: SrcAPI) {
         if (runs.isEmpty()) return
         val wrRun = runs[0]
+        // Don't simplify because joinToString can't receive a suspending transform function
         wrRunners = wrRun.players.map {
             if (it.rel == "guest") it.name!!
             else {
-                withContext(Dispatchers.IO) {
-                    srcApi.user(it.uri).execute()
-                }.body()?.let { user ->
-                    user.name
-                } ?: "[unknown]"
+                srcApi.user(it.uri).body()?.name ?: "[unknown]"
             }
         }.joinToString()
 
         wrPlatform = wrRun.platformId?.let { platformId ->
-            withContext(Dispatchers.IO) {
-                srcApi.platform(platformId).execute()
-            }.body()?.let { it.name }
+            srcApi.platform(platformId).body()?.name
         } ?: "[unknown]"
     }
 }
@@ -109,7 +103,7 @@ class Src private constructor() {
     private val gson = setupGson()
     private val api = setupApi()
 
-    private var gameCache: Map<String, SrcGame> = emptyMap()
+    private var gameCache: MutableMap<String, SrcGame> = mutableMapOf()
 
     private fun setupGson(): Gson {
         fun variablesDeserializer(json: JsonArray): List<SrcVariable> {
@@ -144,7 +138,7 @@ class Src private constructor() {
                     }
         }
 
-        val gamesDeserializer = JsonDeserializer<SrcGame> { json, _, _ ->
+        val gamesDeserializer = JsonDeserializer { json, _, _ ->
             val gameArray = json.asJsonObject.getAsJsonArray("data")
             if (gameArray.isEmpty())
                 return@JsonDeserializer SrcGame.EMPTY_GAME
@@ -155,7 +149,7 @@ class Src private constructor() {
             SrcGame(name, categories, links.toList())
         }
 
-        val leaderboardDeserializer = JsonDeserializer<SrcLeaderboard> { json, _, _ ->
+        val leaderboardDeserializer = JsonDeserializer { json, _, _ ->
             val gson = Gson()
             val leaderboardObj = json.asJsonObject.getAsJsonObject("data")
             val weblink = leaderboardObj.get("weblink").asString
@@ -184,13 +178,13 @@ class Src private constructor() {
             SrcLeaderboard(weblink, lbRuns)
         }
 
-        val userDeserializer = JsonDeserializer<SrcUser> { json, _, _ ->
+        val userDeserializer = JsonDeserializer { json, _, _ ->
             val platformObj = json.asJsonObject.getAsJsonObject("data")
             val name = platformObj.getAsJsonObject("names").get("international").asString
             SrcUser(name)
         }
 
-        val platformDeserializer = JsonDeserializer<SrcPlatform> { json, _, _ ->
+        val platformDeserializer = JsonDeserializer { json, _, _ ->
             SrcPlatform(json.asJsonObject.getAsJsonObject("data").get("name").asString)
         }
 
@@ -212,10 +206,8 @@ class Src private constructor() {
 
     suspend fun fetchGameData(gameName: String): Result<SrcGame> {
         return gameCache.getOrElse(gameName) {
-            withContext(Dispatchers.IO) {
-                api.game(gameName).execute()
-            }.body()?.takeIf { it.name.toLowerCase() == gameName.toLowerCase() }
-                    ?.also { gameCache += gameName to it }
+            api.game(gameName).body()?.takeIf { it.name.toLowerCase(Locale.US) == gameName.toLowerCase(Locale.US) }
+                    ?.also { gameCache[gameName] = it }
         }.toResult()
     }
 
@@ -226,9 +218,7 @@ class Src private constructor() {
                     game.value.categories.flatMap { category ->
                         if (category.leaderboardUrl == null) return@flatMap emptyList<SrcLeaderboard>()
                         if (category.subCategories.isEmpty()) {
-                            withContext(Dispatchers.IO) {
-                                api.leaderboard(category.leaderboardUrl).execute()
-                            }.body()?.run {
+                            api.leaderboard(category.leaderboardUrl).body()?.run {
                                 categoryName = category.name
                                 initWrData(api)
                                 listOf(this)
@@ -241,9 +231,7 @@ class Src private constructor() {
                                 val varQuery: Map<String, String> = varValPairList.map {
                                     "var-${it.first.id}" to it.second.id
                                 }.toMap()
-                                withContext(Dispatchers.IO) {
-                                    api.leaderboard(category.leaderboardUrl, varQuery).execute()
-                                }.body()?.apply {
+                                api.leaderboard(category.leaderboardUrl, varQuery).body()?.apply {
                                     categoryName = category.name
                                     subcategories = varValPairList.map { it.second.label }
                                     initWrData(api)
@@ -252,7 +240,7 @@ class Src private constructor() {
                         }
                     }.toResult()
                 } catch (e: OutOfMemoryError) {
-                    Failure<List<SrcLeaderboard>>()
+                    Failure()
                 }
             }
             is Failure -> Failure()
@@ -261,7 +249,7 @@ class Src private constructor() {
 
     companion object {
 
-        val instance by lazy { Src() }
+        private val instance by lazy { Src() }
 
         operator fun invoke() = instance
     }

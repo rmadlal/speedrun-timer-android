@@ -1,7 +1,5 @@
 package il.ronmad.speedruntimer.activities
 
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
@@ -15,6 +13,7 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import androidx.lifecycle.ViewModelProvider
 import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.fragments.GamesListFragment
 import il.ronmad.speedruntimer.realm.Game
@@ -51,9 +50,9 @@ class MainActivity : AppCompatActivity() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         setupRealm()
 
-        viewModel = ViewModelProviders.of(this).get(InstalledAppsViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(InstalledAppsViewModel::class.java)
         viewModel.apply {
-            setupDone.observe(this@MainActivity, Observer { done ->
+            setupDone.observe(this@MainActivity, { done ->
                 done?.handle()?.let {
                     setupInstalledGamesList()
                     setupSnackbars()

@@ -20,8 +20,7 @@ fun Realm.addGame(gameName: String): Game {
     return game!!
 }
 
-fun Realm.getGameById(id: Long) =
-        this.where<Game>().equalTo("id", id).findFirst()
+fun Realm.getGameById(id: Long) = this.where<Game>().equalTo("id", id).findFirst()
 
 fun Realm.getGameByName(name: String) =
         this.where<Game>().equalTo("name", name, Case.INSENSITIVE).findFirst()
@@ -29,8 +28,7 @@ fun Realm.getGameByName(name: String) =
 fun Realm.getGames(ids: Collection<Long>) =
         this.where<Game>().oneOf("id", ids.toTypedArray()).findAll()!!
 
-fun Realm.getAllGames() =
-        this.where<Game>().findAll()!!
+fun Realm.getAllGames() = this.where<Game>().findAll()!!
 
 fun Realm.gameExists(name: String) =
         this.where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0

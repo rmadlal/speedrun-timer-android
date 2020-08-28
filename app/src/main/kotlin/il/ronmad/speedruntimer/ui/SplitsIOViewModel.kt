@@ -11,7 +11,7 @@ import il.ronmad.speedruntimer.web.Success
 import kotlinx.coroutines.*
 import java.io.IOException
 
-class SplitsIOViewModel : ViewModel() {
+class SplitsIOViewModel : ViewModel(), CoroutineScope by MainScope() {
 
     // Import
     private val _importedRun = MutableLiveData<SplitsIO.Run>()
@@ -28,10 +28,7 @@ class SplitsIOViewModel : ViewModel() {
     private val _claimUri = MutableLiveData<String>()
     val claimUri: LiveData<Event<String>> = Transformations.map(_claimUri) { Event(it) }
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
-
-    fun importRun(id: String) = scope.launch {
+    fun importRun(id: String) = launch {
         try {
             _progressBar.value = true
             when (val result = SplitsIO().getRun(id)) {
@@ -49,7 +46,7 @@ class SplitsIOViewModel : ViewModel() {
         }
     }
 
-    fun exportRun(run: SplitsIO.Run) = scope.launch {
+    fun exportRun(run: SplitsIO.Run) = launch {
         try {
             when (val result = SplitsIO().uploadRun(run)) {
                 is Success -> _claimUri.postValue(result.value)
@@ -63,7 +60,7 @@ class SplitsIOViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        job.cancel()
+        cancel()
     }
 }
 

@@ -6,7 +6,7 @@ import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.BaseRecyclerViewAdapter.BaseViewHolder
 import il.ronmad.speedruntimer.realm.HasPrimaryId
 
-abstract class BaseRecyclerViewAdapter<T : HasPrimaryId>(val data: List<T>)
+abstract class BaseRecyclerViewAdapter<T : HasPrimaryId>(private val data: List<T>)
     : RecyclerView.Adapter<BaseViewHolder<T>>() {
 
     var onItemClickListener: ((BaseViewHolder<T>, Int) -> Unit)? = null

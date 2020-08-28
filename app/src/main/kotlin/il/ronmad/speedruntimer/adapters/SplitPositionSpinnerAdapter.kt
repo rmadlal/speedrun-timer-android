@@ -14,13 +14,13 @@ class SplitPositionSpinnerAdapter(context: Context, numOfElements: Int) : ArrayA
         setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     }
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = super.getView(position, convertView, parent)
         (view as TextView).gravity = Gravity.CENTER
         return view
     }
 
-    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = super.getDropDownView(position, convertView, parent)
         (view as TextView).gravity = Gravity.CENTER
         return view

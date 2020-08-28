@@ -29,7 +29,7 @@ object Dialogs {
             title(text = "New game")
             input(hintRes = R.string.hint_game_title)
             positiveButton(R.string.create) {
-                getInputField()?.run {
+                getInputField().run {
                     if (isValidForGame(realm)) {
                         callback(text.toString())
                         dismiss()
@@ -46,7 +46,7 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "New category")
             customView(view = dialogView).apply {
-                getCustomView()?.run {
+                getCustomView().run {
                     newCategoryInput.setCategories(game.name)
                     newCategoryInput.onTextChanged {
                         setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
@@ -54,7 +54,7 @@ object Dialogs {
                 }
             }
             positiveButton(R.string.create) {
-                getCustomView()?.run {
+                getCustomView().run {
                     if (newCategoryInput.isValidForCategory(game)) {
                         callback(newCategoryInput.text.toString())
                         dismiss()
@@ -71,7 +71,7 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "New split")
             customView(R.layout.new_split_dialog).apply {
-                getCustomView()?.run {
+                getCustomView().run {
                     newSplitInput.onTextChanged {
                         setActionButtonEnabled(WhichButton.POSITIVE, !it.isNullOrBlank())
                     }
@@ -83,7 +83,7 @@ object Dialogs {
                 }
             }
             positiveButton(R.string.create) {
-                getCustomView()?.run {
+                getCustomView().run {
                     if (newSplitInput.isValidForSplit(category)) {
                         val position = positionSpinner.selectedItem as Int - 1
                         callback(newSplitInput.text.toString(), position)
@@ -102,7 +102,7 @@ object Dialogs {
             title(text = "Edit name")
             input(hintRes = R.string.hint_game_title, prefill = game.name)
             positiveButton(R.string.save) {
-                getInputField()?.run {
+                getInputField().run {
                     if (text.toString() == game.name) {
                         dismiss()
                         return@run
@@ -126,7 +126,7 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "Edit category")
             customView(R.layout.edit_category_dialog).apply {
-                getCustomView()?.run {
+                getCustomView().run {
                     categoryName.apply {
                         setText(category.name)
                         setSelection(text.length)
@@ -144,7 +144,7 @@ object Dialogs {
                 }
             }
             positiveButton(R.string.save) {
-                getCustomView()?.run {
+                getCustomView().run {
                     val newName = categoryName.text.toString()
                     if (newName == category.name
                             || categoryName.isValidForCategory(category.getGame())) {
@@ -169,7 +169,7 @@ object Dialogs {
         MaterialDialog(context).show {
             title(text = "Edit split")
             customView(R.layout.edit_split_dialog).apply {
-                getCustomView()?.run {
+                getCustomView().run {
                     editPositionSpinner.apply {
                         adapter = SplitPositionSpinnerAdapter(context,
                                 split.getCategory().splits.size)
@@ -197,7 +197,7 @@ object Dialogs {
                 }
             }
             positiveButton(R.string.save) {
-                getCustomView()?.run {
+                getCustomView().run {
                     val newName = nameInput.text.toString()
                     if (newName == split.name
                             || nameInput.isValidForSplit(split.getCategory())) {
@@ -277,7 +277,7 @@ object Dialogs {
             title(text = "Selected games")
             listItemsMultiChoice(items = gameNames) { _, indices, items ->
                 items.filterIndexed { index, _ -> isItemChecked(index) }
-                        .forEach { realm.addGame(it) }
+                        .forEach { realm.addGame(it.toString()) }
                 if (indices.any { isItemChecked(it) }) callback()
             }
             positiveButton(R.string.add)
@@ -303,7 +303,7 @@ object Dialogs {
             message(R.string.dialog_import_splits_msg)
             input(hintRes = R.string.hint_run_id)
             positiveButton(R.string.do_import) {
-                getInputField()?.run { callback(text.toString()) }
+                getInputField().run { callback(text.toString()) }
                 dismiss()
             }
         }

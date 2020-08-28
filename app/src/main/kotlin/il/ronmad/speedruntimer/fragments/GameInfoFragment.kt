@@ -1,9 +1,8 @@
 package il.ronmad.speedruntimer.fragments
 
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import androidx.core.view.ViewCompat
+import androidx.lifecycle.ViewModelProvider
 import il.ronmad.speedruntimer.ARG_GAME_NAME
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.InfoListAdapter
@@ -46,19 +45,19 @@ class GameInfoFragment : BaseFragment(R.layout.fragment_game_info) {
 
         setupListView(expandedGroups)
 
-        viewModel = ViewModelProviders.of(this).get(GameInfoViewModel::class.java).apply {
-            refreshSpinner.observe(this@GameInfoFragment, Observer { refreshing ->
+        viewModel = ViewModelProvider(this).get(GameInfoViewModel::class.java).apply {
+            refreshSpinner.observe(viewLifecycleOwner, { refreshing ->
                 refreshing?.let {
                     swipeRefreshLayout?.isRefreshing = it
                 }
             })
-            leaderboards.observe(this@GameInfoFragment, Observer { leaderboards ->
+            leaderboards.observe(viewLifecycleOwner, { leaderboards ->
                 leaderboards?.let {
                     mAdapter?.data = it
                     isDataShowing = it.isNotEmpty()
                 }
             })
-            toast.observe(this@GameInfoFragment, Observer { toast ->
+            toast.observe(viewLifecycleOwner, { toast ->
                 toast?.handle()?.let {
                     context?.showToast(it.message)
                     when (it) {

@@ -7,7 +7,7 @@ import com.google.gson.JsonParser
 object Util {
 
     internal fun migrateJson(json: String): String {
-        val gamesArray = JsonParser().parse(json).asJsonArray
+        val gamesArray = JsonParser.parseString(json).asJsonArray
         for (gameElement in gamesArray) {
             val gameObject = gameElement.asJsonObject
             val categoriesObject = gameObject.get("categories").asJsonObject

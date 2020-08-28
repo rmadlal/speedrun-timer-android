@@ -133,6 +133,7 @@ class InfoListAdapter(
 
     override fun getGroupCount() = data.size
 
+    // TODO: unused
     fun clear() {
         data = listOf()
     }

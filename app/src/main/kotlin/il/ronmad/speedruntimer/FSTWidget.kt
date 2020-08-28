@@ -48,15 +48,14 @@ class FSTWidget : AppWidgetProvider() {
         context ?: return
         when (intent?.action) {
             context.getString(R.string.action_start_timer) -> {
-                intent ?: return
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                         && !Settings.canDrawOverlays(context)) {
                     context.showToast(context.getString(R.string.toast_allow_permission), 1)
                     context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:${context.packageName}")))
                 } else {
-                    val gameName = intent.getStringExtra(context.getString(R.string.extra_game))
-                    val categoryName = intent.getStringExtra(context.getString(R.string.extra_category))
+                    val gameName = intent.getStringExtra(context.getString(R.string.extra_game)).orEmpty()
+                    val categoryName = intent.getStringExtra(context.getString(R.string.extra_category)).orEmpty()
                     TimerService.launchTimer(context, gameName, categoryName,
                             minimizeIfNoGameLaunch = false)
                 }

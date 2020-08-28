@@ -25,6 +25,8 @@ import kotlinx.android.synthetic.main.edit_time_layout.view.*
 import kotlinx.android.synthetic.main.timer_overlay.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.*
+import kotlin.math.abs
 
 fun EditText.isValidForGame(realm: Realm): Boolean {
     return when {
@@ -89,7 +91,7 @@ inline fun EditText.onTextChanged(crossinline listener: (CharSequence?) -> Unit)
 }
 
 fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
-    val time = Math.abs(this)
+    val time = abs(this)
     val hours = time.toInt() / (1000 * 3600)
     var remaining = (time % (3600 * 1000)).toInt()
     val minutes = remaining / (60 * 1000)
@@ -108,16 +110,10 @@ fun Long.getFormattedTime(
     if (dashIfZero && this == 0L) return "-"
     val (hours, minutes, seconds, millis) = getTimeUnits(true)
     val formattedTime = when {
-        hours > 0 ->
-            if (withMillis) "%d:%02d:%02d.%02d".format(hours, minutes, seconds, millis)
-            else "%d:%02d:%02d".format(hours, minutes, seconds)
-        minutes > 0 || forceMinutes ->
-            if (withMillis) "%d:%02d.%02d".format(minutes, seconds, millis)
-            else "%d:%02d".format(minutes, seconds)
-        else ->
-            if (withMillis) "%d.%02d".format(seconds, millis)
-            else "%d".format(seconds)
-    }
+        hours > 0 -> "%d:%02d:%02d".format(hours, minutes, seconds)
+        minutes > 0 || forceMinutes -> "%d:%02d".format(minutes, seconds)
+        else -> "%d".format(seconds)
+    } + if (withMillis) ".%02d".format(millis) else ""
     return when {
         this < 0 -> "-$formattedTime"
         plusSign -> "+$formattedTime"
@@ -204,7 +200,7 @@ suspend fun Context.tryLaunchGame(gameName: String): Boolean {
     withContext(Dispatchers.Default) {
         app.setupInstalledAppsMap()
     }
-    app.installedAppsMap[gameName.toLowerCase()]?.let {
+    app.installedAppsMap[gameName.toLowerCase(Locale.US)]?.let {
         showToast("Launching ${packageManager.getApplicationLabel(it)}...")
         startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
         return true
