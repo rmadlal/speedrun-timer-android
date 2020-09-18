@@ -8,7 +8,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.preference.PreferenceManager
+import android.os.Looper
+import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
@@ -166,10 +167,12 @@ class MainActivity : AppCompatActivity() {
         val toShowAddGamesSnackbar = !(getAvailableInstalledGames().isEmpty() || addGamesSnackbarShown)
 
         if (toShowAddGamesSnackbar) {
-            Handler().postDelayed({ showAddInstalledGamesSnackbar() }, 1000)
+            Handler(Looper.myLooper() ?: Looper.getMainLooper())
+                    .postDelayed({ showAddInstalledGamesSnackbar() }, 1000)
             addGamesSnackbarShown = true
         } else if (toShowRateSnackbar) {
-            Handler().postDelayed({ showRateSnackbar() }, 1000)
+            Handler(Looper.myLooper() ?: Looper.getMainLooper())
+                    .postDelayed({ showRateSnackbar() }, 1000)
             rateSnackbarShown = true
         }
     }

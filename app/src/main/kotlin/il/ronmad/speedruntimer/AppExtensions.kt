@@ -3,7 +3,6 @@ package il.ronmad.speedruntimer
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.preference.PreferenceManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -12,6 +11,7 @@ import android.widget.ExpandableListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import com.google.gson.JsonArray
 import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity

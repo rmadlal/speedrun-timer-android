@@ -22,7 +22,7 @@
     <PreferenceCategory
         android:title="@string/pref_header_display">
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_background"
             android:title="@string/pref_color_background_title"
             android:defaultValue="@color/colorTimerBackgroundDefault"
@@ -62,7 +62,7 @@
     <PreferenceCategory
         android:title="@string/pref_header_timer_colors">
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_neutral"
             android:title="@string/pref_color_neutral_title"
             android:defaultValue="@color/colorTimerNeutralDefault"
@@ -70,7 +70,7 @@
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_ahead"
             android:title="@string/pref_color_ahead_title"
             android:defaultValue="@color/colorTimerAheadDefault"
@@ -78,7 +78,7 @@
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_behind"
             android:title="@string/pref_color_behind_title"
             android:defaultValue="@color/colorTimerBehindDefault"
@@ -86,7 +86,7 @@
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_pb"
             android:title="@string/pref_color_pb_title"
             android:defaultValue="@color/colorTimerPBDefault"
@@ -94,7 +94,7 @@
             app:cpv_allowPresets="false"
             app:cpv_dialogType="custom" />
 
-        <com.jaredrummler.android.colorpicker.ColorPreference
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:key="@string/key_pref_color_best_segment"
             android:title="@string/pref_color_best_segment_title"
             android:defaultValue="@color/colorTimerBestSegmentDefault"

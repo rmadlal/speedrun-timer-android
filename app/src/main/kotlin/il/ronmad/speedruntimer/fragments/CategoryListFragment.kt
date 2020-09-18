@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.ActionMode
 import android.view.View
@@ -158,7 +159,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return
         }
-        val handler = Handler()
+        val handler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
         handler.postDelayed({
             if (Settings.canDrawOverlays(context)) {
                 launchTimer()

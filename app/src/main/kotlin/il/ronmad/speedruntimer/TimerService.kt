@@ -7,7 +7,7 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
 import android.os.IBinder
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent

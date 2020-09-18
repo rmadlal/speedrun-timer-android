@@ -1,6 +1,7 @@
 package il.ronmad.speedruntimer
 
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
 import android.view.View
@@ -140,7 +141,8 @@ class Chronometer(private val chronoView: View) {
         }
     }
 
-    private class ChronoHandler(instance: Chronometer) : Handler() {
+    private class ChronoHandler(instance: Chronometer) :
+            Handler(Looper.myLooper() ?: Looper.getMainLooper()) {
 
         private val instance: WeakReference<Chronometer> = WeakReference(instance)
 
