@@ -31,7 +31,10 @@ class SplitsIOViewModel : ViewModel(), CoroutineScope by MainScope() {
     fun importRun(id: String) = launch {
         try {
             _progressBar.value = true
-            when (val result = SplitsIO().getRun(id)) {
+            val result = withContext(Dispatchers.IO) {
+                SplitsIO().getRun(id)
+            }
+            when (result) {
                 is Success -> {
                     _importedRun.postValue(result.value)
                     _toast.value = ToastImportSuccess
@@ -48,7 +51,10 @@ class SplitsIOViewModel : ViewModel(), CoroutineScope by MainScope() {
 
     fun exportRun(run: SplitsIO.Run) = launch {
         try {
-            when (val result = SplitsIO().uploadRun(run)) {
+            val result = withContext(Dispatchers.IO) {
+                SplitsIO().uploadRun(run)
+            }
+            when (result) {
                 is Success -> _claimUri.postValue(result.value)
                 is Failure -> _toast.value = ToastExportFail
             }

@@ -17,48 +17,51 @@ class SettingsFragment : PreferenceFragmentCompat() {
         setHasOptionsMenu(true)
 
         for (listPreferenceKey in arrayOf(
-                getString(R.string.key_pref_compare_against),
-                getString(R.string.key_pref_timer_size))) {
+            getString(R.string.key_pref_compare_against),
+            getString(R.string.key_pref_timer_size)
+        )) {
             findPreference<ListPreference>(listPreferenceKey)?.summaryProvider =
-                    ListPreference.SimpleSummaryProvider.getInstance()
+                ListPreference.SimpleSummaryProvider.getInstance()
         }
 
         findPreference<CheckBoxPreference>(getString(R.string.key_pref_timer_always_minutes))
-                ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
+            ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
             preference.context.getString(
-                    if (preference.isChecked)
-                        R.string.pref_always_show_minutes_summary_true
-                    else
-                        R.string.pref_always_show_minutes_summary_false)
+                if (preference.isChecked)
+                    R.string.pref_always_show_minutes_summary_true
+                else
+                    R.string.pref_always_show_minutes_summary_false
+            )
         }
 
         findPreference<CheckBoxPreference>(getString(R.string.key_pref_launch_games))
-                ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
+            ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
             preference.context.getString(
-                    if (preference.isChecked)
-                        R.string.pref_launch_games_summary_true
-                    else
-                        R.string.pref_launch_games_summary_false)
+                if (preference.isChecked)
+                    R.string.pref_launch_games_summary_true
+                else
+                    R.string.pref_launch_games_summary_false
+            )
         }
 
         findPreference<CheckBoxPreference>(getString(R.string.key_pref_save_time_data))
-                ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
+            ?.summaryProvider = Preference.SummaryProvider { preference: CheckBoxPreference ->
             preference.context.getString(
-                    if (preference.isChecked)
-                        R.string.pref_save_time_data_summary_true
-                    else
-                        R.string.pref_save_time_data_summary_false)
+                if (preference.isChecked)
+                    R.string.pref_save_time_data_summary_true
+                else
+                    R.string.pref_save_time_data_summary_false
+            )
         }
     }
 
-    override fun onDisplayPreferenceDialog(preference: Preference?) {
+    override fun onDisplayPreferenceDialog(preference: Preference) {
         if (parentFragmentManager.findFragmentByTag(TAG_COUNTDOWN_PREFERENCE_FRAGMENT) != null) {
             return
         }
 
         if (preference is CountdownPreference) {
             val fragment = CountdownPreferenceDialogFragment.newInstance(preference.key)
-            fragment.setTargetFragment(this, 0)
             fragment.show(parentFragmentManager, TAG_COUNTDOWN_PREFERENCE_FRAGMENT)
         } else {
             super.onDisplayPreferenceDialog(preference)

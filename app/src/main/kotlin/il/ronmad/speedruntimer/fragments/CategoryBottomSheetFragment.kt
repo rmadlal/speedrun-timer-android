@@ -1,37 +1,43 @@
 package il.ronmad.speedruntimer.fragments
 
 import android.os.Bundle
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import il.ronmad.speedruntimer.R
-import kotlinx.android.synthetic.main.category_bottom_sheet_dialog.view.*
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import il.ronmad.speedruntimer.databinding.CategoryBottomSheetDialogBinding
 
 class CategoryBottomSheetFragment : BottomSheetDialogFragment() {
+
+    private var _viewBinding: CategoryBottomSheetDialogBinding? = null
+    private val viewBinding get() = _viewBinding!!
 
     var onLaunchTimerClickListener: (() -> Unit)? = null
     var onViewSplitsClickListener: (() -> Unit)? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.category_bottom_sheet_dialog, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _viewBinding = CategoryBottomSheetDialogBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        view?.apply {
-            launchTimerItem.setOnClickListener {
-                onLaunchTimerClickListener?.invoke()
-                dismissAllowingStateLoss()
-            }
-            viewSplitsItem.setOnClickListener {
-                onViewSplitsClickListener?.invoke()
-                dismissAllowingStateLoss()
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewBinding.launchTimerItem.setOnClickListener {
+            onLaunchTimerClickListener?.invoke()
+            dismissAllowingStateLoss()
+        }
+        viewBinding.viewSplitsItem.setOnClickListener {
+            onViewSplitsClickListener?.invoke()
+            dismissAllowingStateLoss()
         }
     }
 
-    companion object {
-        fun newInstance() = CategoryBottomSheetFragment()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _viewBinding = null
     }
 }

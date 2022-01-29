@@ -40,7 +40,7 @@ class SplitsIOTests {
     }
 
     @Test
-    fun testGetAsnoobWR() {
+    fun testGetASNOOBRun() {
         runBlocking {
             when (val result = SplitsIO().getRun("2z69")) {
                 is Success -> {
@@ -55,6 +55,7 @@ class SplitsIOTests {
         }
     }
 
+/*
     @Test
     fun testUploadRun() {
         val run = SplitsIO.Run("TestGame", "TestCategory", 14,
@@ -71,4 +72,5 @@ class SplitsIOTests {
             }
         }
     }
+*/
 }

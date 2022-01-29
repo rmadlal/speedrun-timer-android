@@ -1,19 +1,17 @@
 package il.ronmad.speedruntimer.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import il.ronmad.speedruntimer.Comparison
-import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.databinding.SplitListItemBinding
 import il.ronmad.speedruntimer.getFormattedTime
 import il.ronmad.speedruntimer.realm.Split
 import il.ronmad.speedruntimer.realm.calculateSplitTime
-import kotlinx.android.synthetic.main.split_list_item.view.*
 
-class SplitAdapter(splits: List<Split>,
-                   comparison: Comparison = Comparison.PERSONAL_BEST)
-    : BaseRecyclerViewAdapter<Split>(splits) {
+private typealias SplitViewHolder = BaseRecyclerViewAdapter.BaseViewHolder<Split, SplitListItemBinding>
+
+class SplitAdapter(splits: List<Split>, comparison: Comparison = Comparison.PERSONAL_BEST) :
+    BaseRecyclerViewAdapter<Split, SplitListItemBinding>(splits) {
 
     var comparison: Comparison = comparison
         set(value) {
@@ -26,19 +24,18 @@ class SplitAdapter(splits: List<Split>,
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            SplitViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.split_list_item, parent, false))
+        SplitViewHolder(SplitListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: BaseViewHolder<Split>, position: Int) {
+    override fun onBindViewHolder(holder: SplitViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
-        (holder as SplitViewHolder).apply {
+        holder.apply {
             val split = item
-            splitNameText.text = split.name
-            segmentDurationText.text = when (comparison) {
+            viewBinding.nameText.text = split.name
+            viewBinding.segmentDurationText.text = when (comparison) {
                 Comparison.PERSONAL_BEST -> split.pbTime.getFormattedTime(dashIfZero = true)
                 Comparison.BEST_SEGMENTS -> split.bestTime.getFormattedTime(dashIfZero = true)
             }
-            splitTimeText.text = split.calculateSplitTime(comparison).getFormattedTime(dashIfZero = true)
+            viewBinding.splitTimeText.text = split.calculateSplitTime(comparison).getFormattedTime(dashIfZero = true)
         }
     }
 
@@ -48,11 +45,5 @@ class SplitAdapter(splits: List<Split>,
 
     override fun onItemEdited(position: Int) {
         notifyItemRangeChanged(position, itemCount - position)
-    }
-
-    class SplitViewHolder(splitView: View) : BaseViewHolder<Split>(splitView) {
-        val splitNameText: TextView = splitView.nameText
-        val segmentDurationText: TextView = splitView.segmentDurationText
-        val splitTimeText: TextView = splitView.splitTimeText
     }
 }

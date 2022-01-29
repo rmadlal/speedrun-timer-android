@@ -10,23 +10,26 @@ import il.ronmad.speedruntimer.Dialogs
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.TAG_GAME_FRAGMENT
 import il.ronmad.speedruntimer.adapters.GameAdapter
+import il.ronmad.speedruntimer.databinding.FragmentGamesListBinding
 import il.ronmad.speedruntimer.realm.*
 import io.realm.kotlin.where
-import kotlinx.android.synthetic.main.fragment_games_list.*
 
-class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
+class GamesListFragment : BaseFragment<FragmentGamesListBinding>(FragmentGamesListBinding::inflate) {
 
     private var mAdapter: GameAdapter? = null
     private var mActionMode: ActionMode? = null
     private var mActionModeCallback: MyActionModeCallback? = null
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         mActionBar?.apply {
             title = activity.getString(R.string.app_name)
             setDisplayHomeAsUpEnabled(false)
         }
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupActionMode()
         checkEmptyList()
@@ -48,7 +51,7 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
     }
 
     private fun checkEmptyList() {
-        emptyList?.visibility = if (realm.where<Game>().count() == 0L) View.VISIBLE else View.GONE
+        viewBinding.emptyList.visibility = if (realm.where<Game>().count() == 0L) View.VISIBLE else View.GONE
     }
 
     private fun addGame(name: String) {
@@ -102,13 +105,17 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
                 if (mActionMode == null) {
                     val game = holder.item
                     activity.supportFragmentManager.beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out,
-                                    R.anim.fade_in, R.anim.fade_out)
-                            .replace(R.id.fragment_container,
-                                    GameFragment.newInstance(game.name),
-                                    TAG_GAME_FRAGMENT)
-                            .addToBackStack(null)
-                            .commitAllowingStateLoss()
+                        .setCustomAnimations(
+                            R.anim.fade_in, R.anim.fade_out,
+                            R.anim.fade_in, R.anim.fade_out
+                        )
+                        .replace(
+                            R.id.fragment_container,
+                            GameFragment.newInstance(game.name),
+                            TAG_GAME_FRAGMENT
+                        )
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss()
                 } else {
                     mAdapter?.toggleItemSelected(position)
                     mActionMode?.invalidate()
@@ -122,16 +129,11 @@ class GamesListFragment : BaseFragment(R.layout.fragment_games_list) {
                 } else false
             }
         }
-        recyclerView.apply {
+        viewBinding.recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
             ViewCompat.setNestedScrollingEnabled(this, false)
         }
-    }
-
-    companion object {
-
-        fun newInstance() = GamesListFragment()
     }
 }

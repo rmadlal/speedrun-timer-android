@@ -5,10 +5,10 @@ import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
 import android.view.View
-import kotlinx.android.synthetic.main.timer_overlay.view.*
+import il.ronmad.speedruntimer.databinding.TimerOverlayBinding
 import java.lang.ref.WeakReference
 
-class Chronometer(private val chronoView: View) {
+class Chronometer(private val binding: TimerOverlayBinding) {
 
     private var base = 0L
 
@@ -18,7 +18,7 @@ class Chronometer(private val chronoView: View) {
     private var timerColor = colorNeutral
         set(value) {
             if (value == field) return
-            chronoView.chronoViewSet.forEach { it.setTextColor(value) }
+            binding.chronoViewSet.forEach { it.setTextColor(value) }
             field = value
         }
 
@@ -27,13 +27,13 @@ class Chronometer(private val chronoView: View) {
 
     init {
         if (!showMillis) {
-            chronoView.apply {
+            binding.apply {
                 chronoMilli1.visibility = View.GONE
                 chronoMilli2.visibility = View.GONE
                 chronoDot.visibility = View.GONE
             }
         }
-        chronoView.chronoViewSet.forEach { it.setTextColor(colorNeutral) }
+        binding.chronoViewSet.forEach { it.setTextColor(colorNeutral) }
         chronoHandler = ChronoHandler(this)
         init()
     }
@@ -76,7 +76,7 @@ class Chronometer(private val chronoView: View) {
 
     private fun updateTime() {
         val (hours, minutes, seconds, millis) = timeElapsed.getTimeUnits(true)
-        chronoView.apply {
+        binding.apply {
             chronoHr2.text = (hours / 10).toString()
             chronoHr1.text = (hours % 10).toString()
             chronoMin2.text = (minutes / 10).toString()
@@ -90,7 +90,7 @@ class Chronometer(private val chronoView: View) {
 
     private fun updateVisibility() {
         val (hours, minutes, seconds, _) = timeElapsed.getTimeUnits(true)
-        chronoView.apply {
+        binding.apply {
             chronoMinus.visibility = if (timeElapsed < 0) View.VISIBLE else View.GONE
             when {
                 hours > 0 -> {
@@ -142,7 +142,7 @@ class Chronometer(private val chronoView: View) {
     }
 
     private class ChronoHandler(instance: Chronometer) :
-            Handler(Looper.myLooper() ?: Looper.getMainLooper()) {
+        Handler(Looper.myLooper() ?: Looper.getMainLooper()) {
 
         private val instance: WeakReference<Chronometer> = WeakReference(instance)
 

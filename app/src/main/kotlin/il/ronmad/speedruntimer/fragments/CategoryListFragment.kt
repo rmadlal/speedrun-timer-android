@@ -1,6 +1,5 @@
 package il.ronmad.speedruntimer.fragments
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -10,33 +9,41 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.ActionMode
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.CategoryAdapter
+import il.ronmad.speedruntimer.databinding.FragmentCategoryListBinding
 import il.ronmad.speedruntimer.realm.*
-import kotlinx.android.synthetic.main.fragment_category_list.*
 
-class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
+class CategoryListFragment : BaseFragment<FragmentCategoryListBinding>(FragmentCategoryListBinding::inflate) {
 
     private lateinit var game: Game
     private var selectedCategory: Category? = null
     private var mAdapter: CategoryAdapter? = null
     var mActionMode: ActionMode? = null
     private var mActionModeCallback: MyActionModeCallback? = null
+    private lateinit var getOverlayPermissionAndLaunchTimer: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)!!
-            game = realm.getGameByName(gameName)!!
-        }
+        val gameName = requireArguments().getString(ARG_GAME_NAME)!!
+        game = realm.getGameByName(gameName)!!
+
+        getOverlayPermissionAndLaunchTimer =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                if (Settings.canDrawOverlays(context)) {
+                    launchTimer()
+                }
+            }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupActionMode()
         checkEmptyList()
@@ -48,23 +55,11 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         super.onResume()
         mAdapter?.onItemsEdited()
         if (waitingForTimerPermission) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !TimerService.IS_ACTIVE) {
+            if (!TimerService.IS_ACTIVE) {
                 if (Settings.canDrawOverlays(context)) {
                     launchTimer()
                 } else {
                     checkPermissionAndStartTimerDelayed()
-                }
-            }
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            OVERLAY_REQUEST_CODE -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                        || Settings.canDrawOverlays(context)) {
-                    launchTimer()
                 }
             }
         }
@@ -80,7 +75,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun checkEmptyList() {
-        emptyList?.visibility = if (game.categories.size == 0) View.VISIBLE else View.GONE
+        viewBinding.emptyList.visibility = if (game.categories.size == 0) View.VISIBLE else View.GONE
     }
 
     private fun setupActionMode() {
@@ -122,7 +117,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
                 } else false
             }
         }
-        recyclerView.apply {
+        viewBinding.recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
@@ -136,16 +131,17 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
         }
     }
 
-    @SuppressLint("RestrictedApi")
     private fun checkPermissionAndStartTimer() {
         context?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    && !Settings.canDrawOverlays(it)) {
+            if (!Settings.canDrawOverlays(it)) {
                 waitingForTimerPermission = true
                 it.showToast(it.getString(R.string.toast_allow_permission), 1)
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:${activity.packageName}"))
-                startActivityForResult(intent, OVERLAY_REQUEST_CODE, Bundle())
+                getOverlayPermissionAndLaunchTimer.launch(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:${activity.packageName}")
+                    )
+                )
             } else {
                 launchTimer()
             }
@@ -156,9 +152,6 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
      * All of this is because the permission may take time to register.
      */
     private fun checkPermissionAndStartTimerDelayed() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return
-        }
         val handler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
         handler.postDelayed({
             if (Settings.canDrawOverlays(context)) {
@@ -216,11 +209,10 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     }
 
     private fun showBottomSheetDialog() {
-        CategoryBottomSheetFragment.newInstance().apply {
-            onViewSplitsClickListener = { viewSplits() }
-            onLaunchTimerClickListener = { checkPermissionAndStartTimer() }
-            show(this@CategoryListFragment.activity.supportFragmentManager,
-                    TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
+        CategoryBottomSheetFragment().also {
+            it.onViewSplitsClickListener = ::viewSplits
+            it.onLaunchTimerClickListener = ::checkPermissionAndStartTimer
+            it.show(activity.supportFragmentManager, TAG_CATEGORY_BOTTOM_SHEET_DIALOG)
         }
     }
 
@@ -249,7 +241,7 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
 
     private fun showEditedCategorySnackbar(category: Category, prevName: String, prevBestTime: Long, prevRunCount: Int) {
         val message = "${game.name} $prevName has been edited."
-        Snackbar.make(view!!, message, Snackbar.LENGTH_LONG)
+        Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo) {
                     editCategory(category, prevName, prevBestTime, prevRunCount)
                 }.show()
@@ -258,7 +250,6 @@ class CategoryListFragment : BaseFragment(R.layout.fragment_category_list) {
     companion object {
 
         private var waitingForTimerPermission = false
-        private const val OVERLAY_REQUEST_CODE = 251
 
         fun newInstance(gameName: String) = CategoryListFragment().apply {
             arguments = Bundle().also { it.putString(ARG_GAME_NAME, gameName) }

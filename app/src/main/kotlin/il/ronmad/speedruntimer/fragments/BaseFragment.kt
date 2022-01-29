@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.ActionBar
 import androidx.fragment.app.Fragment
+import androidx.viewbinding.ViewBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import il.ronmad.speedruntimer.activities.MainActivity
 import io.realm.Realm
-import kotlinx.android.synthetic.main.activity_main.*
 
-abstract class BaseFragment(private val layoutResId: Int) : Fragment() {
+abstract class BaseFragment<T : ViewBinding>(private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> T) : Fragment() {
+
+    private var _viewBinding: T? = null
+    internal val viewBinding get() = _viewBinding!!
 
     protected lateinit var realm: Realm
 
@@ -22,7 +25,7 @@ abstract class BaseFragment(private val layoutResId: Int) : Fragment() {
         get() = activity.supportActionBar
 
     protected val fabAdd: FloatingActionButton
-        get() = activity.fabAdd
+        get() = activity.viewBinding.fabAdd
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,8 +33,14 @@ abstract class BaseFragment(private val layoutResId: Int) : Fragment() {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(layoutResId, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _viewBinding = bindingInflater(inflater, container, false)
+        return viewBinding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _viewBinding = null
     }
 
     override fun onDestroy() {

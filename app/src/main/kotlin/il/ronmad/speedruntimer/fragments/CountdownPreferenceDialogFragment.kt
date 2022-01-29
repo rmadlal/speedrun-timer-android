@@ -7,50 +7,49 @@ import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceDialogFragmentCompat
 import il.ronmad.speedruntimer.CountdownPreference
 import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.databinding.EditTimeLayoutBinding
 import il.ronmad.speedruntimer.getTimeFromEditTexts
 import il.ronmad.speedruntimer.setEditTextsFromTime
-import kotlinx.android.synthetic.main.edit_time_layout.view.*
 
 class CountdownPreferenceDialogFragment : PreferenceDialogFragmentCompat() {
 
-    private lateinit var editTimeView: View
-    private lateinit var countdownPreference: CountdownPreference
+    private var _editTimeViewBinding: EditTimeLayoutBinding? = null
+    private val editTimeViewBinding get() = _editTimeViewBinding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        countdownPreference = (preference as CountdownPreference)
+    private val countdownPreference get() = preference as CountdownPreference
+
+    override fun onCreateDialogView(context: Context): View {
+        _editTimeViewBinding = EditTimeLayoutBinding.inflate(layoutInflater)
+        return editTimeViewBinding.root
     }
 
-    override fun onCreateDialogView(context: Context?): View {
-        return View.inflate(context, R.layout.edit_time_layout, null).also {
-            editTimeView = it
-        }
-    }
-
-    override fun onBindDialogView(view: View?) {
+    override fun onBindDialogView(view: View) {
         super.onBindDialogView(view)
-        view?.run {
-            setEditTextsFromTime(countdownPreference.countdown)
-            clearTimeButton.setOnClickListener {
-                setEditTextsFromTime(0L)
-            }
+        editTimeViewBinding.setEditTextsFromTime(countdownPreference.countdown)
+        editTimeViewBinding.clearTimeButton.setOnClickListener {
+            editTimeViewBinding.setEditTextsFromTime(0L)
         }
     }
 
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder) {
         builder.setPositiveButton(R.string.save, this)
-                .setNegativeButton(android.R.string.cancel, this)
+            .setNegativeButton(android.R.string.cancel, this)
     }
 
     override fun onDialogClosed(positiveResult: Boolean) {
         if (positiveResult) {
-            countdownPreference.countdown = editTimeView.getTimeFromEditTexts()
+            countdownPreference.countdown = editTimeViewBinding.getTimeFromEditTexts()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _editTimeViewBinding = null
     }
 
     companion object {
         fun newInstance(key: String) = CountdownPreferenceDialogFragment().apply {
-            arguments = Bundle().apply { putString(ARG_KEY, key) }
+            arguments = Bundle().also { it.putString(ARG_KEY, key) }
         }
     }
 }

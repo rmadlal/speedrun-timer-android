@@ -2,10 +2,10 @@ package il.ronmad.speedruntimer
 
 import android.content.Context
 import android.graphics.Rect
-import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import com.google.common.collect.Lists
 import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.Src
@@ -20,15 +20,20 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     private var setCategoriesJob: Job? = null
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     private var categoryNames: List<String> = emptyList()
     private val defaultCategories: List<String>
         get() = listOf("Any%", "100%", "Low%")
 
+
     internal fun setCategories(gameName: String) {
-        setCategoriesJob = GlobalScope.launch(Dispatchers.Main) {
+        setCategoriesJob = scope.launch {
             try {
-                categoryNames = when (val game = Src().fetchGameData(gameName)) {
+                val game = withContext(Dispatchers.IO) {
+                    Src().fetchGameData(gameName)
+                }
+                categoryNames = when (game) {
                     is Success -> {
                         game.value.categories.flatMap { category ->
                             if (category.subCategories.isEmpty())
@@ -55,8 +60,12 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
                 categoryNames = defaultCategories
             } finally {
                 if (isActive) {
-                    setAdapter(ArrayAdapter(context,
-                            R.layout.autocomplete_dropdown_item, categoryNames))
+                    setAdapter(
+                        ArrayAdapter(
+                            context,
+                            R.layout.autocomplete_dropdown_item, categoryNames
+                        )
+                    )
                     delay(200)  // Weird stuff happens without this.
                     if (isShown) showDropDown()
                 }
@@ -85,5 +94,6 @@ class CategoryAutoCompleteView : AppCompatAutoCompleteTextView {
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         setCategoriesJob?.cancel()
+        setCategoriesJob = null
     }
 }

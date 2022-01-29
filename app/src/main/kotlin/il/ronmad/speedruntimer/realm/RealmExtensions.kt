@@ -12,114 +12,116 @@ import io.realm.kotlin.where
 
 fun Realm.addGame(gameName: String): Game {
     var game: Game? = null
-    this.executeTransaction {
-        game = this.createObject(getNextId<Game>())
+    executeTransaction {
+        game = createObject(getNextId<Game>())
         game!!.name = gameName
-        game!!.timerPosition = this.createObject(getNextId<Point>())
+        game!!.timerPosition = createObject(getNextId<Point>())
     }
     return game!!
 }
 
-fun Realm.getGameById(id: Long) = this.where<Game>().equalTo("id", id).findFirst()
+fun Realm.getGameById(id: Long) = where<Game>().equalTo("id", id).findFirst()
 
 fun Realm.getGameByName(name: String) =
-        this.where<Game>().equalTo("name", name, Case.INSENSITIVE).findFirst()
+    where<Game>().equalTo("name", name, Case.INSENSITIVE).findFirst()
 
 fun Realm.getGames(ids: Collection<Long>) =
-        this.where<Game>().oneOf("id", ids.toTypedArray()).findAll()!!
+    where<Game>().oneOf("id", ids.toTypedArray()).findAll()!!
 
-fun Realm.getAllGames() = this.where<Game>().findAll()!!
+fun Realm.getAllGames() = where<Game>().findAll()!!
 
 fun Realm.gameExists(name: String) =
-        this.where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0
+    where<Game>().equalTo("name", name, Case.INSENSITIVE).count() > 0
 
 fun Realm.removeGames(toRemove: Collection<Long>) = executeTransaction {
-    this.getGames(toRemove).deleteAllFromRealm()
+    getGames(toRemove).deleteAllFromRealm()
 }
 
 fun Realm.getCategoryByName(gameName: String, categoryName: String) =
-        this.where<Category>()
-                .equalTo("game.name", gameName, Case.INSENSITIVE)
-                .equalTo("name", categoryName, Case.INSENSITIVE).findFirst()
+    where<Category>()
+        .equalTo("game.name", gameName, Case.INSENSITIVE)
+        .equalTo("name", categoryName, Case.INSENSITIVE).findFirst()
 
-fun Game.setGameName(newName: String) = realm.executeTransaction { this.name = newName }
+fun Game.setGameName(newName: String) = realm.executeTransaction { name = newName }
 
-fun Game.addCategory(name: String): Category {
+fun Game.addCategory(categoryName: String): Category {
     var category: Category? = null
     realm.executeTransaction {
         category = realm.createObject(realm.getNextId<Category>())
-        category!!.name = name
-        category!!.gameName = this.name
-        this.categories.add(category)
+        category!!.name = categoryName
+        category!!.gameName = name
+        categories.add(category)
     }
     return category!!
 }
 
 fun Game.getCategoryById(id: Long) =
-        this.categories.where().equalTo("id", id).findFirst()
+    categories.where().equalTo("id", id).findFirst()
 
 fun Game.getCategoryByName(name: String) =
-        this.categories.where().equalTo("name", name, Case.INSENSITIVE).findFirst()
+    categories.where().equalTo("name", name, Case.INSENSITIVE).findFirst()
 
 fun Game.getCategories(ids: Collection<Long>) =
-        this.categories.where().oneOf("id", ids.toTypedArray()).findAll()!!
+    categories.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
 fun Game.categoryExists(name: String) =
-        this.categories.where().equalTo("name", name, Case.INSENSITIVE).count() > 0
+    categories.where().equalTo("name", name, Case.INSENSITIVE).count() > 0
 
 fun Game.removeCategories(toRemove: Collection<Long>) = realm.executeTransaction {
-    this.getCategories(toRemove).deleteAllFromRealm()
+    getCategories(toRemove).deleteAllFromRealm()
 }
 
 fun Game.getPosition(): Point =
-        this.timerPosition ?: run {
-            realm.executeTransaction {
-                this.timerPosition = realm.createObject(realm.getNextId<Point>())
-            }
-            this.timerPosition!!
+    timerPosition ?: run {
+        realm.executeTransaction {
+            timerPosition = realm.createObject(realm.getNextId<Point>())
         }
+        timerPosition!!
+    }
 
-fun Category.getGame() = this.game!!.first()!!
+fun Category.getGame() = game!!.first()!!
 
-fun Category.incrementRunCount() = realm.executeTransaction { this.runCount++ }
+fun Category.incrementRunCount() = realm.executeTransaction { runCount++ }
 
-fun Category.updateData(name: String = this.name,
-                        bestTime: Long = this.bestTime,
-                        runCount: Int = this.runCount) = realm.executeTransaction {
+fun Category.updateData(
+    name: String = this.name,
+    bestTime: Long = this.bestTime,
+    runCount: Int = this.runCount
+) = realm.executeTransaction {
     this.name = name
     this.bestTime = bestTime
     this.runCount = runCount
 }
 
 fun Category.getSplitById(id: Long) =
-        this.splits.where().equalTo("id", id).findFirst()
+    splits.where().equalTo("id", id).findFirst()
 
 fun Category.getSplits(ids: Collection<Long>) =
-        this.splits.where().oneOf("id", ids.toTypedArray()).findAll()!!
+    splits.where().oneOf("id", ids.toTypedArray()).findAll()!!
 
-fun Category.addSplit(name: String, position: Int = this.splits.size): Split {
+fun Category.addSplit(name: String, position: Int = splits.size): Split {
     var split: Split? = null
     realm.executeTransaction {
         split = realm.createObject(realm.getNextId<Split>())
         split!!.name = name
-        this.splits.add(position, split)
+        splits.add(position, split)
     }
     return split!!
 }
 
 fun Category.splitExists(splitName: String) =
-        this.splits.where().equalTo("name", splitName, Case.INSENSITIVE).count() > 0
+    splits.where().equalTo("name", splitName, Case.INSENSITIVE).count() > 0
 
 fun Category.clearSplits(clearPBTimes: Boolean = true, clearBestTimes: Boolean = true) =
-        realm.executeTransaction {
-            this.splits.forEach { split ->
-                if (clearPBTimes) split.pbTime = 0L
-                if (clearBestTimes) split.bestTime = 0L
-            }
+    realm.executeTransaction {
+        splits.forEach { split ->
+            if (clearPBTimes) split.pbTime = 0L
+            if (clearBestTimes) split.bestTime = 0L
         }
+    }
 
 fun Category.removeSplits(toRemove: Collection<Long>) = realm.executeTransaction {
-    this.getSplits(toRemove).deleteAllFromRealm()
+    getSplits(toRemove).deleteAllFromRealm()
 }
 
 fun Category.setPBFromSplits() = updateData(bestTime = splits.sumByLong { it.pbTime })
@@ -127,17 +129,18 @@ fun Category.setPBFromSplits() = updateData(bestTime = splits.sumByLong { it.pbT
 fun Category.calculateSob() = splits.sumByLong { it.bestTime }
 
 fun Category.toRun(): SplitsIO.Run =
-        SplitsIO.Run(gameName,
-                name,
-                runCount,
-                splits.map { it.toSegment() })
+    SplitsIO.Run(
+        gameName,
+        name,
+        runCount,
+        splits.map { it.toSegment() })
 
-fun Split.getCategory() = this.category!!.first()!!
+fun Split.getCategory() = category!!.first()!!
 
 fun Split.updateData(
-        name: String = this.name,
-        pbTime: Long = this.pbTime,
-        bestTime: Long = this.bestTime
+    name: String = this.name,
+    pbTime: Long = this.pbTime,
+    bestTime: Long = this.bestTime
 ) = realm.executeTransaction {
     this.name = name
     this.pbTime = pbTime
@@ -145,19 +148,19 @@ fun Split.updateData(
 }
 
 fun Split.calculateSplitTime(comparison: Comparison = Comparison.PERSONAL_BEST): Long {
-    val splits = this.getCategory().splits
+    val splits = getCategory().splits
     return when (comparison) {
         Comparison.PERSONAL_BEST ->
-            splits.subList(0, splits.indexOf(this)).sumByLong { it.pbTime } + this.pbTime
+            splits.subList(0, splits.indexOf(this)).sumByLong { it.pbTime } + pbTime
         Comparison.BEST_SEGMENTS ->
-            splits.subList(0, splits.indexOf(this)).sumByLong { it.bestTime } + this.bestTime
+            splits.subList(0, splits.indexOf(this)).sumByLong { it.bestTime } + bestTime
     }
 }
 
 fun Split.hasTime(comparison: Comparison = Comparison.PERSONAL_BEST): Boolean {
     return when (comparison) {
-        Comparison.PERSONAL_BEST -> this.pbTime > 0L
-        Comparison.BEST_SEGMENTS -> this.bestTime > 0L
+        Comparison.PERSONAL_BEST -> pbTime > 0L
+        Comparison.BEST_SEGMENTS -> bestTime > 0L
     }
 }
 
@@ -176,7 +179,7 @@ fun Point.set(x: Int, y: Int) = realm.executeTransaction {
 }
 
 inline fun <reified T : RealmObject> Realm.getNextId() =
-        (this.where<T>().max("id")?.toLong() ?: 0L) + 1
+    (where<T>().max("id")?.toLong() ?: 0L) + 1
 
 inline fun <R> withRealm(block: Realm.() -> R): R {
     Realm.getDefaultInstance().use {

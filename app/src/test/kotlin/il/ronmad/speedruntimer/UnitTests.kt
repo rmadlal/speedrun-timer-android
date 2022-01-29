@@ -12,7 +12,7 @@ class UnitTests {
 
     @Test
     fun testTimeSplit() {
-        val time = (43 + 1000 * 27 + 1000 * 60 * 5).toLong()
+        val time = (43 + 1000 * (27 + 60 * 5)).toLong()
 
         val (hours, minutes, seconds, milliseconds) = time.getTimeUnits()
 

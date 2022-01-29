@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import il.ronmad.speedruntimer.*
 import il.ronmad.speedruntimer.adapters.SplitAdapter
+import il.ronmad.speedruntimer.databinding.FragmentSplitsBinding
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.ui.SplitsIOViewModel
-import kotlinx.android.synthetic.main.fragment_splits.*
 
-class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
+class SplitsFragment : BaseFragment<FragmentSplitsBinding>(FragmentSplitsBinding::inflate) {
 
     lateinit var category: Category
     var mAdapter: SplitAdapter? = null
@@ -26,45 +26,43 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)!!
-            val categoryName = it.getString(ARG_CATEGORY_NAME)!!
-            category = realm.getCategoryByName(gameName, categoryName)!!
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        splitsIOViewModel = ViewModelProvider(this).get(SplitsIOViewModel::class.java)
-        splitsIOViewModel.apply {
-            importedRun.observe(viewLifecycleOwner, { run ->
-                run?.handle()?.let {
-                    it.toRealmCategory(category.gameName, category.name)
-                    refresh()
-                }
-            })
-            progressBar.observe(viewLifecycleOwner, { progress ->
-                progress?.let {
-                    splitsProgressBar?.visibility = if (it) View.VISIBLE else View.GONE
-                }
-            })
-            claimUri.observe(viewLifecycleOwner, { uri ->
-                uri?.handle()?.let {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
-                }
-            })
-            toast.observe(viewLifecycleOwner, { toast ->
-                toast?.handle()?.let {
-                    context?.showToast(it.message)
-                }
-            })
-        }
+        val gameName = requireArguments().getString(ARG_GAME_NAME)!!
+        val categoryName = requireArguments().getString(ARG_CATEGORY_NAME)!!
+        category = realm.getCategoryByName(gameName, categoryName)!!
 
         mActionBar?.apply {
             title = category.gameName
             subtitle = category.name
             setDisplayHomeAsUpEnabled(true)
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        splitsIOViewModel = ViewModelProvider(this).get(SplitsIOViewModel::class.java).apply {
+            importedRun.observe(viewLifecycleOwner) { run ->
+                run?.handle()?.let {
+                    it.toRealmCategory(category.gameName, category.name)
+                    refresh()
+                }
+            }
+            progressBar.observe(viewLifecycleOwner) { progress ->
+                progress?.let {
+                    viewBinding.splitsProgressBar.visibility = if (it) View.VISIBLE else View.GONE
+                }
+            }
+            claimUri.observe(viewLifecycleOwner) { uri ->
+                uri?.handle()?.let {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)))
+                }
+            }
+            toast.observe(viewLifecycleOwner) { toast ->
+                toast?.handle()?.let {
+                    context?.showToast(it.message)
+                }
+            }
+        }
+
         setupRecyclerView()
         setupActionMode()
         setupComparisonSpinner()
@@ -123,11 +121,11 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun editSplit(
-            split: Split,
-            newName: String,
-            newPBTime: Long,
-            newBestTime: Long,
-            newPosition: Int
+        split: Split,
+        newName: String,
+        newPBTime: Long,
+        newBestTime: Long,
+        newPosition: Int
     ) {
         split.updateData(newName, newPBTime, newBestTime)
         val position = split.getPosition()
@@ -155,7 +153,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun updateSob() {
-        sobValueText?.text = category.calculateSob().getFormattedTime(dashIfZero = true)
+        viewBinding.sobValueText.text = category.calculateSob().getFormattedTime(dashIfZero = true)
     }
 
     private fun onClearSplitsPressed() {
@@ -220,7 +218,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
                 } else false
             }
         }
-        recyclerView.apply {
+        viewBinding.recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = mAdapter
             addItemDecoration(DividerItemDecoration(activity, DividerItemDecoration.VERTICAL))
@@ -229,7 +227,7 @@ class SplitsFragment : BaseFragment(R.layout.fragment_splits) {
     }
 
     private fun setupComparisonSpinner() {
-        comarisonSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        viewBinding.comarisonSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {

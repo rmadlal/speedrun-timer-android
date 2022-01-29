@@ -8,40 +8,35 @@ import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.*
-import com.google.android.material.tabs.TabLayout
 import il.ronmad.speedruntimer.ARG_GAME_NAME
 import il.ronmad.speedruntimer.R
 import il.ronmad.speedruntimer.adapters.SmartFragmentStatePagerAdapter
+import il.ronmad.speedruntimer.databinding.FragmentGameBinding
 import il.ronmad.speedruntimer.realm.Game
 import il.ronmad.speedruntimer.realm.getGameByName
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_game.*
 
-class GameFragment : BaseFragment(R.layout.fragment_game) {
+class GameFragment : BaseFragment<FragmentGameBinding>(FragmentGameBinding::inflate) {
 
     private lateinit var game: Game
     private lateinit var viewPagerAdapter: SmartFragmentStatePagerAdapter
 
-    private val tabLayout: TabLayout
-        get() = activity.tabLayout
+    private val viewPager get() = viewBinding.viewPager
+    private val tabLayout get() = activity.viewBinding.tabLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        arguments?.let {
-            val gameName = it.getString(ARG_GAME_NAME)!!
-            game = realm.getGameByName(gameName)!!
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        view?.requestFocus()
+        val gameName = requireArguments().getString(ARG_GAME_NAME)!!
+        game = realm.getGameByName(gameName)!!
 
         mActionBar?.apply {
             title = game.name
             setDisplayHomeAsUpEnabled(true)
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        view.requestFocus()
 
         setupViewPager()
         tabLayout.visibility = View.VISIBLE
@@ -51,14 +46,14 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
 
     override fun onResume() {
         super.onResume()
-        (activity.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags =
-                SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP
+        (activity.viewBinding.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags =
+            SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         tabLayout.visibility = View.GONE
-        (activity.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags = 0
+        (activity.viewBinding.toolbar.layoutParams as AppBarLayout.LayoutParams).scrollFlags = 0
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -85,7 +80,7 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
             }
 
             override fun getPageTitle(position: Int): CharSequence? =
-                    resources.getStringArray(R.array.fragment_game_tabs)[position]
+                resources.getStringArray(R.array.fragment_game_tabs)[position]
 
             override fun getCount() = 2
         }
@@ -98,19 +93,19 @@ class GameFragment : BaseFragment(R.layout.fragment_game) {
             override fun onPageSelected(position: Int) {
                 when (position) {
                     TAB_CATEGORIES -> {
-                        activity.fabAdd.show()
+                        fabAdd.show()
                         view?.setOnKeyListener(null)
                     }
                     TAB_INFO -> {
-                        activity.fabAdd.hide()
+                        fabAdd.hide()
                         (viewPagerAdapter.getRegisteredFragment(TAB_INFO) as? GameInfoFragment)
-                                ?.let {
-                                    if (!it.isDataShowing) {
-                                        it.refreshData()
-                                    }
+                            ?.let {
+                                if (!it.isDataShowing) {
+                                    it.refreshData()
                                 }
+                            }
                         (viewPagerAdapter.getRegisteredFragment(TAB_CATEGORIES) as? CategoryListFragment)
-                                ?.mActionMode?.finish()
+                            ?.mActionMode?.finish()
                         view?.setOnKeyListener { _, keyCode, _ ->
                             when (keyCode) {
                                 KeyEvent.KEYCODE_BACK -> {

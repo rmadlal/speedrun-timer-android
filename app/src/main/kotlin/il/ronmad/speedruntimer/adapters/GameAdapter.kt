@@ -1,29 +1,24 @@
 package il.ronmad.speedruntimer.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.databinding.GamesListItemBinding
 import il.ronmad.speedruntimer.realm.Game
-import kotlinx.android.synthetic.main.games_list_item.view.*
 
-class GameAdapter(games: List<Game>) : BaseRecyclerViewAdapter<Game>(games) {
+private typealias GameViewHolder = BaseRecyclerViewAdapter.BaseViewHolder<Game, GamesListItemBinding>
+
+class GameAdapter(games: List<Game>) : BaseRecyclerViewAdapter<Game, GamesListItemBinding>(games) {
 
     init {
         setHasStableIds(true)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            GameViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.games_list_item, parent, false))
+        GameViewHolder(GamesListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: BaseViewHolder<Game>, position: Int) {
+    override fun onBindViewHolder(holder: GameViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
-        (holder as GameViewHolder).apply {
-            val game = item
-            gameNameText.text = game.name
-        }
+        holder.viewBinding.gameName.text = holder.item.name
     }
 
     override fun onItemMoved(oldPos: Int, newPos: Int) {
@@ -32,9 +27,5 @@ class GameAdapter(games: List<Game>) : BaseRecyclerViewAdapter<Game>(games) {
 
     override fun onItemEdited(position: Int) {
         notifyItemChanged(position)
-    }
-
-    class GameViewHolder(gameView: View) : BaseViewHolder<Game>(gameView) {
-        val gameNameText: TextView = gameView.gameName
     }
 }

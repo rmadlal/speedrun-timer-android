@@ -50,10 +50,10 @@ class SrcTests {
             when (val leaderboardRes = Src().fetchLeaderboardsForGame("Thoth")) {
                 is Success -> {
                     with(leaderboardRes.value) {
-                        assertEquals(3, size)
-                        assertEquals(13, get(0).runs.size)
-                        assertEquals("Procedural", get(1).categoryName)
-                        assertEquals(776992, get(2).runs[0].time)
+                        assertEquals(18, size)
+                        assertTrue(get(0).runs.isNotEmpty())
+                        assertEquals("Standard", get(0).categoryName)
+                        assertEquals("https://www.speedrun.com/thoth#Standard", get(0).weblink)
                     }
                 }
                 is Failure -> fail()

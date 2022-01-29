@@ -2,31 +2,34 @@ package il.ronmad.speedruntimer.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import il.ronmad.speedruntimer.R
+import il.ronmad.speedruntimer.databinding.CategoryListItemBinding
 import il.ronmad.speedruntimer.getColorCpt
 import il.ronmad.speedruntimer.getFormattedTime
 import il.ronmad.speedruntimer.realm.Category
-import kotlinx.android.synthetic.main.category_list_item.view.*
 
-class CategoryAdapter(val context: Context, categories: List<Category>)
-    : BaseRecyclerViewAdapter<Category>(categories) {
+private typealias CategoryViewHolder = BaseRecyclerViewAdapter.BaseViewHolder<Category, CategoryListItemBinding>
+
+class CategoryAdapter(val context: Context, categories: List<Category>) :
+    BaseRecyclerViewAdapter<Category, CategoryListItemBinding>(categories) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            CategoryViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.category_list_item, parent, false))
+        CategoryViewHolder(CategoryListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: BaseViewHolder<Category>, position: Int) {
+    override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
-        (holder as CategoryViewHolder).apply {
+        holder.apply {
             val category = item
-            categoryNameText.text = category.name
-            pbTime.text = if (category.bestTime > 0) category.bestTime.getFormattedTime() else "None yet"
-            pbTime.setTextColor(context.getColorCpt(if (category.bestTime > 0) R.color.colorAccent
-            else android.R.color.primary_text_light))
-            runsNum.text = category.runCount.toString()
+            viewBinding.categoryName.text = category.name
+            viewBinding.pbTime.text = if (category.bestTime > 0) category.bestTime.getFormattedTime() else "None yet"
+            viewBinding.pbTime.setTextColor(
+                context.getColorCpt(
+                    if (category.bestTime > 0) R.color.colorAccent
+                    else android.R.color.primary_text_light
+                )
+            )
+            viewBinding.runsNum.text = category.runCount.toString()
         }
     }
 
@@ -36,11 +39,5 @@ class CategoryAdapter(val context: Context, categories: List<Category>)
 
     override fun onItemEdited(position: Int) {
         notifyItemChanged(position)
-    }
-
-    class CategoryViewHolder(categoryView: View) : BaseViewHolder<Category>(categoryView) {
-        val categoryNameText: TextView = categoryView.categoryName
-        val pbTime: TextView = categoryView.pbTime
-        val runsNum: TextView = categoryView.runsNum
     }
 }

@@ -7,14 +7,13 @@ import androidx.preference.DialogPreference
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceChangeListener
 import androidx.preference.Preference.SummaryProvider
-import androidx.preference.PreferenceViewHolder
 
 class CountdownPreference : DialogPreference {
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?) : super(context)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context) : super(context)
 
     var countdown: Long = 0L
         set(value) {
@@ -34,14 +33,7 @@ class CountdownPreference : DialogPreference {
         }
     }
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
-        super.onBindViewHolder(holder)
-/*
-
-*/
-    }
-
-    override fun onGetDefaultValue(a: TypedArray?, index: Int) = a?.getInt(index, 0)?.toLong()
+    override fun onGetDefaultValue(a: TypedArray, index: Int) = a.getInt(index, 0).toLong()
 
     override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any?) {
         countdown = if (restorePersistedValue)

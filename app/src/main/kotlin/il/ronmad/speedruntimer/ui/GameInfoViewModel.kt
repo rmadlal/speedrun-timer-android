@@ -28,7 +28,10 @@ class GameInfoViewModel : ViewModel(), CoroutineScope by MainScope() {
     fun refreshInfo(gameName: String) = launch {
         try {
             _refreshSpinner.value = true
-            when (val result = Src().fetchLeaderboardsForGame(gameName)) {
+            val result = withContext(Dispatchers.IO) {
+                Src().fetchLeaderboardsForGame(gameName)
+            }
+            when (result) {
                 is Success -> {
                     _leaderboards.postValue(result.value)
                     if (result.value.isEmpty()) {

@@ -6,7 +6,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializer
 import il.ronmad.speedruntimer.SRC_API
-import il.ronmad.speedruntimer.isEmpty
 import il.ronmad.speedruntimer.toResult
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -140,7 +139,7 @@ class Src private constructor() {
 
         val gamesDeserializer = JsonDeserializer { json, _, _ ->
             val gameArray = json.asJsonObject.getAsJsonArray("data")
-            if (gameArray.isEmpty())
+            if (gameArray.isEmpty)
                 return@JsonDeserializer SrcGame.EMPTY_GAME
             val gameObj = gameArray[0].asJsonObject
             val name = gameObj.getAsJsonObject("names").get("international").asString
@@ -162,7 +161,7 @@ class Src private constructor() {
                     run.get("videos").isJsonNull -> null
                     run.getAsJsonObject("videos").get("links") == null -> null
                     run.getAsJsonObject("videos").get("links").isJsonNull -> null
-                    run.getAsJsonObject("videos").getAsJsonArray("links").isEmpty() -> null
+                    run.getAsJsonObject("videos").getAsJsonArray("links").isEmpty -> null
                     else -> gson.fromJson(
                             run.getAsJsonObject("videos").getAsJsonArray("links")[0],
                             SrcLink::class.java)
@@ -206,7 +205,9 @@ class Src private constructor() {
 
     suspend fun fetchGameData(gameName: String): Result<SrcGame> {
         return gameCache.getOrElse(gameName) {
-            api.game(gameName).body()?.takeIf { it.name.toLowerCase(Locale.US) == gameName.toLowerCase(Locale.US) }
+            api.game(gameName).body()?.takeIf { it.name.lowercase(Locale.US) == gameName.lowercase(
+                Locale.US
+            ) }
                     ?.also { gameCache[gameName] = it }
         }.toResult()
     }
@@ -228,9 +229,9 @@ class Src private constructor() {
                                 variable.values.map { variable to it }
                             }
                             Lists.cartesianProduct(pairs).mapNotNull { varValPairList ->
-                                val varQuery: Map<String, String> = varValPairList.map {
+                                val varQuery: Map<String, String> = varValPairList.associate {
                                     "var-${it.first.id}" to it.second.id
-                                }.toMap()
+                                }
                                 api.leaderboard(category.leaderboardUrl, varQuery).body()?.apply {
                                     categoryName = category.name
                                     subcategories = varValPairList.map { it.second.label }

@@ -5,24 +5,22 @@ import android.content.Intent
 import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.EditText
 import android.widget.ExpandableListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
-import com.google.gson.JsonArray
 import com.google.gson.stream.JsonReader
 import il.ronmad.speedruntimer.activities.MainActivity
+import il.ronmad.speedruntimer.databinding.EditTimeLayoutBinding
+import il.ronmad.speedruntimer.databinding.TimerOverlayBinding
 import il.ronmad.speedruntimer.realm.*
 import il.ronmad.speedruntimer.web.Failure
 import il.ronmad.speedruntimer.web.Result
 import il.ronmad.speedruntimer.web.SplitsIO
 import il.ronmad.speedruntimer.web.Success
 import io.realm.Realm
-import kotlinx.android.synthetic.main.edit_time_layout.view.*
-import kotlinx.android.synthetic.main.timer_overlay.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -102,10 +100,10 @@ fun Long.getTimeUnits(twoDecimalPlaces: Boolean = false): IntArray {
 }
 
 fun Long.getFormattedTime(
-        withMillis: Boolean = true,
-        forceMinutes: Boolean = false,
-        plusSign: Boolean = false,
-        dashIfZero: Boolean = false
+    withMillis: Boolean = true,
+    forceMinutes: Boolean = false,
+    plusSign: Boolean = false,
+    dashIfZero: Boolean = false
 ): String {
     if (dashIfZero && this == 0L) return "-"
     val (hours, minutes, seconds, millis) = getTimeUnits(true)
@@ -121,8 +119,7 @@ fun Long.getFormattedTime(
     }
 }
 
-fun View.setEditTextsFromTime(time: Long) {
-    requireHasTimeViews()
+fun EditTimeLayoutBinding.setEditTextsFromTime(time: Long) {
     val (hours, minutes, seconds, millis) = time.getTimeUnits()
     this.hours.setText(if (hours > 0) hours.toString() else "")
     this.minutes.setText(if (minutes > 0) minutes.toString() else "")
@@ -130,8 +127,7 @@ fun View.setEditTextsFromTime(time: Long) {
     this.milliseconds.setText(if (millis > 0) millis.toString() else "")
 }
 
-fun View.getTimeFromEditTexts(): Long {
-    requireHasTimeViews()
+fun EditTimeLayoutBinding.getTimeFromEditTexts(): Long {
     val hoursStr = this.hours.text.toString()
     val minutesStr = this.minutes.text.toString()
     val secondsStr = this.seconds.text.toString()
@@ -141,13 +137,6 @@ fun View.getTimeFromEditTexts(): Long {
     val seconds = if (secondsStr.isNotEmpty()) secondsStr.toInt() else 0
     val millis = if (millisStr.isNotEmpty()) millisStr.toInt() else 0
     return (1000 * 60 * 60 * hours + 1000 * 60 * minutes + 1000 * seconds + millis).toLong()
-}
-
-private fun View.requireHasTimeViews() {
-    requireNotNull(hours)
-    requireNotNull(minutes)
-    requireNotNull(seconds)
-    requireNotNull(milliseconds)
 }
 
 fun Int.toOrdinal(): String {
@@ -200,7 +189,7 @@ suspend fun Context.tryLaunchGame(gameName: String): Boolean {
     withContext(Dispatchers.Default) {
         app.setupInstalledAppsMap()
     }
-    app.installedAppsMap[gameName.toLowerCase(Locale.US)]?.let {
+    app.installedAppsMap[gameName.lowercase(Locale.US)]?.let {
         showToast("Launching ${packageManager.getApplicationLabel(it)}...")
         startActivity(packageManager.getLaunchIntentForPackage(it.packageName))
         return true
@@ -228,15 +217,15 @@ private fun getComparison(context: Context): Comparison {
 }
 
 inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long) =
-        fold(0L) { acc, curr -> acc + selector(curr) }
+    fold(0L) { acc, curr -> acc + selector(curr) }
 
 /**
  * Converts Run to Category, adding it to Realm.
  * This overwrites the category's splits if they exist.
  */
 fun SplitsIO.Run.toRealmCategory(
-        gameName: String = this.gameName,
-        categoryName: String = this.categoryName
+    gameName: String = this.gameName,
+    categoryName: String = this.categoryName
 ): Category {
     return withRealm {
         val game = getGameByName(gameName) ?: addGame(gameName)
@@ -245,7 +234,7 @@ fun SplitsIO.Run.toRealmCategory(
             executeTransaction { splits.deleteAllFromRealm() }
             segments.forEach {
                 addSplit(it.segmentName)
-                        .updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
+                    .updateData(pbTime = it.pbDuration, bestTime = it.bestDuration)
             }
             setPBFromSplits()
             updateData(runCount = attemptsTotal)
@@ -286,30 +275,27 @@ inline fun <reified T> JsonReader.nextValue(): T {
 }
 
 fun ExpandableListView.getExpandedGroupPositions(): List<Int> =
-        (0 until count).filter { isGroupExpanded(it) }
-
-fun JsonArray.isEmpty() = size() == 0
+    (0 until count).filter { isGroupExpanded(it) }
 
 /**
  * Wraps the receiver in a Success if not null, or Failure otherwise
  */
 fun <T> T?.toResult(): Result<T> = this?.let { Success(it) } ?: Failure()
 
-val View.chronoViewSet: Set<TextView>
+val TimerOverlayBinding.chronoViewSet: Set<TextView>
     get() {
-        require(id == R.id.timer_overlay)
         return setOf(
-                chronoMinus,
-                chronoHr2,
-                chronoHr1,
-                chronoHrMinColon,
-                chronoMin2,
-                chronoMin1,
-                chronoMinSecColon,
-                chronoSec2,
-                chronoSec1,
-                chronoDot,
-                chronoMilli2,
-                chronoMilli1
+            chronoMinus,
+            chronoHr2,
+            chronoHr1,
+            chronoHrMinColon,
+            chronoMin2,
+            chronoMin1,
+            chronoMinSecColon,
+            chronoSec2,
+            chronoSec1,
+            chronoDot,
+            chronoMilli2,
+            chronoMilli1
         )
     }

@@ -2,8 +2,8 @@ package il.ronmad.speedruntimer.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.mukesh.MarkdownView
 import il.ronmad.speedruntimer.R
-import kotlinx.android.synthetic.main.activity_help.*
 
 class HelpActivity : AppCompatActivity() {
 
@@ -11,6 +11,7 @@ class HelpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_help)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        val markdownView = findViewById<MarkdownView>(R.id.markdownView)
         markdownView.loadMarkdownFromAssets("help.md")
         markdownView.isOpenUrlInBrowser = true
     }

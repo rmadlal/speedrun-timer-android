@@ -18,23 +18,18 @@ import kotlinx.coroutines.*
  * The installed apps data is in MyApplication so that it can be accessible from any timer launch
  *  - from the app, from the Widget, etc.
  */
-class InstalledAppsViewModel(application: Application) : AndroidViewModel(application) {
+class InstalledAppsViewModel(application: Application) : AndroidViewModel(application), CoroutineScope by MainScope() {
 
     private val _setupDone = MutableLiveData<Boolean>()
     val setupDone: LiveData<Event<Boolean>> = Transformations.map(_setupDone) { Event(it) }
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
-
-    fun setupInstalledAppsMap() = scope.launch {
-        withContext(Dispatchers.Default) {
-            getApplication<MyApplication>().setupInstalledAppsMap()
-        }
+    fun setupInstalledAppsMap() = launch {
+        getApplication<MyApplication>().setupInstalledAppsMap()
         _setupDone.postValue(true)
     }
 
     override fun onCleared() {
         super.onCleared()
-        job.cancel()
+        cancel()
     }
 }
